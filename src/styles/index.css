@@ -1,0 +1,235 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg-canvas: #FAF9F5;
+    --color-bg-surface: #FFFFFF;
+    --color-bg-sidebar: #F5F2EC;
+    --color-bg-subtle: #F7F5EF;
+    --color-bg-hover: #EFEDE5;
+    --color-border-subtle: #EEEBE2;
+    --color-border: #E3DFD3;
+    --color-border-strong: #D4CFC0;
+    --color-text-primary: #1F1E1C;
+    --color-text-secondary: #5A5955;
+    --color-text-muted: #8C8A82;
+    --color-accent: #C96442;
+    --color-accent-hover: #B45838;
+    --color-success: #2F7D5B;
+    --color-warning: #A8740F;
+    --color-danger: #B54232;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    background-color: var(--color-bg-canvas);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    line-height: 1.55;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 8px;
+    border: 2px solid var(--color-bg-canvas);
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border-strong);
+  }
+
+  ::selection {
+    background: rgba(201, 100, 66, 0.15);
+    color: var(--color-text-primary);
+  }
+
+  /* hairline borders — the claude.ai feel */
+  .border-hairline {
+    border-width: 0.5px;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-surface border border-border-subtle rounded-xl;
+  }
+
+  .card-muted {
+    @apply bg-bg-subtle border border-border-subtle rounded-xl;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5
+           bg-accent text-white font-medium
+           px-3.5 py-2 rounded-lg text-sm
+           hover:bg-accent-hover
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring
+           active:translate-y-px
+           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5
+           bg-bg-surface text-text-primary border border-border
+           font-medium px-3.5 py-2 rounded-lg text-sm
+           hover:bg-bg-hover hover:border-border-strong
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong
+           transition-colors duration-150 disabled:opacity-50;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-1.5
+           text-text-secondary font-medium px-3 py-2 rounded-lg text-sm
+           hover:bg-bg-hover hover:text-text-primary
+           transition-colors duration-150;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1.5
+           bg-white text-danger border border-danger/30 font-medium
+           px-3.5 py-2 rounded-lg text-sm
+           hover:bg-danger-subtle
+           transition-colors duration-150;
+  }
+
+  .input-base {
+    @apply w-full bg-bg-surface border border-border rounded-lg
+           px-3 py-2 text-sm text-text-primary placeholder-text-muted
+           focus:outline-none focus:border-text-secondary
+           focus:ring-1 focus:ring-border-strong
+           transition-colors duration-150;
+  }
+
+  .input-subtle {
+    @apply w-full bg-bg-subtle border border-transparent rounded-lg
+           px-3 py-2 text-sm text-text-primary placeholder-text-muted
+           focus:outline-none focus:bg-bg-surface focus:border-border
+           transition-colors duration-150;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md
+           text-[11px] font-medium leading-normal;
+  }
+
+  .badge-neutral {
+    @apply badge bg-bg-hover text-text-secondary;
+  }
+
+  .badge-success {
+    @apply badge bg-success-subtle text-success;
+  }
+
+  .badge-warning {
+    @apply badge bg-warning-subtle text-warning;
+  }
+
+  .badge-danger {
+    @apply badge bg-danger-subtle text-danger;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent-subtle text-accent;
+  }
+
+  .badge-info {
+    @apply badge bg-info-subtle text-info;
+  }
+
+  .badge-outline {
+    @apply badge bg-bg-surface border border-border text-text-secondary;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded-md
+           text-[13px] font-medium text-text-secondary
+           hover:bg-bg-hover hover:text-text-primary
+           transition-colors duration-150 cursor-pointer;
+  }
+
+  .sidebar-link.active {
+    @apply bg-bg-surface text-text-primary border border-border-subtle;
+  }
+
+  .section-title {
+    @apply font-semibold text-text-primary tracking-tight;
+  }
+
+  .stat-number {
+    @apply font-medium text-text-primary tabular-nums tracking-tight;
+  }
+
+  .divider {
+    @apply border-t border-border-subtle;
+  }
+
+  .kbd {
+    @apply inline-flex items-center px-1.5 py-0.5 rounded
+           bg-bg-surface border border-border
+           text-[10px] text-text-muted font-mono;
+  }
+
+  .dot {
+    @apply inline-block w-1.5 h-1.5 rounded-full;
+  }
+
+  /* Toggle */
+  .toggle {
+    @apply relative inline-flex items-center h-5 w-9 rounded-full
+           transition-colors duration-150 cursor-pointer;
+  }
+
+  .toggle-on { @apply bg-accent; }
+  .toggle-off { @apply bg-border; }
+
+  .toggle-thumb {
+    @apply absolute top-0.5 h-4 w-4 rounded-full bg-white
+           transition-all duration-200;
+  }
+
+  .toggle-thumb-on { @apply left-[18px]; }
+  .toggle-thumb-off { @apply left-0.5; }
+}
+
+@layer utilities {
+  /* Staggered entrance — keep it restrained */
+  .stagger-1 { animation-delay: 40ms; opacity: 0; }
+  .stagger-2 { animation-delay: 80ms; opacity: 0; }
+  .stagger-3 { animation-delay: 120ms; opacity: 0; }
+  .stagger-4 { animation-delay: 160ms; opacity: 0; }
+  .stagger-5 { animation-delay: 200ms; opacity: 0; }
+  .stagger-6 { animation-delay: 240ms; opacity: 0; }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+}
