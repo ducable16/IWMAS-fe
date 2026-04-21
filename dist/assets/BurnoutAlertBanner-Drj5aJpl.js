@@ -1,0 +1,21 @@
+import{c as s,r as c,j as e,e as m}from"./index-BbORGUSj.js";import{b as x}from"./useWorkload-gacjOf1K.js";/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const o=s("AlertTriangle",[["path",{d:"m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z",key:"c3ski4"}],["path",{d:"M12 9v4",key:"juzpu7"}],["path",{d:"M12 17h.01",key:"p32p05"}]]);/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const k=s("CheckCircle2",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["path",{d:"m9 12 2 2 4-4",key:"dzmm74"}]]);/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const j=s("Sparkles",[["path",{d:"m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z",key:"17u4zn"}],["path",{d:"M5 3v4",key:"bklmnn"}],["path",{d:"M19 17v4",key:"iiml17"}],["path",{d:"M3 5h4",key:"nem4j1"}],["path",{d:"M17 19h4",key:"lbex7p"}]]);/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const h=s("X",[["path",{d:"M18 6 6 18",key:"1bl5f8"}],["path",{d:"m6 6 12 12",key:"d8bk6v"}]]);function y({compact:r=!1}){const[n,l]=c.useState(!1),{data:i}=x(),t=i||[];return n||t.length===0?null:e.jsxs("div",{className:"flex items-start gap-3 bg-danger-subtle border border-danger/20 rounded-xl px-4 py-3",children:[e.jsx("div",{className:"w-7 h-7 rounded-md bg-white flex items-center justify-center shrink-0 mt-px",children:e.jsx(o,{className:"w-3.5 h-3.5 text-danger",strokeWidth:1.75})}),e.jsx("div",{className:"flex-1 min-w-0",children:e.jsxs("p",{className:"text-[13px] text-text-primary leading-snug",children:[e.jsx("span",{className:"text-danger font-semibold",children:"Burnout risk: "}),t.map((a,d)=>e.jsxs("span",{children:[e.jsx("span",{className:"font-medium",children:a.name}),e.jsxs("span",{className:"text-text-muted tabular-nums ml-1",children:["(",a.score,"/100)"]}),d<t.length-1&&e.jsx("span",{className:"text-text-muted",children:", "})]},a.name))," ",!r&&e.jsx("span",{className:"text-text-secondary",children:"are approaching unsafe workload levels."})]})}),e.jsxs("div",{className:"flex items-center gap-2 shrink-0",children:[e.jsx(m,{to:"/workforce",className:"text-[12.5px] text-danger hover:text-danger/80 font-medium whitespace-nowrap",children:"Redistribute →"}),e.jsx("button",{onClick:()=>l(!0),className:"text-text-muted hover:text-text-primary transition-colors p-1 rounded -mr-1","aria-label":"Dismiss",children:e.jsx(h,{className:"w-3.5 h-3.5",strokeWidth:1.75})})]})]})}export{o as A,y as B,k as C,j as S};

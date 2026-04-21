@@ -1,7 +1,8 @@
-import { Bell, Search, LogOut, ChevronDown } from 'lucide-react'
+import { Bell, Search, LogOut } from 'lucide-react'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import AppModeToggle from '@/components/AppModeToggle'
 
 const ROUTE_LABELS = {
   '/dashboard': 'Dashboard',
@@ -49,6 +50,8 @@ export default function Topbar() {
         />
         <span className="kbd">⌘K</span>
       </div>
+
+      <AppModeToggle />
 
       {/* Notifications */}
       <button

@@ -1,16 +1,14 @@
 import { AlertTriangle, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-
-const AT_RISK = [
-  { name: 'Marcus Rivera', score: 89 },
-  { name: 'Tran Minh Duc', score: 81 },
-]
+import { useBurnoutAtRisk } from '../hooks/useWorkload'
 
 export default function BurnoutAlertBanner({ compact = false }) {
   const [dismissed, setDismissed] = useState(false)
+  const { data: atRisk } = useBurnoutAtRisk()
+  const list = atRisk || []
 
-  if (dismissed || AT_RISK.length === 0) return null
+  if (dismissed || list.length === 0) return null
 
   return (
     <div className="flex items-start gap-3 bg-danger-subtle border border-danger/20 rounded-xl px-4 py-3">
@@ -20,11 +18,11 @@ export default function BurnoutAlertBanner({ compact = false }) {
       <div className="flex-1 min-w-0">
         <p className="text-[13px] text-text-primary leading-snug">
           <span className="text-danger font-semibold">Burnout risk: </span>
-          {AT_RISK.map((m, i) => (
+          {list.map((m, i) => (
             <span key={m.name}>
               <span className="font-medium">{m.name}</span>
               <span className="text-text-muted tabular-nums ml-1">({m.score}/100)</span>
-              {i < AT_RISK.length - 1 && <span className="text-text-muted">, </span>}
+              {i < list.length - 1 && <span className="text-text-muted">, </span>}
             </span>
           ))}{' '}
           {!compact && <span className="text-text-secondary">are approaching unsafe workload levels.</span>}

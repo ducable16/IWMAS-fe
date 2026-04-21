@@ -1,0 +1,11 @@
+import{c as i,j as e,L as x}from"./index-BbORGUSj.js";/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const n=i("AlertCircle",[["circle",{cx:"12",cy:"12",r:"10",key:"1mglay"}],["line",{x1:"12",x2:"12",y1:"8",y2:"12",key:"1pkeuh"}],["line",{x1:"12",x2:"12.01",y1:"16",y2:"16",key:"4dfq90"}]]);/**
+ * @license lucide-react v0.309.0 - ISC
+ *
+ * This source code is licensed under the ISC license.
+ * See the LICENSE file in the root directory of this source tree.
+ */const l=i("RefreshCw",[["path",{d:"M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8",key:"v9h5vc"}],["path",{d:"M21 3v5h-5",key:"1q7to0"}],["path",{d:"M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16",key:"3uifl3"}],["path",{d:"M8 16H3v5",key:"1cv678"}]]);function r({label:t="Loading from API…"}){return e.jsxs("div",{className:"card p-8 flex flex-col items-center justify-center gap-2 text-text-muted",children:[e.jsx(x,{className:"w-5 h-5 animate-spin text-accent",strokeWidth:1.75}),e.jsx("p",{className:"text-[12.5px]",children:t})]})}function h({error:t,onRetry:s}){var a,c;const d=((c=(a=t==null?void 0:t.response)==null?void 0:a.data)==null?void 0:c.message)||(t==null?void 0:t.message)||"Failed to load data";return e.jsx("div",{className:"card p-6 border-danger/20 bg-danger-subtle/40",children:e.jsxs("div",{className:"flex items-start gap-3",children:[e.jsx(n,{className:"w-4 h-4 text-danger mt-0.5 shrink-0",strokeWidth:1.75}),e.jsxs("div",{className:"flex-1 min-w-0",children:[e.jsx("p",{className:"text-[13px] font-medium text-text-primary",children:"Live API request failed"}),e.jsx("p",{className:"text-[12px] text-text-secondary mt-0.5 break-words",children:d}),e.jsx("p",{className:"text-[11.5px] text-text-muted mt-2",children:"Switch to Mock mode in the topbar to preview the UI without a backend."}),s&&e.jsxs("button",{onClick:()=>s(),className:"btn-secondary mt-3 text-[12px]",children:[e.jsx(l,{className:"w-3 h-3",strokeWidth:1.75}),"Retry"]})]})]})})}function p({label:t="No data returned by the API."}){return e.jsx("div",{className:"card p-8 text-center text-text-muted text-[12.5px]",children:t})}export{n as A,r as L,l as R,h as a,p as b};

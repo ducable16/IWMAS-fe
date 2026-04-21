@@ -1,20 +1,6 @@
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import clsx from 'clsx'
-
-const VELOCITY_DATA = [
-  { sprint: 'S11', planned: 32, actual: 31 },
-  { sprint: 'S12', planned: 35, actual: 29 },
-  { sprint: 'S13', planned: 32, actual: 32 },
-  { sprint: 'S14', planned: 28, actual: 26 },
-  { sprint: 'S15', planned: 34, actual: null, forecast: 24 },
-]
-
-const RISKS = [
-  { level: 'critical', title: 'External dependency block', desc: 'Auth service API delayed by 3rd party team — affects TASK-189, TASK-201, TASK-202', impact: 'High', effort: 'Low to resolve' },
-  { level: 'high', title: 'Developer overload', desc: 'Marcus Rivera at 89/100 workload. Velocity will degrade if not redistributed', impact: 'High', effort: 'Medium to resolve' },
-  { level: 'medium', title: 'Scope creep detected', desc: '4 tasks added mid-sprint without removing existing ones (+14% scope increase)', impact: 'Medium', effort: 'Low to resolve' },
-  { level: 'low', title: 'QA coverage gap', desc: 'Only 2 tasks have automated test coverage — manual testing bottleneck likely', impact: 'Low', effort: 'High to resolve' },
-]
+import { useVelocityData, useSprintRisks } from '@/features/workforce/hooks/useWorkload'
 
 const LEVEL_STYLE = {
   critical: { badge: 'badge-danger', dot: 'bg-danger' },
@@ -38,6 +24,12 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 export default function SprintRiskPage() {
+  const { data: velocity } = useVelocityData()
+  const { data: risks } = useSprintRisks()
+
+  const velocityData = velocity || []
+  const risksList = risks || []
+
   return (
     <div className="space-y-6 max-w-[1100px] mx-auto">
       <div>
@@ -70,7 +62,7 @@ export default function SprintRiskPage() {
           </div>
         </div>
         <ResponsiveContainer width="100%" height={220}>
-          <AreaChart data={VELOCITY_DATA} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+          <AreaChart data={velocityData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="gradPlanned" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="#5A5955" stopOpacity={0.08} />
@@ -94,39 +86,17 @@ export default function SprintRiskPage() {
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area
-              type="monotone"
-              dataKey="planned"
-              stroke="#5A5955"
-              strokeWidth={1.5}
-              fill="url(#gradPlanned)"
-              name="Planned"
-            />
-            <Area
-              type="monotone"
-              dataKey="actual"
-              stroke="#2F7D5B"
-              strokeWidth={2}
-              fill="url(#gradActual)"
-              name="Actual"
-            />
-            <Area
-              type="monotone"
-              dataKey="forecast"
-              stroke="#B54232"
-              strokeWidth={2}
-              fill="none"
-              strokeDasharray="4 3"
-              name="Forecast"
-            />
+            <Area type="monotone" dataKey="planned" stroke="#5A5955" strokeWidth={1.5} fill="url(#gradPlanned)" name="Planned" />
+            <Area type="monotone" dataKey="actual" stroke="#2F7D5B" strokeWidth={2} fill="url(#gradActual)" name="Actual" />
+            <Area type="monotone" dataKey="forecast" stroke="#B54232" strokeWidth={2} fill="none" strokeDasharray="4 3" name="Forecast" />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       <div className="space-y-3">
         <h3 className="section-title text-[13px] mt-2">Risk factors</h3>
-        {RISKS.map((risk, i) => {
-          const s = LEVEL_STYLE[risk.level]
+        {risksList.map((risk, i) => {
+          const s = LEVEL_STYLE[risk.level] || LEVEL_STYLE.low
           return (
             <div key={i} className="card p-4 flex gap-3">
               <div className="shrink-0 pt-1">

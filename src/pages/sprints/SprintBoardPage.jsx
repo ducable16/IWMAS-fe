@@ -1,48 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus, GripVertical, Clock, MessageSquare } from 'lucide-react'
 import clsx from 'clsx'
-
-const INITIAL_COLUMNS = {
-  todo: {
-    id: 'todo',
-    label: 'To do',
-    dot: 'bg-text-muted',
-    tasks: [
-      { id: 't1', title: 'Design OAuth2 callback page', priority: 'high', assignee: 'SC', tags: ['frontend', 'auth'], comments: 2, estimate: '3h' },
-      { id: 't2', title: 'Write migration scripts for v2 schema', priority: 'medium', assignee: 'JP', tags: ['backend', 'db'], comments: 0, estimate: '5h' },
-      { id: 't3', title: 'Set up CI pipeline for staging', priority: 'low', assignee: 'AK', tags: ['devops'], comments: 1, estimate: '2h' },
-    ],
-  },
-  inprogress: {
-    id: 'inprogress',
-    label: 'In progress',
-    dot: 'bg-accent',
-    tasks: [
-      { id: 't4', title: 'Implement workload scoring algorithm', priority: 'high', assignee: 'MR', tags: ['backend', 'ai'], comments: 5, estimate: '8h' },
-      { id: 't5', title: 'Sprint board drag-and-drop feature', priority: 'high', assignee: 'SC', tags: ['frontend'], comments: 3, estimate: '6h' },
-      { id: 't6', title: 'API endpoint for smart assign', priority: 'medium', assignee: 'JP', tags: ['backend', 'api'], comments: 1, estimate: '4h' },
-    ],
-  },
-  review: {
-    id: 'review',
-    label: 'In review',
-    dot: 'bg-info',
-    tasks: [
-      { id: 't7', title: 'Notification bell component', priority: 'low', assignee: 'HL', tags: ['frontend'], comments: 2, estimate: '3h' },
-      { id: 't8', title: 'User profile settings API', priority: 'medium', assignee: 'TD', tags: ['backend'], comments: 4, estimate: '5h' },
-    ],
-  },
-  done: {
-    id: 'done',
-    label: 'Done',
-    dot: 'bg-success',
-    tasks: [
-      { id: 't9', title: 'Login / Register pages', priority: 'high', assignee: 'PN', tags: ['frontend', 'auth'], comments: 6, estimate: '10h', done: true },
-      { id: 't10', title: 'Database schema v1', priority: 'high', assignee: 'MR', tags: ['backend', 'db'], comments: 3, estimate: '8h', done: true },
-      { id: 't11', title: 'Docker compose dev setup', priority: 'medium', assignee: 'AK', tags: ['devops'], comments: 1, estimate: '3h', done: true },
-    ],
-  },
-}
+import { useSprintBoard } from '@/features/tasks/hooks/useTasks'
+import { LiveLoading, LiveError } from '@/components/feedback/LiveStateOverlay'
 
 const PRIORITY_DOT = { high: 'bg-danger', medium: 'bg-warning', low: 'bg-border-strong' }
 
@@ -57,7 +17,7 @@ function TaskCard({ task, onDragStart }) {
       )}
     >
       <div className="flex items-start gap-2 mb-2">
-        <div className={clsx('w-1.5 h-1.5 rounded-full mt-1.5 shrink-0', PRIORITY_DOT[task.priority])} />
+        <div className={clsx('w-1.5 h-1.5 rounded-full mt-1.5 shrink-0', PRIORITY_DOT[task.priority] || 'bg-border-strong')} />
         <p
           className={clsx(
             'text-[13px] text-text-primary flex-1 leading-snug',
@@ -72,7 +32,7 @@ function TaskCard({ task, onDragStart }) {
         />
       </div>
 
-      {task.tags && (
+      {task.tags?.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2.5 ml-3.5">
           {task.tags.map((tag) => (
             <span key={tag} className="badge-neutral">{tag}</span>
@@ -104,9 +64,14 @@ function TaskCard({ task, onDragStart }) {
 }
 
 export default function SprintBoardPage() {
-  const [columns, setColumns] = useState(INITIAL_COLUMNS)
+  const { data: board, isLoading, isError, error, refetch } = useSprintBoard()
+  const [columns, setColumns] = useState(board || {})
   const [dragging, setDragging] = useState(null)
   const [dragOver, setDragOver] = useState(null)
+
+  useEffect(() => {
+    if (board) setColumns(board)
+  }, [board])
 
   const handleDragStart = (taskId, fromCol) => {
     setDragging({ taskId, fromCol })
@@ -116,8 +81,8 @@ export default function SprintBoardPage() {
     if (!dragging || dragging.fromCol === toCol) return
 
     setColumns((prev) => {
-      const from = { ...prev[dragging.fromCol] }
-      const to = { ...prev[toCol] }
+      const from = { ...prev[dragging.fromCol], tasks: [...prev[dragging.fromCol].tasks] }
+      const to = { ...prev[toCol], tasks: [...prev[toCol].tasks] }
       const taskIdx = from.tasks.findIndex((t) => t.id === dragging.taskId)
       if (taskIdx === -1) return prev
 
@@ -131,9 +96,13 @@ export default function SprintBoardPage() {
     setDragOver(null)
   }
 
-  const totalTasks = Object.values(columns).reduce((a, c) => a + c.tasks.length, 0)
-  const doneTasks = columns.done.tasks.length
-  const pct = Math.round((doneTasks / totalTasks) * 100)
+  if (isLoading) return <LiveLoading label="Loading sprint board…" />
+  if (isError) return <LiveError error={error} onRetry={refetch} />
+
+  const colList = Object.values(columns)
+  const totalTasks = colList.reduce((a, c) => a + c.tasks.length, 0)
+  const doneTasks = columns.done?.tasks.length || 0
+  const pct = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0
 
   return (
     <div className="space-y-6">
@@ -164,7 +133,7 @@ export default function SprintBoardPage() {
       </div>
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
-        {Object.values(columns).map((col) => (
+        {colList.map((col) => (
           <div
             key={col.id}
             onDragOver={(e) => {
