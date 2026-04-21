@@ -3,9 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
-import toast from 'react-hot-toast'
+import { useLogin } from '../hooks/useAuth'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -14,24 +12,14 @@ const schema = z.object({
 
 export default function LoginForm() {
   const [showPw, setShowPw] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const navigate = useNavigate()
+  const login = useLogin()
 
   const { register, handleSubmit, formState: { errors } } = useForm({
     resolver: zodResolver(schema),
   })
 
-  const onSubmit = async (data) => {
-    setLoading(true)
-    await new Promise((r) => setTimeout(r, 600))
-    setAuth(
-      { id: '1', name: 'Alex Johnson', email: data.email, role: 'Project Manager' },
-      'demo-token-123',
-    )
-    toast.success('Welcome back, Alex')
-    navigate('/dashboard')
-    setLoading(false)
+  const onSubmit = (data) => {
+    login.mutate(data)
   }
 
   return (
@@ -95,19 +83,13 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={login.isPending}
           className="btn-primary w-full py-2.5 mt-2"
         >
-          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-          {loading ? 'Signing in…' : 'Sign in'}
+          {login.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+          {login.isPending ? 'Signing in…' : 'Sign in'}
         </button>
       </form>
-
-      <div className="mt-6 p-3 bg-bg-subtle border border-border-subtle rounded-lg">
-        <p className="text-text-muted text-[12px] text-center">
-          <span className="text-text-secondary font-medium">Demo mode</span> — use any email and password
-        </p>
-      </div>
     </div>
   )
 }
