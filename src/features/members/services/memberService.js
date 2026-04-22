@@ -8,7 +8,7 @@ export const userService = {
   getAll: () => api.get('/users'),
   getById: (id) => api.get(`/users/${id}`),
   create: (data) => api.post('/users', data),
-  update: (id, data) => api.put(`/users/${id}`, data),
+  update: (id, data) => api.post(`/users/${id}/update`, data),
   activate: (id) => api.post(`/users/${id}/activate`),
   deactivate: (id) => api.post(`/users/${id}/deactivate`),
 }

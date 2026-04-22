@@ -1,16 +1,56 @@
-import { UserPlus, Search, MoreHorizontal, Mail } from 'lucide-react'
-import { useState } from 'react'
+import { UserPlus, Search, MoreHorizontal, Mail, Pencil } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
+import EditMemberModal from '@/features/members/components/EditMemberModal'
 
 const scoreColor = (s) =>
   s >= 80 ? 'text-danger' : s >= 60 ? 'text-[#C0552F]' : s >= 40 ? 'text-warning' : 'text-success'
 const scoreBg = (s) =>
   s >= 80 ? 'bg-danger' : s >= 60 ? 'bg-[#C0552F]' : s >= 40 ? 'bg-warning' : 'bg-success'
 
+/** Small dropdown for each member card */
+function MemberMenu({ member, onEdit }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return
+    const handler = (e) => { if (!ref.current?.contains(e.target)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="text-text-muted hover:text-text-primary transition-colors p-1 -m-1 rounded"
+        aria-label="Member options"
+      >
+        <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-6 z-20 bg-bg-surface border border-border rounded-lg shadow-lg py-1 min-w-[130px] animate-fade-in">
+          <button
+            onClick={() => { setOpen(false); onEdit(member) }}
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-[12.5px] text-text-primary hover:bg-bg-subtle transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5 text-text-muted" strokeWidth={1.75} />
+            Edit info
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function MembersPage() {
   const [search, setSearch] = useState('')
+  const [editing, setEditing] = useState(null) // member being edited
   const { data: members, isLoading, isError, error, refetch } = useMembers()
 
   const list = members || []
@@ -57,9 +97,7 @@ export default function MembersPage() {
                 <div className="w-10 h-10 rounded-full bg-bg-subtle border border-border-subtle flex items-center justify-center text-[13px] font-semibold text-text-primary">
                   {member.name?.[0] || '?'}
                 </div>
-                <button className="text-text-muted hover:text-text-primary transition-colors p-1 -m-1 rounded">
-                  <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
-                </button>
+                <MemberMenu member={member} onEdit={setEditing} />
               </div>
 
               <h4 className="text-[14px] font-medium text-text-primary">{member.name}</h4>
@@ -93,6 +131,13 @@ export default function MembersPage() {
           ))}
         </div>
       )}
+
+      {/* Edit member modal */}
+      <EditMemberModal
+        member={editing}
+        onClose={() => setEditing(null)}
+        onSuccess={refetch}
+      />
     </div>
   )
 }
