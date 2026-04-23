@@ -1,39 +1,34 @@
-import { useModeData } from '@/lib/useModeData'
-import {
-  DASHBOARD_STATS,
-  AI_INSIGHT,
-  RECENT_ACTIVITIES,
-  SPRINTS_OVERVIEW,
-} from '@/mocks/dashboard'
+import { useQuery } from '@tanstack/react-query'
 
 export function useDashboardStats() {
-  return useModeData({
-    key: ['dashboard', 'stats'],
-    mockData: DASHBOARD_STATS,
-    queryFn: async () => DASHBOARD_STATS,
+  return useQuery({
+    queryKey: ['dashboard', 'stats'],
+    queryFn: async () => ({
+      activeProjects: 0,
+      tasksCompleted: 0,
+      teamMembers: 0,
+      upcomingDeadlines: 0
+    }),
   })
 }
 
 export function useAiInsight() {
-  return useModeData({
-    key: ['dashboard', 'ai-insight'],
-    mockData: AI_INSIGHT,
-    queryFn: async () => AI_INSIGHT,
+  return useQuery({
+    queryKey: ['dashboard', 'ai-insight'],
+    queryFn: async () => 'Your team is performing well. No critical sprint risks detected.',
   })
 }
 
 export function useRecentActivity() {
-  return useModeData({
-    key: ['dashboard', 'recent-activity'],
-    mockData: RECENT_ACTIVITIES,
-    queryFn: async () => RECENT_ACTIVITIES,
+  return useQuery({
+    queryKey: ['dashboard', 'recent-activity'],
+    queryFn: async () => [],
   })
 }
 
 export function useSprintSummary() {
-  return useModeData({
-    key: ['dashboard', 'sprint-summary'],
-    mockData: SPRINTS_OVERVIEW,
-    queryFn: async () => SPRINTS_OVERVIEW,
+  return useQuery({
+    queryKey: ['dashboard', 'sprint-summary'],
+    queryFn: async () => [],
   })
 }

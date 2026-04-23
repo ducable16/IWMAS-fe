@@ -1,17 +1,9 @@
-import { useModeData } from '@/lib/useModeData'
+import { useQuery } from '@tanstack/react-query'
 import { workloadService } from '../services/workforceService'
-import {
-  WORKLOAD_MEMBERS,
-  WORKLOAD_AT_RISK,
-  WORKLOAD_KPIS,
-  VELOCITY_DATA,
-  SPRINT_RISKS,
-} from '@/mocks/workforce'
 
 export function useWorkloadTeam() {
-  return useModeData({
-    key: ['workload', 'team'],
-    mockData: WORKLOAD_MEMBERS,
+  return useQuery({
+    queryKey: ['workload', 'team'],
     queryFn: async () => {
       const res = await workloadService.getTeam()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []
@@ -29,13 +21,13 @@ export function useWorkloadTeam() {
 }
 
 export function useBurnoutAtRisk() {
-  return useModeData({
-    key: ['workload', 'burnout'],
-    mockData: WORKLOAD_AT_RISK,
+  return useQuery({
+    queryKey: ['workload', 'burnout'],
     queryFn: async () => {
       const res = await workloadService.getBurnout()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []
       return items.map((m) => ({
+        id: m.userId || m.id,
         name: m.fullName || m.name,
         score: m.score ?? m.workloadScore ?? 0,
       }))
@@ -44,28 +36,29 @@ export function useBurnoutAtRisk() {
 }
 
 export function useWorkloadKpis() {
-  return useModeData({
-    key: ['workload', 'kpis'],
-    mockData: WORKLOAD_KPIS,
+  return useQuery({
+    queryKey: ['workload', 'kpis'],
     queryFn: async () => {
       const res = await workloadService.getTeam()
-      return res.data?.kpis || WORKLOAD_KPIS
+      return res.data?.kpis || {
+        avgWorkload: 0,
+        overloaded: 0,
+        underutilized: 0
+      }
     },
   })
 }
 
 export function useVelocityData() {
-  return useModeData({
-    key: ['workload', 'velocity'],
-    mockData: VELOCITY_DATA,
-    queryFn: async () => VELOCITY_DATA,
+  return useQuery({
+    queryKey: ['workload', 'velocity'],
+    queryFn: async () => []
   })
 }
 
 export function useSprintRisks() {
-  return useModeData({
-    key: ['workload', 'risks'],
-    mockData: SPRINT_RISKS,
-    queryFn: async () => SPRINT_RISKS,
+  return useQuery({
+    queryKey: ['workload', 'risks'],
+    queryFn: async () => []
   })
 }

@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { Search, Plus, MoreHorizontal } from 'lucide-react'
 import clsx from 'clsx'
+import { useNavigate } from 'react-router-dom'
 import { useTasks } from '@/features/tasks/hooks/useTasks'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 
 const STATUS_STYLE = {
   todo: { label: 'To do', cls: 'badge-neutral' },
   in_progress: { label: 'In progress', cls: 'badge-accent' },
-  review: { label: 'Review', cls: 'badge-info' },
+  in_review: { label: 'In review', cls: 'badge-info' },
   done: { label: 'Done', cls: 'badge-success' },
+  cancelled: { label: 'Cancelled', cls: 'badge-danger' },
 }
 
 const PRIORITY_DOT = { high: 'bg-danger', medium: 'bg-warning', low: 'bg-border-strong' }
@@ -17,13 +19,15 @@ const FILTERS = [
   ['all', 'All'],
   ['todo', 'To do'],
   ['in_progress', 'In progress'],
-  ['review', 'Review'],
+  ['in_review', 'In review'],
   ['done', 'Done'],
+  ['cancelled', 'Cancelled'],
 ]
 
 export default function TasksPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const navigate = useNavigate()
   const { data: tasks, isLoading, isError, error, refetch } = useTasks()
 
   const all = tasks || []
@@ -101,11 +105,12 @@ export default function TasksPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((task) => {
+                  {filtered.map((task) => {
                   const s = STATUS_STYLE[task.status] || { label: task.status, cls: 'badge-neutral' }
                   return (
                     <tr
                       key={task.id}
+                      onClick={() => navigate(`/tasks/${task.id}`)}
                       className="border-b border-border-subtle last:border-0 hover:bg-bg-hover/40 transition-colors cursor-pointer"
                     >
                       <td className="px-4 py-3">

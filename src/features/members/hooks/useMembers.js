@@ -1,19 +1,21 @@
-import { useModeData } from '@/lib/useModeData'
+import { useQuery } from '@tanstack/react-query'
 import { userService } from '../services/memberService'
-import { MEMBERS } from '@/mocks/members'
 
 export function useMembers() {
-  return useModeData({
-    key: ['members'],
-    mockData: MEMBERS,
+  return useQuery({
+    queryKey: ['members'],
     queryFn: async () => {
       const res = await userService.getAll()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []
       return items.map((u) => ({
         id: u.id,
         name: u.fullName || u.name || u.email,
+        username: u.username || '',
+        phone: u.phone || '',
         email: u.email,
-        role: u.role || u.title || 'Member',
+        position: u.position || u.title || '',
+        role: u.position || u.title || u.role || 'Member',
+        systemRole: u.role || 'TEAM_MEMBER',
         workloadScore: u.workloadScore ?? 0,
       }))
     },

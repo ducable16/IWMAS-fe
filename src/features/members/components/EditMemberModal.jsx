@@ -44,7 +44,7 @@ export default function EditMemberModal({ member, onClose, onSuccess }) {
       fullName: member.name || '',
       username: member.username || '',
       phone: member.phone || '',
-      position: member.role || '',
+      position: member.position || '',
       role: member.systemRole || 'TEAM_MEMBER',
     })
     setError(null)

@@ -1,23 +1,32 @@
-import { useModeData } from '@/lib/useModeData'
+import { useQuery } from '@tanstack/react-query'
 import { taskService } from '../services/taskService'
-import { TASKS } from '@/mocks/tasks'
-import { SPRINT_BOARD } from '@/mocks/sprints'
 
 export function useTasks() {
-  return useModeData({
-    key: ['tasks', 'mine'],
-    mockData: TASKS,
+  return useQuery({
+    queryKey: ['tasks', 'mine'],
     queryFn: async () => {
       const res = await taskService.getMine()
-      return Array.isArray(res.data) ? res.data : res.data?.items || []
+      const items = Array.isArray(res.data) ? res.data : res.data?.items || []
+      return items.map((t) => {
+        const assigneeName = t.assignee?.fullName || t.assignee?.username || '?'
+        return {
+          id: t.id,
+          title: t.title || 'Untitled',
+          status: t.status ? t.status.toLowerCase() : 'todo',
+          priority: t.priority ? t.priority.toLowerCase() : 'medium',
+          assignee: assigneeName.substring(0, 2).toUpperCase(),
+          sprint: '—',
+          due: t.dueDate || '—',
+          estimate: t.estimatedHours ? `${t.estimatedHours}h` : '—',
+        }
+      })
     },
   })
 }
 
 export function useSprintBoard() {
-  return useModeData({
-    key: ['sprint-board'],
-    mockData: SPRINT_BOARD,
+  return useQuery({
+    queryKey: ['sprint-board'],
     queryFn: async () => {
       const res = await taskService.getMine()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []
@@ -28,22 +37,22 @@ export function useSprintBoard() {
         done: { id: 'done', label: 'Done', dot: 'bg-success', tasks: [] },
       }
       for (const t of items) {
+        const statusLower = t.status ? t.status.toLowerCase() : 'todo'
         const key =
-          t.status === 'IN_PROGRESS' || t.status === 'in_progress'
-            ? 'inprogress'
-            : t.status === 'REVIEW' || t.status === 'review'
-              ? 'review'
-              : t.status === 'DONE' || t.status === 'done'
-                ? 'done'
-                : 'todo'
+          statusLower === 'in_progress' ? 'inprogress' :
+          statusLower === 'in_review' ? 'review' :
+          statusLower === 'done' ? 'done' : 'todo'
+        
+        const assigneeName = t.assignee?.fullName || t.assignee?.username || '?'
+        
         cols[key].tasks.push({
           id: String(t.id),
-          title: t.title || t.name || 'Untitled',
-          priority: (t.priority || 'medium').toLowerCase(),
-          assignee: (t.assigneeName || t.assignee || '?').toString().slice(0, 2).toUpperCase(),
-          tags: t.tags || [],
-          comments: t.commentCount || 0,
-          estimate: t.estimateHours ? `${t.estimateHours}h` : '',
+          title: t.title || 'Untitled',
+          priority: t.priority ? t.priority.toLowerCase() : 'medium',
+          assignee: assigneeName.substring(0, 2).toUpperCase(),
+          tags: [],
+          comments: 0,
+          estimate: t.estimatedHours ? `${t.estimatedHours}h` : '',
           done: key === 'done',
         })
       }
