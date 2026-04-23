@@ -136,6 +136,15 @@
            transition-colors duration-150;
   }
 
+  .input-sm {
+    @apply w-full bg-bg-surface border border-border rounded-lg
+           px-2.5 py-1.5 text-[12px] text-text-primary placeholder-text-muted
+           focus:outline-none focus:border-text-secondary
+           focus:ring-1 focus:ring-border-strong
+           transition-colors duration-150;
+  }
+
+
   .badge {
     @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md
            text-[11px] font-medium leading-normal;
