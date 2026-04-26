@@ -10,7 +10,6 @@ export function useMembers() {
       return items.map((u) => ({
         id: u.id,
         name: u.fullName || u.name || u.email,
-        username: u.username || '',
         phone: u.phone || '',
         email: u.email,
         position: u.position || u.title || '',

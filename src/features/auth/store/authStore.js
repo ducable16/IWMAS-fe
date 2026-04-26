@@ -1,20 +1,15 @@
 import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
 
-export const useAuthStore = create(
-  persist(
-    (set) => ({
-      user: null,
-      token: null,
-      refreshToken: null,
-      isAuthenticated: false,
+export const useAuthStore = create((set) => ({
+  user: null,
+  token: null,
+  isAuthenticated: false,
+  isInitialized: false, // true after first refresh attempt on startup
 
-      setAuth: (user, token, refreshToken = null) =>
-        set({ user, token, refreshToken, isAuthenticated: true }),
-      updateUser: (user) => set({ user }),
-      logout: () =>
-        set({ user: null, token: null, refreshToken: null, isAuthenticated: false }),
-    }),
-    { name: 'iwas-auth' },
-  ),
-)
+  setAuth: (user, token) =>
+    set({ user, token, isAuthenticated: true }),
+  updateUser: (user) => set({ user }),
+  setInitialized: () => set({ isInitialized: true }),
+  logout: () =>
+    set({ user: null, token: null, isAuthenticated: false }),
+}))

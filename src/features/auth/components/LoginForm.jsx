@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useLogin } from '../hooks/useAuth'
+import Field from '@/components/ui/Field'
 
 const schema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -14,13 +15,13 @@ export default function LoginForm() {
   const [showPw, setShowPw] = useState(false)
   const login = useLogin()
 
-  const { register, handleSubmit, formState: { errors } } = useForm({
-    resolver: zodResolver(schema),
-  })
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({ resolver: zodResolver(schema) })
 
-  const onSubmit = (data) => {
-    login.mutate(data)
-  }
+  const onSubmit = (data) => login.mutate(data)
 
   return (
     <div className="animate-fade-in">
@@ -34,27 +35,29 @@ export default function LoginForm() {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <label className="text-[12px] font-medium text-text-secondary mb-1.5 block">Email</label>
+
+        {/* Email */}
+        <Field label="Email" id="login-email" error={errors.email?.message}>
           <input
             {...register('email')}
+            id="login-email"
             type="email"
             placeholder="you@company.com"
-            className="input-base"
             autoComplete="email"
+            className={errors.email ? 'input-field-error' : 'input-field'}
           />
-          {errors.email && <p className="text-danger text-xs mt-1">{errors.email.message}</p>}
-        </div>
+        </Field>
 
-        <div>
-          <label className="text-[12px] font-medium text-text-secondary mb-1.5 block">Password</label>
+        {/* Password */}
+        <Field label="Password" id="login-password" error={errors.password?.message}>
           <div className="relative">
             <input
               {...register('password')}
+              id="login-password"
               type={showPw ? 'text' : 'password'}
               placeholder="••••••••"
-              className="input-base pr-10"
               autoComplete="current-password"
+              className={`${errors.password ? 'input-field-error' : 'input-field'} pr-10`}
             />
             <button
               type="button"
@@ -62,12 +65,14 @@ export default function LoginForm() {
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors p-0.5"
               aria-label={showPw ? 'Hide password' : 'Show password'}
             >
-              {showPw ? <EyeOff className="w-4 h-4" strokeWidth={1.75} /> : <Eye className="w-4 h-4" strokeWidth={1.75} />}
+              {showPw
+                ? <EyeOff className="w-4 h-4" strokeWidth={1.75} />
+                : <Eye className="w-4 h-4" strokeWidth={1.75} />}
             </button>
           </div>
-          {errors.password && <p className="text-danger text-xs mt-1">{errors.password.message}</p>}
-        </div>
+        </Field>
 
+        {/* Remember me + Forgot */}
         <div className="flex items-center justify-between text-[12.5px] pt-1">
           <label className="flex items-center gap-2 text-text-secondary cursor-pointer select-none">
             <input

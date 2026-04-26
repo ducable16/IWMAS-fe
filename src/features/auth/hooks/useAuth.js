@@ -11,7 +11,9 @@ export function useLogin() {
   return useMutation({
     mutationFn: authService.login,
     onSuccess: ({ data }) => {
-      setAuth(data.user, data.accessToken, data.refreshToken)
+      // Refresh token is now set as HttpOnly cookie by the backend;
+      // we only store the access token + user in memory.
+      setAuth(data.user, data.accessToken)
       toast.success(`Welcome back, ${data.user.fullName || data.user.email}`)
       navigate('/dashboard')
     },
@@ -25,7 +27,12 @@ export function useLogout() {
   const navigate = useNavigate()
   const logout = useAuthStore((s) => s.logout)
 
-  return () => {
+  return async () => {
+    try {
+      await authService.logout() // revokes refresh token + clears cookie
+    } catch {
+      // Even if the API call fails, clear local state
+    }
     logout()
     navigate('/login')
     toast.success('Logged out')

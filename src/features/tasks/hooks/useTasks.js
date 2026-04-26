@@ -8,7 +8,7 @@ export function useTasks() {
       const res = await taskService.getMine()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []
       return items.map((t) => {
-        const assigneeName = t.assignee?.fullName || t.assignee?.username || '?'
+        const assigneeName = t.assignee?.fullName || '?'
         return {
           id: t.id,
           title: t.title || 'Untitled',
@@ -43,7 +43,7 @@ export function useSprintBoard() {
           statusLower === 'in_review' ? 'review' :
           statusLower === 'done' ? 'done' : 'todo'
         
-        const assigneeName = t.assignee?.fullName || t.assignee?.username || '?'
+        const assigneeName = t.assignee?.fullName || '?'
         
         cols[key].tasks.push({
           id: String(t.id),

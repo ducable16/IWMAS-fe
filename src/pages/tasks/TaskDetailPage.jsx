@@ -177,11 +177,11 @@ function CommentsTab({ taskId, comments = [] }) {
         <div className="space-y-4">
           {comments.map((c) => (
             <div key={c.id} className="flex items-start gap-3">
-              <Avatar name={c.author?.fullName || c.author?.username} size="sm" />
+              <Avatar name={c.author?.fullName} size="sm" />
               <div className="flex-1">
                 <div className="flex items-baseline gap-2 mb-0.5">
                   <span className="text-[13px] font-semibold text-text-primary">
-                    {c.author?.fullName || c.author?.username || 'Unknown'}
+                    {c.author?.fullName || 'Unknown'}
                   </span>
                   <span className="text-[11px] text-text-muted">
                     {new Date(c.createdAt).toLocaleString()}
@@ -389,8 +389,8 @@ export default function TaskDetailPage() {
             <DetailRow icon={User} label="Assignee">
               {assignee ? (
                 <div className="flex items-center gap-2">
-                  <Avatar name={assignee.fullName || assignee.username} />
-                  <span>{assignee.fullName || assignee.username}</span>
+                  <Avatar name={assignee.fullName} />
+                  <span>{assignee.fullName}</span>
                 </div>
               ) : (
                 <span className="text-text-muted">Unassigned</span>
@@ -445,8 +445,8 @@ export default function TaskDetailPage() {
             <DetailRow icon={User} label="Reporter">
               {reporter ? (
                 <div className="flex items-center gap-2">
-                  <Avatar name={reporter.fullName || reporter.username} />
-                  <span>{reporter.fullName || reporter.username}</span>
+                  <Avatar name={reporter.fullName} />
+                  <span>{reporter.fullName}</span>
                 </div>
               ) : (
                 <span className="text-text-muted">—</span>
