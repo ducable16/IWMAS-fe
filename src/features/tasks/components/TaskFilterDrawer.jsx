@@ -80,11 +80,12 @@ function ToggleChip({ active, onClick, children, colorCls = '' }) {
 
 /** User avatar chip for assignee / reporter */
 function UserChip({ user, active, onClick }) {
-  const initials = (user.name || '?').substring(0, 2).toUpperCase()
+  const name = user.fullName || user.name || '?'
+  const initials = name.substring(0, 2).toUpperCase()
   return (
     <button
       onClick={onClick}
-      title={user.name}
+      title={name}
       className={clsx(
         'flex flex-col items-center gap-1 p-2 rounded-xl border transition-all duration-150 w-[64px]',
         active
@@ -106,7 +107,7 @@ function UserChip({ user, active, onClick }) {
           active ? 'text-accent font-medium' : 'text-text-muted',
         )}
       >
-        {user.name.split(' ').pop()}
+        {name.split(' ').pop()}
       </span>
     </button>
   )

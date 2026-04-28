@@ -3,45 +3,42 @@ import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
 
 /**
- * PATCH /users/{id} with optimistic cache update.
- * On error → rollback cache + show toast.
+ * Activate or deactivate a user (admin only).
+ * Uses optimistic update for instant UI feedback.
  */
-export function useUpdateMember() {
+export function useActivateMember() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ id, data }) => userService.update(id, data),
+    mutationFn: ({ id, active }) =>
+      active ? userService.activate(id) : userService.deactivate(id),
 
-    onMutate: async ({ id, data }) => {
-      // Cancel any outgoing refetch so they don't overwrite optimistic update
+    onMutate: async ({ id, active }) => {
       await queryClient.cancelQueries({ queryKey: ['members'] })
-
-      // Snapshot previous value for rollback
       const previous = queryClient.getQueryData(['members'])
 
-      // Optimistically update cache
       queryClient.setQueryData(['members'], (old) => {
         if (!Array.isArray(old)) return old
-        return old.map((u) => (u.id === id ? { ...u, ...data } : u))
+        return old.map((u) =>
+          u.id === id ? { ...u, status: active ? 'ACTIVE' : 'DISABLED' } : u,
+        )
       })
 
       return { previous }
     },
 
     onError: (err, _vars, context) => {
-      // Rollback on error
       if (context?.previous) {
         queryClient.setQueryData(['members'], context.previous)
       }
-      toast.error(err?.message || 'Failed to update user')
+      toast.error(err?.message || 'Failed to update status')
     },
 
-    onSuccess: () => {
-      toast.success('User updated')
+    onSuccess: (_data, { active }) => {
+      toast.success(active ? 'User activated' : 'User deactivated')
     },
 
     onSettled: () => {
-      // Always refetch to get server truth
       queryClient.invalidateQueries({ queryKey: ['members'] })
     },
   })

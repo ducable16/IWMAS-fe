@@ -62,10 +62,10 @@ function ProfileSection({ user, updateUser }) {
     setSaving(true)
     try {
       const res = await userService.updateMe({ name: form.name, email: form.email })
-      updateUser(res.data?.data ?? { ...user, ...form })
+      updateUser(res.data ?? { ...user, ...form })
       toast.success('Profile updated')
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to update profile')
+      toast.error(err?.message || 'Failed to update profile')
     } finally {
       setSaving(false)
     }
@@ -163,7 +163,7 @@ function SecuritySection() {
       setForm({ current: '', next: '', confirm: '' })
       setErrors({})
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to update password')
+      toast.error(err?.message || 'Failed to update password')
     } finally {
       setSaving(false)
     }

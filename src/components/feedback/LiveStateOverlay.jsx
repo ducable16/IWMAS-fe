@@ -10,7 +10,7 @@ export function LiveLoading({ label = 'Loading from API…' }) {
 }
 
 export function LiveError({ error, onRetry }) {
-  const msg = error?.response?.data?.message || error?.message || 'Failed to load data'
+  const msg = error?.message || 'Failed to load data'
   return (
     <div className="card p-6 border-danger/20 bg-danger-subtle/40">
       <div className="flex items-start gap-3">

@@ -110,7 +110,7 @@ function ActiveChips({ filters, users, projects, onChange, onClearAll }) {
     const u = users.find((x) => x.id === filters.assigneeId)
     chips.push({
       key: 'assigneeId',
-      label: `Assignee: ${u?.name ?? filters.assigneeId}`,
+      label: `Assignee: ${(u?.fullName || u?.name) ?? filters.assigneeId}`,
       clear: () => onChange('assigneeId', null),
     })
   }
@@ -120,7 +120,7 @@ function ActiveChips({ filters, users, projects, onChange, onClearAll }) {
     const u = users.find((x) => x.id === filters.reporterId)
     chips.push({
       key: 'reporterId',
-      label: `Reporter: ${u?.name ?? filters.reporterId}`,
+      label: `Reporter: ${(u?.fullName || u?.name) ?? filters.reporterId}`,
       clear: () => onChange('reporterId', null),
     })
   }
@@ -580,12 +580,12 @@ export default function TasksPage() {
                             onClick={(e) => {
                               e.stopPropagation()
                               // clicking assignee quick-filters by them
-                              const found = users.find((u) => u.name === task.assigneeFull)
+                              const found = users.find((u) => u.fullName === task.assigneeFull || u.name === task.assigneeFull)
                               if (found) set('assigneeId', filters.assigneeId === found.id ? null : found.id)
                             }}
                             className={clsx(
                               'w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2 transition-all',
-                              filters.assigneeId && users.find((u) => u.name === task.assigneeFull && u.id === filters.assigneeId)
+                              filters.assigneeId && users.find((u) => (u.fullName === task.assigneeFull || u.name === task.assigneeFull) && u.id === filters.assigneeId)
                                 ? 'border-accent text-accent bg-accent/10'
                                 : 'border-border-subtle text-text-primary bg-bg-subtle hover:border-accent/50',
                             )}

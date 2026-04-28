@@ -35,9 +35,16 @@ function processQueue(error, token = null) {
 instance.interceptors.response.use(
   // Success: unwrap backend ApiResponse envelope
   (response) => {
+    // 204 No Content — DELETE, PATCH /read-all: no body
+    if (response.status === 204) return response
+
     const body = response.data
     if (body && typeof body === 'object' && 'code' in body && 'data' in body) {
-      return { ...response, data: body.data, meta: { code: body.code, message: body.message } }
+      // Business error inside 2xx — reject as ApiResponse
+      if (body.code !== 200) {
+        return Promise.reject(body)
+      }
+      return { ...response, data: body.data }
     }
     return response
   },
@@ -45,15 +52,16 @@ instance.interceptors.response.use(
   // Error: handle 401 with silent refresh
   async (error) => {
     const originalRequest = error.config
+    const body = error.response?.data // ApiResponse | undefined
 
     // Auth endpoints (/auth/*) — let errors propagate normally, no auto-refresh
     if (originalRequest.url?.includes('/auth/')) {
-      return Promise.reject(error)
+      return Promise.reject(body ?? error)
     }
 
     // Only handle 401, and only once per request
     if (error.response?.status !== 401 || originalRequest._retry) {
-      return Promise.reject(error)
+      return Promise.reject(body ?? error)
     }
 
     // If a refresh is already in progress, queue this request
