@@ -579,13 +579,13 @@ export default function TasksPage() {
                             title={task.assigneeFull}
                             onClick={(e) => {
                               e.stopPropagation()
-                              // clicking assignee quick-filters by them
-                              const found = users.find((u) => u.fullName === task.assigneeFull || u.name === task.assigneeFull)
-                              if (found) set('assigneeId', filters.assigneeId === found.id ? null : found.id)
+                              // Click assignee avatar → quick-filter by that user
+                              if (task.assigneeId)
+                                set('assigneeId', filters.assigneeId === task.assigneeId ? null : task.assigneeId)
                             }}
                             className={clsx(
                               'w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2 transition-all',
-                              filters.assigneeId && users.find((u) => (u.fullName === task.assigneeFull || u.name === task.assigneeFull) && u.id === filters.assigneeId)
+                              filters.assigneeId && filters.assigneeId === task.assigneeId
                                 ? 'border-accent text-accent bg-accent/10'
                                 : 'border-border-subtle text-text-primary bg-bg-subtle hover:border-accent/50',
                             )}

@@ -37,7 +37,7 @@ function Toggle({ enabled, onChange }) {
 /* ── Profile Section ──────────────────────────────────────── */
 function ProfileSection({ user, updateUser }) {
   const [form, setForm] = useState({
-    name:  user?.name  || '',
+    name:  user?.fullName || user?.name || '',
     email: user?.email || '',
   })
   const [errors, setErrors] = useState({})

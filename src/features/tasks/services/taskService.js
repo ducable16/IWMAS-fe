@@ -2,13 +2,29 @@ import api from '@/lib/axios'
 
 export const taskService = {
   getByProject: (projectId) => api.get(`/projects/${projectId}/tasks`),
-  getMine: () => api.get('/tasks/my'),
-  getById: (id) => api.get(`/tasks/${id}`),
-  create: (data) => api.post('/tasks', data),
-  update: (id, data) => api.put(`/tasks/${id}`, data),
-  updateStatus: (id, data) => api.patch(`/tasks/${id}/status`, data),
-  remove: (id) => api.delete(`/tasks/${id}`),
-  getHistory: (id) => api.get(`/tasks/${id}/history`),
+  getMine:       ()          => api.get('/tasks/my'),
+  getById:       (id)        => api.get(`/tasks/${id}`),
+  create:        (data)      => api.post('/tasks', data),
+  update:        (id, data)  => api.put(`/tasks/${id}`, data),
+  updateStatus:  (id, data)  => api.patch(`/tasks/${id}/status`, data),
+  remove:        (id)        => api.delete(`/tasks/${id}`),
+  getHistory:    (id)        => api.get(`/tasks/${id}/history`),
+
+  /**
+   * §4.4 GET /api/tasks/board — Kanban grouped by status.
+   * Requires projectId query param.
+   */
+  getBoard: (projectId) => api.get(`/tasks/board?projectId=${projectId}`),
+
+  /**
+   * §4.5 GET /api/tasks/calendar — Tasks grouped by dueDate.
+   * Params: from (required), to (required), projectId (optional)
+   */
+  getCalendar: ({ from, to, projectId } = {}) => {
+    const qs = new URLSearchParams({ from, to })
+    if (projectId) qs.append('projectId', projectId)
+    return api.get(`/tasks/calendar?${qs.toString()}`)
+  },
 
   /**
    * Search & filter tasks — GET /api/tasks
@@ -40,6 +56,11 @@ export const taskService = {
     ;(params.priorities || []).forEach((v) => qs.append('priorities', v))
     ;(params.types || []).forEach((v) => qs.append('types', v))
     ;(params.labels || []).forEach((v) => qs.append('labels', v))
+
+    // Custom fields: forwarded as individual query params per §4.3
+    Object.entries(params.customFields || {}).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') qs.append(k, v)
+    })
 
     return api.get(`/tasks?${qs.toString()}`)
   },

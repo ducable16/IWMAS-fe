@@ -3,20 +3,27 @@ import { taskService } from '../services/taskService'
 
 /** Normalise a raw TaskResponse from the API into the shape used by the UI */
 function normaliseTask(t) {
-  const assigneeName = t.assignee?.fullName || t.assignee?.username || '?'
+  // §4.6: assignee and reporter are full objects { id, fullName, email, role, ... }
+  const assigneeName = t.assignee?.fullName || t.assignee?.email || '?'
+  const reporterName = t.reporter?.fullName || t.reporter?.email || '?'
   return {
     id: t.id,
     title: t.title || 'Untitled',
     status: t.status ? t.status.toUpperCase() : 'TODO',
     priority: t.priority ? t.priority.toUpperCase() : 'MEDIUM',
     type: t.type || 'TASK',
+    // Display initials for the avatar cell
     assignee: assigneeName.substring(0, 2).toUpperCase(),
     assigneeFull: assigneeName,
+    assigneeId: t.assignee?.id ?? null,   // for filter matching
+    reporterFull: reporterName,
+    reporterId: t.reporter?.id ?? null,   // for filter matching
     sprint: t.sprint || '—',
     due: t.dueDate || null,
     estimate: t.estimatedHours ? `${t.estimatedHours}h` : '—',
     labels: t.labels || [],
     projectId: t.projectId,
+    customFields: t.customFields || {},
   }
 }
 
