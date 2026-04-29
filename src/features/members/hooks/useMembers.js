@@ -2,31 +2,37 @@ import { useQuery } from '@tanstack/react-query'
 import { userService } from '../services/memberService'
 
 /**
- * Fetch all users and normalise into a flat shape for the table.
+ * Server-side paginated user list — §2.6 GET /api/users
  *
- * §2.6: GET /api/users returns paginated { content, page, size, totalElements, totalPages }.
- * We fetch with a large size (default 200) so dropdowns/filters always get all users.
+ * Supported params:
+ *   search, role, position, active, verified,
+ *   sortBy, sortDirection, page, size
  *
- * Field mapping (per 02-users.md):
- *   lastLoginAt  — only ADMIN sees this field
- *   active       — only ADMIN/HR see this field
- *   createdAt    — only ADMIN/HR see this field
- *   phone        — only ADMIN/HR see this field
+ * Returns: { members, page, size, totalElements, totalPages }
  */
-export function useMembers() {
+export function useMembers(params = {}) {
   return useQuery({
-    queryKey: ['members'],
+    queryKey: ['members', params],
     queryFn: async () => {
-      const res = await userService.getAll()
-      // Backend returns paginated { content: [...], totalElements, ... }
+      const res = await userService.getAll(params)
       const raw = res.data ?? {}
+
+      // Backend returns paginated { content, page, size, totalElements, totalPages }
       const items = Array.isArray(raw)
         ? raw
         : Array.isArray(raw.content)
         ? raw.content
         : []
-      return items.map(normaliseUser)
+
+      return {
+        members: items.map(normaliseUser),
+        page: raw.page ?? params.page ?? 0,
+        size: raw.size ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages: raw.totalPages ?? 1,
+      }
     },
+    placeholderData: (prev) => prev, // keep previous data visible while re-fetching
     staleTime: 30_000,
   })
 }
@@ -42,7 +48,7 @@ export function normaliseUser(u) {
     role: u.role || 'TEAM_MEMBER',
     // §2.6: active field (ADMIN/HR only) — fall back to ACTIVE if not present
     status: u.active === false ? 'DISABLED' : 'ACTIVE',
-    // §2.6: lastLoginAt (ADMIN only) — the correct backend field name
+    // §2.6: lastLoginAt (ADMIN only)
     lastActive: u.lastLoginAt || null,
     createdAt: u.createdAt || null,
     verified: u.verified ?? null,

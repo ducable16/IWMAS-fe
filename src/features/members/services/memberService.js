@@ -21,7 +21,7 @@ export const userService = {
     append('sortBy',        params.sortBy)
     append('sortDirection', params.sortDirection)
     append('page',          params.page ?? 0)
-    append('size',          params.size ?? 200) // large default so dropdowns get all users
+    append('size',          params.size ?? 20)  // page size, max 100 per API docs
     const q = qs.toString()
     return api.get(q ? `/users?${q}` : '/users')
   },

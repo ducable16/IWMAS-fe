@@ -282,7 +282,8 @@ export default function TasksPage() {
     useSearchTasks(deferredFilters)
 
   const { data: projects = [] } = useProjects()
-  const { data: users = [] } = useMembers()
+  const { data: membersData } = useMembers()
+  const users = membersData?.members ?? []
 
   const tasks        = data?.tasks        ?? []
   const totalElements = data?.totalElements ?? 0
