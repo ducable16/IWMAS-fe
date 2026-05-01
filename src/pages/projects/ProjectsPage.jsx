@@ -1,219 +1,206 @@
-import { useState } from 'react'
+import { useState, useCallback, useDeferredValue } from 'react'
 import {
-  Plus, MoreHorizontal, Calendar, Users,
-  FolderKanban, Search, ChevronDown, Pencil, Trash2,
+  Plus, Search, ChevronDown, ChevronLeft, ChevronRight,
+  ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useProjects, useCreateProject, useDeleteProject } from '@/features/projects/hooks/useProjects'
+import { useNavigate } from 'react-router-dom'
+import { useProjects } from '@/features/projects/hooks/useProjects'
+import { useMembers } from '@/features/members/hooks/useMembers'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import ProjectFormModal from '@/features/projects/components/ProjectFormModal'
 
-/* ── Status metadata — matches backend enum exactly §3.1 ───── */
+/* ── Constants ─────────────────────────────────────────────── */
 
 const STATUS_META = {
-  PLANNING:    { label: 'Planning',    badge: 'badge-info',    bar: 'bg-info',    dot: 'bg-info' },
-  IN_PROGRESS: { label: 'In Progress', badge: 'badge-accent',  bar: 'bg-accent',  dot: 'bg-accent' },
-  ON_HOLD:     { label: 'On Hold',     badge: 'badge-warning', bar: 'bg-warning', dot: 'bg-warning' },
-  COMPLETED:   { label: 'Completed',   badge: 'badge-success', bar: 'bg-success', dot: 'bg-success' },
-  CANCELLED:   { label: 'Cancelled',   badge: 'badge-danger',  bar: 'bg-danger',  dot: 'bg-danger' },
+  PLANNING:    { label: 'Planning',    dot: 'bg-info',    badge: 'badge-info' },
+  IN_PROGRESS: { label: 'In Progress', dot: 'bg-accent',  badge: 'badge-accent' },
+  ON_HOLD:     { label: 'On Hold',     dot: 'bg-warning', badge: 'badge-warning' },
+  COMPLETED:   { label: 'Completed',   dot: 'bg-success', badge: 'badge-success' },
+  CANCELLED:   { label: 'Cancelled',   dot: 'bg-danger',  badge: 'badge-danger' },
 }
 
-const PRIORITY_BADGE = {
-  LOW:      'badge-neutral',
-  MEDIUM:   'badge-info',
-  HIGH:     'badge-warning',
-  CRITICAL: 'badge-danger',
+const PRIORITY_META = {
+  LOW:      { label: 'Low',      badge: 'badge-neutral' },
+  MEDIUM:   { label: 'Medium',   badge: 'badge-neutral' },
+  HIGH:     { label: 'High',     badge: 'badge-warning' },
+  CRITICAL: { label: 'Critical', badge: 'badge-danger' },
 }
 
-const STATUS_OPTIONS = [
-  { value: '',            label: 'All statuses' },
-  { value: 'PLANNING',    label: 'Planning' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'ON_HOLD',     label: 'On Hold' },
-  { value: 'COMPLETED',   label: 'Completed' },
-  { value: 'CANCELLED',   label: 'Cancelled' },
-]
+const ALL_STATUSES = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED']
 
-/* ── Helpers ────────────────────────────────────────────────── */
+const SORT_FIELDS = {
+  name:      'name',
+  status:    'status',
+  priority:  'priority',
+  startDate: 'startDate',
+  endDate:   'endDate',
+  createdAt: 'createdAt',
+}
+
+const DEFAULT_PARAMS = {
+  search:        '',
+  statuses:      [],
+  priorities:    [],
+  sortBy:        'createdAt',
+  sortDirection: 'DESC',
+  page:          0,
+  size:          20,
+}
+
+/* ── Helpers ───────────────────────────────────────────────── */
 
 function formatDate(d) {
   if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
+  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-/** Compute a rough progress % from status since API doesn't return one */
-function progressFromStatus(status) {
-  return { PLANNING: 5, IN_PROGRESS: 50, ON_HOLD: 40, COMPLETED: 100, CANCELLED: 0 }[status] ?? 0
-}
+/* ── Sortable Column Header ────────────────────────────────── */
 
-/* ── Project Card ───────────────────────────────────────────── */
-
-function ProjectCard({ project, canEdit, onEdit, onDelete }) {
-  const meta = STATUS_META[project.status] || STATUS_META.PLANNING
-  const progress = progressFromStatus(project.status)
-  const [menuOpen, setMenuOpen] = useState(false)
+function SortHeader({ label, field, params, onSort, className }) {
+  const backendField = SORT_FIELDS[field]
+  const active = params.sortBy === backendField
+  const isDesc = params.sortDirection === 'DESC'
+  const icon = active
+    ? isDesc
+      ? <ArrowDown className="w-3 h-3" strokeWidth={2} />
+      : <ArrowUp className="w-3 h-3" strokeWidth={2} />
+    : <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" strokeWidth={1.75} />
 
   return (
-    <div className="card p-5 hover:border-border transition-all duration-200 cursor-pointer relative group">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[12px] font-bold text-accent shrink-0">
-            {project.code?.[0] || project.name?.[0] || '?'}
-          </div>
-          <div className="min-w-0">
-            <h3 className="text-[14px] font-medium text-text-primary truncate">{project.name}</h3>
-            {project.code && (
-              <span className="text-[11px] text-text-muted font-mono">{project.code}</span>
-            )}
-          </div>
-        </div>
-
-        {/* Actions menu */}
-        {canEdit && (
-          <div className="relative">
-            <button
-              onClick={(e) => { e.stopPropagation(); setMenuOpen((o) => !o) }}
-              className="text-text-muted hover:text-text-primary transition-colors p-1 -m-1 rounded opacity-0 group-hover:opacity-100"
-            >
-              <MoreHorizontal className="w-4 h-4" strokeWidth={1.75} />
-            </button>
-            {menuOpen && (
-              <div
-                className="absolute right-0 top-7 z-20 w-36 bg-bg-surface border border-border rounded-xl shadow-lg py-1"
-                onMouseLeave={() => setMenuOpen(false)}
-              >
-                <button
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(project) }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-[12.5px] text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
-                >
-                  <Pencil className="w-3.5 h-3.5" /> Edit
-                </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(project) }}
-                  className="flex items-center gap-2 w-full px-3 py-2 text-[12.5px] text-danger hover:bg-danger/5 transition-colors"
-                >
-                  <Trash2 className="w-3.5 h-3.5" /> Delete
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Badges */}
-      <div className="flex items-center gap-2 mb-3">
-        <span className={clsx('badge', meta.badge)}>
-          <span className={clsx('dot', meta.dot)} />
-          {meta.label}
-        </span>
-        {project.priority && (
-          <span className={clsx('badge', PRIORITY_BADGE[project.priority] || 'badge-neutral')}>
-            {project.priority}
-          </span>
-        )}
-      </div>
-
-      {/* Description */}
-      {project.description && (
-        <p className="text-[12.5px] text-text-muted mb-4 line-clamp-2 leading-relaxed">
-          {project.description}
-        </p>
+    <th
+      className={clsx(
+        'text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 cursor-pointer select-none group transition-colors hover:text-text-secondary',
+        className,
       )}
+      onClick={() => onSort(field)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <span className={clsx('transition-opacity', active ? 'text-accent' : 'text-text-muted')}>
+          {icon}
+        </span>
+      </span>
+    </th>
+  )
+}
 
-      {/* Progress bar */}
-      <div className="mb-4">
-        <div className="flex justify-between text-[11.5px] mb-1.5">
-          <span className="text-text-muted">Progress</span>
-          <span className="text-text-secondary tabular-nums">{progress}%</span>
-        </div>
-        <div className="h-1 bg-bg-subtle rounded-full overflow-hidden">
-          <div
-            className={clsx('h-full rounded-full transition-all duration-700', meta.bar)}
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+/* ── Pagination ─────────────────────────────────────────────── */
 
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-3 border-t border-border-subtle">
-        <div className="flex items-center gap-3 text-[11.5px] text-text-muted">
-          {/* Manager ID badge */}
-          {project.managerId && (
-            <span className="flex items-center gap-1">
-              <Users className="w-3 h-3" strokeWidth={1.75} />
-              PM #{project.managerId}
-            </span>
-          )}
-          {/* End date from §3.1: endDate field */}
-          {project.endDate && (
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" strokeWidth={1.75} />
-              {formatDate(project.endDate)}
-            </span>
-          )}
-        </div>
-        {/* Created date */}
-        {project.createdAt && (
-          <span className="text-[11px] text-text-muted">
-            {formatDate(project.createdAt)}
-          </span>
-        )}
+function Pagination({ page, totalPages, totalElements, size, onChange }) {
+  if (totalPages <= 1) return null
+
+  const pages = Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+    let start = Math.max(0, page - 3)
+    const end = Math.min(totalPages - 1, start + 6)
+    start = Math.max(0, end - 6)
+    return start + i
+  }).filter((p) => p < totalPages)
+
+  return (
+    <div className="flex items-center justify-between px-5 py-3 border-t border-border-subtle bg-bg-subtle/30">
+      <span className="text-[12px] text-text-muted">
+        Showing {page * size + 1}–{Math.min((page + 1) * size, totalElements)} of{' '}
+        {totalElements} {totalElements === 1 ? 'project' : 'projects'}
+      </span>
+      <div className="flex items-center gap-1">
+        <button
+          disabled={page === 0}
+          onClick={() => onChange(page - 1)}
+          className="p-1.5 rounded-lg border border-border text-text-secondary hover:border-border-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+        {pages.map((pg) => (
+          <button
+            key={pg}
+            onClick={() => onChange(pg)}
+            className={clsx(
+              'min-w-[28px] h-7 rounded-lg text-[12px] font-medium border transition-colors',
+              pg === page
+                ? 'bg-accent text-white border-accent'
+                : 'border-border text-text-secondary hover:border-border-strong',
+            )}
+          >
+            {pg + 1}
+          </button>
+        ))}
+        <button
+          disabled={page >= totalPages - 1}
+          onClick={() => onChange(page + 1)}
+          className="p-1.5 rounded-lg border border-border text-text-secondary hover:border-border-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
   )
 }
 
-/* ── Main Page ──────────────────────────────────────────────── */
+/* ── Main Page ─────────────────────────────────────────────── */
 
 export default function ProjectsPage() {
+  const navigate = useNavigate()
   const currentUser = useAuthStore((s) => s.user)
-  const canEdit =
-    currentUser?.role === 'ADMIN' || currentUser?.role === 'PROJECT_MANAGER'
+  const canEdit = currentUser?.role === 'ADMIN' || currentUser?.role === 'PROJECT_MANAGER'
 
-  const [statusFilter, setStatusFilter] = useState('')
-  const [search, setSearch] = useState('')
+  const [params, setParams] = useState(DEFAULT_PARAMS)
   const [formOpen, setFormOpen] = useState(false)
   const [editingProject, setEditingProject] = useState(null)
 
-  const { data: projects, isLoading, isError, error, refetch } = useProjects(
-    statusFilter ? { status: statusFilter } : {},
-  )
-  const { mutate: deleteProject } = useDeleteProject()
+  const deferredParams = useDeferredValue(params)
 
-  const list = projects || []
+  const { data, isLoading, isError, error, refetch, isFetching } = useProjects(deferredParams)
 
-  // Client-side search (name/code/description)
-  const filtered = search
-    ? list.filter(
-        (p) =>
-          p.name?.toLowerCase().includes(search.toLowerCase()) ||
-          p.code?.toLowerCase().includes(search.toLowerCase()) ||
-          p.description?.toLowerCase().includes(search.toLowerCase()),
-      )
-    : list
+  // Fetch all users once for manager name lookup (uses React Query cache)
+  const { data: usersData } = useMembers({ size: 100 })
+  const allUsers = usersData?.members ?? []
 
-  // Stats
-  const inProgressCount = list.filter((p) => p.status === 'IN_PROGRESS').length
-  const completedCount  = list.filter((p) => p.status === 'COMPLETED').length
+  const projects      = data?.projects      ?? []
+  const totalElements = data?.totalElements ?? 0
+  const totalPages    = data?.totalPages    ?? 1
+  const isStale       = isFetching && !isLoading
 
-  const handleEdit = (project) => {
-    setEditingProject(project)
-    setFormOpen(true)
-  }
+  /* ── Param helpers ── */
+  const set = useCallback((key, val) => {
+    setParams((prev) => ({
+      ...prev,
+      [key]: val,
+      ...(key !== 'page' ? { page: 0 } : {}),
+    }))
+  }, [])
 
-  const handleDelete = (project) => {
-    if (!window.confirm(`Delete project "${project.name}"? This cannot be undone.`)) return
-    deleteProject(project.id)
-  }
+  const reset = useCallback(() => setParams(DEFAULT_PARAMS), [])
+
+  const toggle = useCallback((key, val) => {
+    setParams((prev) => {
+      const arr = prev[key] || []
+      const next = arr.includes(val) ? arr.filter((x) => x !== val) : [...arr, val]
+      return { ...prev, [key]: next, page: 0 }
+    })
+  }, [])
+
+  const handleSort = useCallback((field) => {
+    const backendField = SORT_FIELDS[field]
+    setParams((prev) => ({
+      ...prev,
+      sortBy: backendField,
+      sortDirection:
+        prev.sortBy === backendField && prev.sortDirection === 'ASC' ? 'DESC' : 'ASC',
+      page: 0,
+    }))
+  }, [])
+
+  const hasFilters =
+    params.search ||
+    params.statuses.length > 0 ||
+    params.priorities.length > 0
 
   return (
-    <div className="space-y-6 max-w-[1100px] mx-auto">
+    <div className="max-w-[1200px] mx-auto">
       {/* ── Header ── */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-6">
         <div>
           <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
             Projects
@@ -221,7 +208,7 @@ export default function ProjectsPage() {
           <p className="text-text-secondary text-[14px] mt-1">
             {isLoading
               ? 'Loading…'
-              : `${inProgressCount} in progress · ${completedCount} completed · ${list.length} total`}
+              : `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} in workspace`}
           </p>
         </div>
         {canEdit && (
@@ -237,66 +224,186 @@ export default function ProjectsPage() {
       </div>
 
       {/* ── Toolbar ── */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-center gap-3 mb-4 flex-wrap">
         {/* Search */}
         <div className="flex items-center gap-2 bg-bg-surface border border-border rounded-lg px-3 py-1.5 flex-1 min-w-[200px] max-w-[320px] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 transition-all">
           <Search className="w-3.5 h-3.5 text-text-muted shrink-0" strokeWidth={1.75} />
           <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, code…"
+            value={params.search}
+            onChange={(e) => set('search', e.target.value)}
+            placeholder="Search by name or code…"
             className="bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none w-full"
           />
         </div>
 
-        {/* Status filter — maps to backend ?status= param */}
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="appearance-none bg-bg-surface border border-border rounded-lg pl-3 pr-8 py-1.5 text-[12.5px] text-text-primary hover:border-border-strong focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 transition-all cursor-pointer"
+        {/* Status toggle pills */}
+        <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg flex-shrink-0">
+          <button
+            onClick={() => set('statuses', [])}
+            className={clsx(
+              'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium',
+              params.statuses.length === 0
+                ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                : 'text-text-muted hover:text-text-secondary',
+            )}
           >
-            {STATUS_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>{o.label}</option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" strokeWidth={1.75} />
+            All
+          </button>
+          {ALL_STATUSES.map((s) => {
+            const active = params.statuses.includes(s)
+            return (
+              <button
+                key={s}
+                onClick={() => toggle('statuses', s)}
+                className={clsx(
+                  'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
+                  active
+                    ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                    : 'text-text-muted hover:text-text-secondary',
+                )}
+              >
+                {STATUS_META[s].label}
+              </button>
+            )
+          })}
         </div>
 
-        {(search || statusFilter) && (
+        {hasFilters && (
           <button
-            onClick={() => { setSearch(''); setStatusFilter('') }}
+            onClick={reset}
             className="text-[11.5px] text-accent hover:text-accent-hover font-medium transition-colors"
           >
             Clear filters
           </button>
         )}
+
+        {isStale && (
+          <span className="text-[11px] text-text-muted animate-pulse">Updating…</span>
+        )}
       </div>
 
       {/* ── States ── */}
       {isLoading && <LiveLoading label="Loading projects…" />}
-      {isError   && <LiveError error={error} onRetry={refetch} />}
+      {isError && <LiveError error={error} onRetry={refetch} />}
 
-      {!isLoading && !isError && list.length === 0 && (
+      {!isLoading && !isError && totalElements === 0 && !hasFilters && (
         <LiveEmpty label="No projects yet. Create your first project." />
       )}
-
-      {!isLoading && !isError && list.length > 0 && filtered.length === 0 && (
-        <LiveEmpty label="No projects match your search." />
+      {!isLoading && !isError && totalElements === 0 && hasFilters && (
+        <LiveEmpty label="No projects match your filters." />
       )}
 
-      {/* ── Grid ── */}
-      {!isLoading && !isError && filtered.length > 0 && (
-        <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map((project) => (
-            <ProjectCard
-              key={project.id}
-              project={project}
-              canEdit={canEdit}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-            />
-          ))}
+      {/* ── Table ── */}
+      {!isLoading && !isError && totalElements > 0 && (
+        <div className={clsx('card overflow-hidden transition-opacity duration-200', isStale && 'opacity-70')}>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-border-subtle bg-bg-subtle/50">
+                  <SortHeader label="Project"    field="name"      params={params} onSort={handleSort} className="pl-5" />
+                  <SortHeader label="Status"     field="status"    params={params} onSort={handleSort} />
+                  <SortHeader label="Priority"   field="priority"  params={params} onSort={handleSort} />
+                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Manager</th>
+                  <SortHeader label="Start"      field="startDate" params={params} onSort={handleSort} />
+                  <SortHeader label="End"        field="endDate"   params={params} onSort={handleSort} />
+                  <SortHeader label="Created"    field="createdAt" params={params} onSort={handleSort} />
+                  <th className="py-2.5 px-3 w-10"><span className="sr-only">Open</span></th>
+                </tr>
+              </thead>
+
+              <tbody className="divide-y divide-border-subtle">
+                {projects.map((project) => {
+                  const statusMeta = STATUS_META[project.status] || STATUS_META.PLANNING
+                  const prioMeta   = PRIORITY_META[project.priority] || PRIORITY_META.MEDIUM
+
+                  return (
+                    <tr
+                      key={project.id}
+                      onClick={() => navigate(`/projects/${project.id}`)}
+                      className="cursor-pointer transition-colors hover:bg-bg-subtle/70 group"
+                      id={`project-row-${project.id}`}
+                    >
+                      {/* Project name + code */}
+                      <td className="py-3 px-3 pl-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[11px] font-bold text-accent shrink-0">
+                            {project.code?.[0] || project.name?.[0] || '?'}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-[13px] font-medium text-text-primary truncate max-w-[220px] group-hover:text-accent transition-colors">
+                              {project.name}
+                            </p>
+                            {project.code && (
+                              <p className="text-[11px] text-text-muted font-mono">{project.code}</p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="py-3 px-3">
+                        <span className={clsx('badge', statusMeta.badge)}>
+                          <span className={clsx('dot', statusMeta.dot)} />
+                          {statusMeta.label}
+                        </span>
+                      </td>
+
+                      {/* Priority */}
+                      <td className="py-3 px-3">
+                        <span className={clsx('badge', prioMeta.badge)}>
+                          {prioMeta.label}
+                        </span>
+                      </td>
+
+                      {/* Manager name */}
+                      <td className="py-3 px-3">
+                        <span className="text-[12.5px] text-text-secondary">
+                          {project.managerId
+                            ? (allUsers.find((u) => u.id === project.managerId)?.fullName ?? `#${project.managerId}`)
+                            : '—'}
+                        </span>
+                      </td>
+
+                      {/* Start date */}
+                      <td className="py-3 px-3">
+                        <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
+                          {formatDate(project.startDate)}
+                        </span>
+                      </td>
+
+                      {/* End date */}
+                      <td className="py-3 px-3">
+                        <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
+                          {formatDate(project.endDate)}
+                        </span>
+                      </td>
+
+                      {/* Created */}
+                      <td className="py-3 px-3">
+                        <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
+                          {formatDate(project.createdAt)}
+                        </span>
+                      </td>
+
+                      {/* Chevron */}
+                      <td className="py-3 px-3 text-right">
+                        <ChevronDown className="w-3.5 h-3.5 text-text-muted -rotate-90 inline-block" strokeWidth={1.75} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Pagination ── */}
+          <Pagination
+            page={params.page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            size={params.size}
+            onChange={(pg) => set('page', pg)}
+          />
         </div>
       )}
 

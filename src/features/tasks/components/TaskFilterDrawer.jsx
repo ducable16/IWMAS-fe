@@ -11,8 +11,8 @@
  *   projects    []            – [{id, name}] list for project dropdown
  *   users       []            – [{id, name}] list for assignee/reporter dropdowns
  */
-import { useEffect, useRef } from 'react'
-import { X, RotateCcw } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { X, RotateCcw, Search } from 'lucide-react'
 import clsx from 'clsx'
 
 // ─── Enum options (mirror API enums) ─────────────────────────────────────────
@@ -78,38 +78,134 @@ function ToggleChip({ active, onClick, children, colorCls = '' }) {
   )
 }
 
-/** User avatar chip for assignee / reporter */
-function UserChip({ user, active, onClick }) {
-  const name = user.fullName || user.name || '?'
-  const initials = name.substring(0, 2).toUpperCase()
+/**
+ * Searchable single-select for a user.
+ * Shows an input that filters the user list; selecting a user shows a chip.
+ */
+function UserSearchSelect({ filterKey, selectedId, users, onChange }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  const selected = users.find((u) => u.id === selectedId) || null
+  const selectedName = selected ? (selected.fullName || selected.name || '?') : null
+
+  const filtered = users.filter((u) => {
+    const name = (u.fullName || u.name || '').toLowerCase()
+    return name.includes(query.toLowerCase())
+  })
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const select = (user) => {
+    // Toggle off if same user clicked
+    onChange(filterKey, selectedId === user.id ? null : user.id)
+    setQuery('')
+    setOpen(false)
+  }
+
+  const clear = (e) => {
+    e.stopPropagation()
+    onChange(filterKey, null)
+    setQuery('')
+  }
+
+  const initials = (name) => name.substring(0, 2).toUpperCase()
+
   return (
-    <button
-      onClick={onClick}
-      title={name}
-      className={clsx(
-        'flex flex-col items-center gap-1 p-2 rounded-xl border transition-all duration-150 w-[64px]',
-        active
-          ? 'border-accent bg-accent/10'
-          : 'border-border bg-bg-surface hover:border-border-strong',
+    <div ref={wrapRef} className="relative">
+      {/* Selected chip or search input */}
+      {selectedName && !open ? (
+        <div
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-accent bg-accent/10 cursor-pointer"
+        >
+          <div className="w-5 h-5 rounded-full bg-accent/20 border border-accent text-accent text-[10px] font-semibold flex items-center justify-center flex-shrink-0">
+            {initials(selectedName)}
+          </div>
+          <span className="text-[12px] text-accent font-medium flex-1 truncate">{selectedName}</span>
+          <button
+            onClick={clear}
+            className="text-accent/60 hover:text-danger transition-colors flex-shrink-0"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            autoFocus={open}
+            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+            onFocus={() => setOpen(true)}
+            placeholder="Search by name…"
+            className="input-sm w-full pl-7"
+          />
+        </div>
       )}
-    >
-      <div
-        className={clsx(
-          'w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-semibold border-2 transition-colors',
-          active ? 'border-accent text-accent bg-accent/10' : 'border-border text-text-muted bg-bg-subtle',
-        )}
-      >
-        {initials}
-      </div>
-      <span
-        className={clsx(
-          'text-[10px] text-center leading-tight max-w-full truncate w-full',
-          active ? 'text-accent font-medium' : 'text-text-muted',
-        )}
-      >
-        {name.split(' ').pop()}
-      </span>
-    </button>
+
+      {/* Dropdown list */}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
+          {/* Search input inside dropdown when a chip is shown (i.e. user clicked chip to reopen) */}
+          {selectedName && (
+            <div className="p-2 border-b border-border-subtle relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name…"
+                className="input-sm w-full pl-7"
+              />
+            </div>
+          )}
+          <ul className="max-h-44 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-[12px] text-text-muted italic">No users found</li>
+            ) : (
+              filtered.map((u) => {
+                const name = u.fullName || u.name || '?'
+                const active = selectedId === u.id
+                return (
+                  <li
+                    key={u.id}
+                    onClick={() => select(u)}
+                    className={clsx(
+                      'flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors text-[12px]',
+                      active
+                        ? 'bg-accent/10 text-accent'
+                        : 'hover:bg-bg-hover text-text-primary',
+                    )}
+                  >
+                    <div
+                      className={clsx(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0',
+                        active ? 'bg-accent/20 text-accent border border-accent' : 'bg-bg-subtle text-text-muted border border-border',
+                      )}
+                    >
+                      {initials(name)}
+                    </div>
+                    <span className="truncate flex-1">{name}</span>
+                    {active && <span className="text-[10px] text-accent font-medium">Selected</span>}
+                  </li>
+                )
+              })
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -311,16 +407,12 @@ export default function TaskFilterDrawer({
             {users.length === 0 ? (
               <p className="text-[12px] text-text-muted italic">No users available</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {users.map((u) => (
-                  <UserChip
-                    key={u.id}
-                    user={u}
-                    active={filters.assigneeId === u.id}
-                    onClick={() => setUser('assigneeId', u.id)}
-                  />
-                ))}
-              </div>
+              <UserSearchSelect
+                filterKey="assigneeId"
+                selectedId={filters.assigneeId ?? null}
+                users={users}
+                onChange={onChange}
+              />
             )}
           </div>
 
@@ -332,16 +424,12 @@ export default function TaskFilterDrawer({
             {users.length === 0 ? (
               <p className="text-[12px] text-text-muted italic">No users available</p>
             ) : (
-              <div className="flex flex-wrap gap-2">
-                {users.map((u) => (
-                  <UserChip
-                    key={u.id}
-                    user={u}
-                    active={filters.reporterId === u.id}
-                    onClick={() => setUser('reporterId', u.id)}
-                  />
-                ))}
-              </div>
+              <UserSearchSelect
+                filterKey="reporterId"
+                selectedId={filters.reporterId ?? null}
+                users={users}
+                onChange={onChange}
+              />
             )}
           </div>
 

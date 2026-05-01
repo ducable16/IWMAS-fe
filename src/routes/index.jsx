@@ -8,6 +8,7 @@ import FullPageSpinner from '@/components/feedback/FullPageSpinner'
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
 const ProjectsPage = lazy(() => import('@/pages/projects/ProjectsPage'))
+const ProjectDetailPage = lazy(() => import('@/pages/projects/ProjectDetailPage'))
 const SprintBoardPage = lazy(() => import('@/pages/sprints/SprintBoardPage'))
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage'))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage'))
@@ -31,6 +32,7 @@ export default function AppRouter() {
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
+              <Route path="/projects/:id" element={<ProjectDetailPage />} />
               <Route path="/sprints/:sprintId?" element={<SprintBoardPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />

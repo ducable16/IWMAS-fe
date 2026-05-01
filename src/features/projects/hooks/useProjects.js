@@ -4,30 +4,60 @@ import { projectService } from '../services/projectService'
 
 /**
  * §3.1 GET /api/projects — all projects (ADMIN / PROJECT_MANAGER)
- * Supports optional status filter: PLANNING | IN_PROGRESS | ON_HOLD | COMPLETED | CANCELLED
+ * Returns paginated { content, page, size, totalElements, totalPages }
+ *
+ * Supported params: search, statuses[], priorities[], managerId,
+ *   startDateFrom, startDateTo, endDateFrom, endDateTo,
+ *   sortBy, sortDirection, page, size
  */
 export function useProjects(params = {}) {
   return useQuery({
     queryKey: ['projects', params],
     queryFn: async () => {
       const res = await projectService.getAll(params)
-      // §3.1: API returns a plain array
-      return Array.isArray(res.data) ? res.data : []
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw)
+        ? raw                           // fallback if server returns plain array
+        : Array.isArray(raw.content)
+        ? raw.content
+        : []
+      return {
+        projects:      items,
+        page:          raw.page          ?? params.page ?? 0,
+        size:          raw.size          ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages:    raw.totalPages    ?? 1,
+      }
     },
+    placeholderData: (prev) => prev,
     staleTime: 60_000,
   })
 }
 
 /**
- * §3.2 GET /api/projects/my — projects the current user belongs to
+ * §3.2 GET /api/projects/my — current user's projects (all roles)
+ * Same paginated response shape and params as §3.1
  */
-export function useMyProjects() {
+export function useMyProjects(params = {}) {
   return useQuery({
-    queryKey: ['projects', 'my'],
+    queryKey: ['projects', 'my', params],
     queryFn: async () => {
-      const res = await projectService.getMy()
-      return Array.isArray(res.data) ? res.data : []
+      const res = await projectService.getMy(params)
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw.content)
+        ? raw.content
+        : []
+      return {
+        projects:      items,
+        page:          raw.page          ?? params.page ?? 0,
+        size:          raw.size          ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages:    raw.totalPages    ?? 1,
+      }
     },
+    placeholderData: (prev) => prev,
     staleTime: 60_000,
   })
 }
@@ -49,8 +79,7 @@ export function useProject(id) {
 
 /**
  * §3.7 GET /api/projects/{id}/members
- * Returns ProjectMemberResponse[] with shape:
- *   { id, projectId, userId, userFullName, roleInProject, allocatedEffortPercent, joinDate, leaveDate, note }
+ * Shape: { id, projectId, userId, userFullName, roleInProject, allocatedEffortPercent, joinDate, leaveDate, note }
  */
 export function useProjectMembers(projectId) {
   return useQuery({
@@ -64,9 +93,9 @@ export function useProjectMembers(projectId) {
   })
 }
 
-/**
- * §3.4 POST /api/projects — create project
- */
+// ── Mutations ────────────────────────────────────────────────
+
+/** §3.4 POST /api/projects */
 export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -79,9 +108,7 @@ export function useCreateProject() {
   })
 }
 
-/**
- * §3.5 PUT /api/projects/{id} — update project
- */
+/** §3.5 PUT /api/projects/{id} */
 export function useUpdateProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -95,9 +122,7 @@ export function useUpdateProject() {
   })
 }
 
-/**
- * §3.6 DELETE /api/projects/{id} — delete project
- */
+/** §3.6 DELETE /api/projects/{id} */
 export function useDeleteProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -110,9 +135,7 @@ export function useDeleteProject() {
   })
 }
 
-/**
- * §3.8 POST /api/projects/{id}/members — add member
- */
+/** §3.8 POST /api/projects/{id}/members */
 export function useAddProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -125,9 +148,7 @@ export function useAddProjectMember(projectId) {
   })
 }
 
-/**
- * §3.9 PUT /api/projects/{id}/members/{memberId} — update member
- */
+/** §3.9 PUT /api/projects/{id}/members/{memberId} */
 export function useUpdateProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -141,9 +162,7 @@ export function useUpdateProjectMember(projectId) {
   })
 }
 
-/**
- * §3.10 DELETE /api/projects/{id}/members/{memberId} — remove member
- */
+/** §3.10 DELETE /api/projects/{id}/members/{memberId} */
 export function useRemoveProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({

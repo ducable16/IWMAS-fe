@@ -281,7 +281,8 @@ export default function TasksPage() {
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSearchTasks(deferredFilters)
 
-  const { data: projects = [] } = useProjects()
+  const { data: projectsData } = useProjects()
+  const projects = projectsData?.projects ?? []
   const { data: membersData } = useMembers()
   const users = membersData?.members ?? []
 
