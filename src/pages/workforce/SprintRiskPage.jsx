@@ -4,9 +4,9 @@ import { useVelocityData, useSprintRisks } from '@/features/workforce/hooks/useW
 
 const LEVEL_STYLE = {
   critical: { badge: 'badge-danger', dot: 'bg-danger' },
-  high: { badge: 'badge bg-[#F4EAE3] text-[#C0552F]', dot: 'bg-[#C0552F]' },
-  medium: { badge: 'badge-warning', dot: 'bg-warning' },
-  low: { badge: 'badge-neutral', dot: 'bg-border-strong' },
+  high:     { badge: 'badge-warning', dot: 'bg-warning' },
+  medium:   { badge: 'badge-warning', dot: 'bg-warning' },
+  low:      { badge: 'badge-neutral', dot: 'bg-border-strong' },
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -33,10 +33,8 @@ export default function SprintRiskPage() {
   return (
     <div className="space-y-6 max-w-[1100px] mx-auto">
       <div>
-        <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-          Sprint risk forecast
-        </h2>
-        <p className="text-text-secondary text-[14px] mt-1">Predictive analysis for Sprint 15</p>
+        <h2 className="text-subhead">Sprint risk forecast</h2>
+        <p className="text-caption-light text-text-secondary mt-1">Predictive analysis for Sprint 15</p>
       </div>
 
       <div className="card p-5">
@@ -55,7 +53,7 @@ export default function SprintRiskPage() {
             <span className="flex items-center gap-1.5">
               <span
                 className="w-3 h-0.5 inline-block"
-                style={{ borderTop: '1.5px dashed #B54232' }}
+                style={{ borderTop: '1.5px dashed #B43A18' }}
               />{' '}
               Forecast
             </span>
@@ -65,30 +63,30 @@ export default function SprintRiskPage() {
           <AreaChart data={velocityData} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
             <defs>
               <linearGradient id="gradPlanned" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#5A5955" stopOpacity={0.08} />
-                <stop offset="100%" stopColor="#5A5955" stopOpacity={0} />
+                <stop offset="0%" stopColor="#615D59" stopOpacity={0.08} />
+                <stop offset="100%" stopColor="#615D59" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="gradActual" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2F7D5B" stopOpacity={0.1} />
-                <stop offset="100%" stopColor="#2F7D5B" stopOpacity={0} />
+                <stop offset="0%" stopColor="#1AAE39" stopOpacity={0.1} />
+                <stop offset="100%" stopColor="#1AAE39" stopOpacity={0} />
               </linearGradient>
             </defs>
-            <CartesianGrid stroke="#EEEBE2" vertical={false} strokeDasharray="0" />
+            <CartesianGrid stroke="rgba(0, 0, 0, 0.06)" vertical={false} strokeDasharray="0" />
             <XAxis
               dataKey="sprint"
-              tick={{ fontSize: 11, fill: '#8C8A82', fontFamily: 'Inter' }}
+              tick={{ fontSize: 11, fill: '#A39E98', fontFamily: 'NotionInter, Inter, sans-serif' }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fontSize: 11, fill: '#8C8A82', fontFamily: 'Inter' }}
+              tick={{ fontSize: 11, fill: '#A39E98', fontFamily: 'NotionInter, Inter, sans-serif' }}
               axisLine={false}
               tickLine={false}
             />
             <Tooltip content={<CustomTooltip />} />
-            <Area type="monotone" dataKey="planned" stroke="#5A5955" strokeWidth={1.5} fill="url(#gradPlanned)" name="Planned" />
-            <Area type="monotone" dataKey="actual" stroke="#2F7D5B" strokeWidth={2} fill="url(#gradActual)" name="Actual" />
-            <Area type="monotone" dataKey="forecast" stroke="#B54232" strokeWidth={2} fill="none" strokeDasharray="4 3" name="Forecast" />
+            <Area type="monotone" dataKey="planned"  stroke="#615D59" strokeWidth={1.5} fill="url(#gradPlanned)" name="Planned" />
+            <Area type="monotone" dataKey="actual"   stroke="#1AAE39" strokeWidth={2}   fill="url(#gradActual)"  name="Actual" />
+            <Area type="monotone" dataKey="forecast" stroke="#B43A18" strokeWidth={2}   fill="none" strokeDasharray="4 3" name="Forecast" />
           </AreaChart>
         </ResponsiveContainer>
       </div>

@@ -2,24 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ──────────────────────────────────────────────────────────────
+   IWAS — Notion-inspired design system
+   Tokens here MIRROR the Tailwind theme. Components use Tailwind
+   utility classes; raw CSS variables are exposed for cases where
+   Tailwind classes aren't reachable (e.g. inline svg fills).
+   ──────────────────────────────────────────────────────────────*/
+
 @layer base {
   :root {
-    --color-bg-canvas: #FAF9F5;
-    --color-bg-surface: #FFFFFF;
-    --color-bg-sidebar: #F5F2EC;
-    --color-bg-subtle: #F7F5EF;
-    --color-bg-hover: #EFEDE5;
-    --color-border-subtle: #EEEBE2;
-    --color-border: #E3DFD3;
-    --color-border-strong: #D4CFC0;
-    --color-text-primary: #1F1E1C;
-    --color-text-secondary: #5A5955;
-    --color-text-muted: #8C8A82;
-    --color-accent: #C96442;
-    --color-accent-hover: #B45838;
-    --color-success: #2F7D5B;
-    --color-warning: #A8740F;
-    --color-danger: #B54232;
+    /* Surfaces */
+    --color-bg-canvas:   #FFFFFF;
+    --color-bg-surface:  #FFFFFF;
+    --color-bg-sidebar:  #F6F5F4;
+    --color-bg-subtle:   #F6F5F4;
+    --color-bg-hover:    rgba(0, 0, 0, 0.05);
+
+    /* Borders — whisper weights */
+    --color-border-subtle: rgba(0, 0, 0, 0.06);
+    --color-border:        rgba(0, 0, 0, 0.10);
+    --color-border-strong: rgba(0, 0, 0, 0.16);
+
+    /* Text */
+    --color-text-primary:   rgba(0, 0, 0, 0.95);
+    --color-text-secondary: #615D59;
+    --color-text-muted:     #A39E98;
+
+    /* Accent */
+    --color-accent:        #0075DE;
+    --color-accent-hover:  #005BAB;
+    --color-accent-subtle: #F2F9FF;
+    --color-accent-text:   #097FE8;
+
+    /* Semantic */
+    --color-success: #1AAE39;
+    --color-warning: #DD5B00;
+    --color-danger:  #DD5B00;
+    --color-info:    #0075DE;
+
+    /* Focus */
+    --color-focus: #097FE8;
+
+    /* Shadows */
+    --shadow-card:
+      rgba(0, 0, 0, 0.04) 0px 4px 18px,
+      rgba(0, 0, 0, 0.027) 0px 2.025px 7.84688px,
+      rgba(0, 0, 0, 0.02) 0px 0.8px 2.925px,
+      rgba(0, 0, 0, 0.01) 0px 0.175px 1.04062px;
+    --shadow-deep:
+      rgba(0, 0, 0, 0.01) 0px 1px 3px,
+      rgba(0, 0, 0, 0.02) 0px 3px 7px,
+      rgba(0, 0, 0, 0.02) 0px 7px 15px,
+      rgba(0, 0, 0, 0.04) 0px 14px 28px,
+      rgba(0, 0, 0, 0.05) 0px 23px 52px;
+
+    /* Radii */
+    --radius-micro:       4px;
+    --radius-subtle:      5px;
+    --radius-standard:    8px;
+    --radius-comfortable: 12px;
+    --radius-hero:        16px;
   }
 
   * {
@@ -36,149 +78,192 @@
   }
 
   body {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    /* NotionInter is the spec'd display face but we don't ship the licensed
+       file — Inter is the closest open fallback and renders nearly identically. */
+    font-family: 'NotionInter', 'Inter', -apple-system, system-ui, 'Segoe UI',
+      Helvetica, Arial, sans-serif;
     background-color: var(--color-bg-canvas);
     color: var(--color-text-primary);
     min-height: 100vh;
-    line-height: 1.55;
-    font-feature-settings: 'cv11', 'ss01';
+    line-height: 1.50;
+    /* Notion enables lining numerals + localised forms for poise */
+    font-feature-settings: 'lnum' 1, 'locl' 1;
   }
 
   #root {
     min-height: 100vh;
   }
 
+  /* Display / heading text gets the OpenType perks + tight tracking */
+  h1, h2, h3, h4, h5, h6,
+  .text-display-hero, .text-display-secondary, .text-section,
+  .text-subhead-lg, .text-subhead, .text-card-title {
+    font-feature-settings: 'lnum' 1, 'locl' 1;
+    color: var(--color-text-primary);
+    font-weight: 700;
+  }
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
   }
-
   ::-webkit-scrollbar-track {
     background: transparent;
   }
-
   ::-webkit-scrollbar-thumb {
     background: var(--color-border);
     border-radius: 8px;
     border: 2px solid var(--color-bg-canvas);
   }
-
   ::-webkit-scrollbar-thumb:hover {
     background: var(--color-border-strong);
   }
 
   ::selection {
-    background: rgba(201, 100, 66, 0.15);
+    background: rgba(0, 117, 222, 0.15);
     color: var(--color-text-primary);
   }
 
-  /* hairline borders — the claude.ai feel */
-  .border-hairline {
-    border-width: 0.5px;
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-micro);
   }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Component layer — re-uses existing class names so call sites
+   stay untouched. Values are remapped to Notion tokens.
+   ──────────────────────────────────────────────────────────────*/
+
 @layer components {
+
+  /* Cards */
   .card {
-    @apply bg-bg-surface border border-border-subtle rounded-xl;
+    @apply bg-bg-surface border border-border rounded-comfortable;
+  }
+
+  .card-flat {
+    @apply bg-bg-surface border border-border rounded-comfortable;
   }
 
   .card-muted {
-    @apply bg-bg-subtle border border-border-subtle rounded-xl;
+    @apply bg-bg-subtle border border-border rounded-comfortable;
   }
 
+  .card-hero {
+    @apply bg-bg-surface border border-border rounded-hero;
+  }
+
+  /* Buttons — Notion shape: 4px radius, 8px 16px padding */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-1.5
-           bg-accent text-white font-medium
-           px-3.5 py-2 rounded-lg text-sm
+           bg-accent text-white text-[15px] font-semibold leading-[1.33]
+           px-4 py-2 rounded-micro
+           border border-transparent
            hover:bg-accent-hover
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ring
-           active:translate-y-px
-           transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+           active:scale-[0.97]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-canvas
+           transition-[transform,background-color,color] duration-150
+           disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-1.5
-           bg-bg-surface text-text-primary border border-border
-           font-medium px-3.5 py-2 rounded-lg text-sm
-           hover:bg-bg-hover hover:border-border-strong
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong
-           transition-colors duration-150 disabled:opacity-50;
+           bg-[rgba(0,0,0,0.05)] text-text-primary text-[15px] font-semibold leading-[1.33]
+           px-4 py-2 rounded-micro
+           border border-transparent
+           hover:bg-[rgba(0,0,0,0.08)]
+           active:scale-[0.97]
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-canvas
+           transition-[transform,background-color] duration-150
+           disabled:opacity-50;
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-1.5
-           text-text-secondary font-medium px-3 py-2 rounded-lg text-sm
-           hover:bg-bg-hover hover:text-text-primary
+           bg-transparent text-text-primary text-[15px] font-semibold leading-[1.33]
+           px-3 py-2 rounded-micro
+           hover:bg-[rgba(0,0,0,0.05)]
+           active:scale-[0.97]
+           transition-[transform,background-color] duration-150;
+  }
+
+  .btn-link {
+    @apply inline-flex items-center gap-1
+           bg-transparent text-accent text-[15px] font-semibold
+           hover:underline underline-offset-2
            transition-colors duration-150;
   }
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-1.5
-           bg-white text-danger border border-danger/30 font-medium
-           px-3.5 py-2 rounded-lg text-sm
+           bg-white text-danger text-[15px] font-semibold leading-[1.33]
+           px-4 py-2 rounded-micro border border-danger/30
            hover:bg-danger-subtle
-           transition-colors duration-150;
+           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-bg-canvas
+           active:scale-[0.97]
+           transition-[transform,background-color] duration-150;
   }
 
-  .input-base {
-    @apply w-full bg-bg-surface border border-border rounded-lg
-           px-3 py-2 text-sm text-text-primary placeholder-text-muted
-           focus:outline-none focus:border-text-secondary
-           focus:ring-1 focus:ring-border-strong
-           transition-colors duration-150;
-  }
-
-  .input-subtle {
-    @apply w-full bg-bg-subtle border border-transparent rounded-lg
-           px-3 py-2 text-sm text-text-primary placeholder-text-muted
-           focus:outline-none focus:bg-bg-surface focus:border-border
-           transition-colors duration-150;
-  }
-
-  /* ── New canonical input classes ─────────────────────────── */
-
-  /* Editable text input: white bg, visible border, accent focus ring */
+  /* Inputs — 4px radius, 6px padding, near-black text */
+  .input-base,
   .input-field {
-    @apply w-full bg-bg-surface border border-border rounded-lg
-           px-3 py-2 text-[13px] text-text-primary placeholder-text-muted
+    @apply w-full bg-bg-surface text-text-primary text-[14px] leading-[1.43]
+           placeholder-text-muted
+           border border-[#DDDDDD] rounded-micro
+           px-3 py-2
            hover:border-border-strong
-           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15
-           transition-all duration-150
+           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25
+           transition-[border-color,box-shadow] duration-150
            disabled:bg-bg-subtle disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
-  /* Read-only / non-editable display: gray bg, no border, no cursor */
+  .input-subtle {
+    @apply w-full bg-bg-subtle text-text-primary text-[14px] leading-[1.43]
+           placeholder-text-muted
+           border border-transparent rounded-micro
+           px-3 py-2
+           focus:outline-none focus:bg-bg-surface focus:border-accent focus:ring-2 focus:ring-accent/25
+           transition-[border-color,background-color,box-shadow] duration-150;
+  }
+
   .input-readonly {
-    @apply w-full bg-bg-subtle border border-transparent rounded-lg
-           px-3 py-2 text-[13px] text-text-secondary
+    @apply w-full bg-bg-subtle text-text-secondary text-[14px] leading-[1.43]
+           border border-transparent rounded-micro
+           px-3 py-2
            cursor-default select-none pointer-events-none;
   }
 
-  /* Select / dropdown: editable + appearance-none + extra padding for caret icon */
   .input-select {
-    @apply w-full bg-bg-surface border border-border rounded-lg
-           pl-3 pr-9 py-2 text-[13px] text-text-primary
+    @apply w-full bg-bg-surface text-text-primary text-[14px] leading-[1.43]
+           border border-[#DDDDDD] rounded-micro
+           pl-3 pr-9 py-2
            hover:border-border-strong
-           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15
-           transition-all duration-150
+           focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/25
+           transition-[border-color,box-shadow] duration-150
            appearance-none cursor-pointer
            disabled:bg-bg-subtle disabled:opacity-60 disabled:cursor-not-allowed;
   }
 
-  /* Error state: overlays input-field with danger border + ring */
   .input-field-error {
-    @apply input-field border-danger ring-2 ring-danger/15
-           hover:border-danger focus:border-danger focus:ring-danger/20;
+    @apply input-field border-danger ring-2 ring-danger/20
+           hover:border-danger focus:border-danger focus:ring-danger/25;
   }
 
+  /* Pill badges — 9999px radius, 12px weight 600, 0.125px tracking */
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-md
-           text-[11px] font-medium leading-normal;
+    @apply inline-flex items-center gap-1
+           px-2 py-0.5 rounded-pill
+           text-[12px] font-semibold leading-[1.33] tracking-badge;
   }
 
   .badge-neutral {
-    @apply badge bg-bg-hover text-text-secondary;
+    @apply badge bg-[rgba(0,0,0,0.05)] text-text-primary;
+  }
+
+  .badge-accent {
+    @apply badge bg-accent-subtle text-accent-text;
   }
 
   .badge-success {
@@ -193,45 +278,45 @@
     @apply badge bg-danger-subtle text-danger;
   }
 
-  .badge-accent {
-    @apply badge bg-accent-subtle text-accent;
-  }
-
   .badge-info {
-    @apply badge bg-info-subtle text-info;
+    @apply badge bg-info-subtle text-accent-text;
   }
 
   .badge-outline {
     @apply badge bg-bg-surface border border-border text-text-secondary;
   }
 
+  /* Sidebar nav links */
   .sidebar-link {
-    @apply flex items-center gap-2.5 px-2.5 py-1.5 rounded-md
-           text-[13px] font-medium text-text-secondary
-           hover:bg-bg-hover hover:text-text-primary
+    @apply flex items-center gap-2.5
+           px-2.5 py-1.5 rounded-subtle
+           text-[14px] font-medium text-text-secondary
+           hover:bg-[rgba(0,0,0,0.05)] hover:text-text-primary
            transition-colors duration-150 cursor-pointer;
   }
 
   .sidebar-link.active {
-    @apply bg-bg-surface text-text-primary border border-border-subtle;
+    @apply bg-bg-surface text-text-primary border border-border;
   }
 
+  /* Headings + helpers */
   .section-title {
-    @apply font-semibold text-text-primary tracking-tight;
+    @apply font-bold text-text-primary tracking-[-0.625px];
   }
 
   .stat-number {
-    @apply font-medium text-text-primary tabular-nums tracking-tight;
+    @apply font-bold text-text-primary tabular-nums tracking-[-0.25px];
   }
 
   .divider {
-    @apply border-t border-border-subtle;
+    @apply border-t border-border;
   }
 
   .kbd {
-    @apply inline-flex items-center px-1.5 py-0.5 rounded
+    @apply inline-flex items-center
+           px-1.5 py-0.5 rounded-micro
            bg-bg-surface border border-border
-           text-[10px] text-text-muted font-mono;
+           text-[11px] font-medium text-text-muted font-mono;
   }
 
   .dot {
@@ -243,23 +328,74 @@
     @apply relative inline-flex items-center h-5 w-9 rounded-full
            transition-colors duration-150 cursor-pointer;
   }
-
-  .toggle-on { @apply bg-accent; }
-  .toggle-off { @apply bg-border; }
+  .toggle-on  { @apply bg-accent; }
+  .toggle-off { @apply bg-border-strong; }
 
   .toggle-thumb {
     @apply absolute top-0.5 h-4 w-4 rounded-full bg-white
            transition-all duration-200;
   }
-
-  .toggle-thumb-on { @apply left-[18px]; }
+  .toggle-thumb-on  { @apply left-[18px]; }
   .toggle-thumb-off { @apply left-0.5; }
+
+  /* Layout helpers — Notion's alternating section rhythm */
+  .section {
+    @apply max-w-[1200px] mx-auto px-6 md:px-8 py-16 md:py-20;
+  }
+
+  .section-alt {
+    @apply bg-bg-subtle;
+  }
+
+  /* Typography roles — apply directly via class on heading/text elements */
+  .text-display-hero {
+    @apply text-[64px] leading-[1.00] tracking-compress-hero font-bold;
+  }
+  .text-display-secondary {
+    @apply text-[54px] leading-[1.04] tracking-compress-secondary font-bold;
+  }
+  .text-section {
+    @apply text-[48px] leading-[1.00] tracking-compress-section font-bold;
+  }
+  .text-subhead-lg {
+    @apply text-[40px] leading-[1.50] font-bold;
+  }
+  .text-subhead {
+    @apply text-[26px] leading-[1.23] tracking-compress-subhead font-bold;
+  }
+  .text-card-title {
+    @apply text-[22px] leading-[1.27] tracking-compress-card font-bold;
+  }
+  .text-body-lg {
+    @apply text-[20px] leading-[1.40] tracking-compress-body-lg font-semibold;
+  }
+  .text-body-base {
+    @apply text-[16px] leading-[1.50] font-normal;
+  }
+  .text-nav {
+    @apply text-[15px] leading-[1.33] font-semibold;
+  }
+  .text-caption {
+    @apply text-[14px] leading-[1.43] font-medium;
+  }
+  .text-caption-light {
+    @apply text-[14px] leading-[1.43] font-normal;
+  }
+  .text-badge {
+    @apply text-[12px] leading-[1.33] font-semibold tracking-badge;
+  }
+  .text-micro {
+    @apply text-[12px] leading-[1.33] font-normal tracking-badge;
+  }
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Utilities — restraint above all
+   ──────────────────────────────────────────────────────────────*/
+
 @layer utilities {
-  /* Staggered entrance — keep it restrained */
-  .stagger-1 { animation-delay: 40ms; opacity: 0; }
-  .stagger-2 { animation-delay: 80ms; opacity: 0; }
+  .stagger-1 { animation-delay: 40ms;  opacity: 0; }
+  .stagger-2 { animation-delay: 80ms;  opacity: 0; }
   .stagger-3 { animation-delay: 120ms; opacity: 0; }
   .stagger-4 { animation-delay: 160ms; opacity: 0; }
   .stagger-5 { animation-delay: 200ms; opacity: 0; }
@@ -269,7 +405,20 @@
     text-wrap: balance;
   }
 
-  /* Fade-in for modals and dropdowns */
+  .border-whisper {
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.10);
+  }
+
+  .border-hairline {
+    border-width: 1px;
+    border-color: rgba(0, 0, 0, 0.06);
+  }
+
+  /* Pure-white sections vs warm-white alt sections — Notion rhythm */
+  .bg-warm-white { background-color: #F6F5F4; }
+  .bg-warm-dark  { background-color: #31302E; }
+
   @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }

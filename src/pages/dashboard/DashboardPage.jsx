@@ -19,9 +19,7 @@ export default function DashboardPage() {
     <div className="space-y-6 max-w-[1200px] mx-auto">
       {/* Welcome */}
       <div>
-        <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-          Good morning, {firstName}.
-        </h2>
+        <h2 className="text-subhead text-text-primary">Good morning, {firstName}.</h2>
         <p className="text-text-secondary text-[14px] mt-1">
           Here's what's happening across your workspace today.
         </p>

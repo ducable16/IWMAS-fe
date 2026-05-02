@@ -30,9 +30,7 @@ export default function WorkloadPage() {
     <div className="space-y-6 max-w-[1400px] mx-auto">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-            Workload analytics
-          </h2>
+          <h2 className="text-subhead text-text-primary">Workload analytics</h2>
           <p className="text-text-secondary text-[14px] mt-1">
             Real-time team capacity analysis with AI-powered assignment suggestions
           </p>

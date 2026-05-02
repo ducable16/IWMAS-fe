@@ -340,9 +340,7 @@ export default function TasksPage() {
         {/* ── Page header ── */}
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-              Tasks
-            </h2>
+            <h2 className="text-subhead text-text-primary">Tasks</h2>
             <p className="text-text-secondary text-[14px] mt-0.5">
               {isLoading
                 ? 'Loading…'
@@ -384,7 +382,7 @@ export default function TasksPage() {
                 className={clsx(
                   'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
                   filters.statuses.length === 0
-                    ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                    ? 'bg-bg-surface text-text-primary border border-border-subtle'
                     : 'text-text-muted hover:text-text-secondary',
                 )}
               >
@@ -401,7 +399,7 @@ export default function TasksPage() {
                     className={clsx(
                       'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
                       active
-                        ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                        ? 'bg-bg-surface text-text-primary border border-border-subtle'
                         : 'text-text-muted hover:text-text-secondary',
                     )}
                   >

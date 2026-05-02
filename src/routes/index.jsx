@@ -15,6 +15,7 @@ const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage'))
 const WorkloadPage = lazy(() => import('@/pages/workforce/WorkloadPage'))
 const SprintRiskPage = lazy(() => import('@/pages/workforce/SprintRiskPage'))
 const MembersPage = lazy(() => import('@/pages/members/MembersPage'))
+const SearchPage = lazy(() => import('@/pages/search/SearchPage'))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
 const NotFoundPage = lazy(() => import('@/pages/errors/NotFoundPage'))
 
@@ -39,6 +40,7 @@ export default function AppRouter() {
               <Route path="/workforce" element={<WorkloadPage />} />
               <Route path="/workforce/sprint-risk" element={<SprintRiskPage />} />
               <Route path="/members" element={<MembersPage />} />
+              <Route path="/search" element={<SearchPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

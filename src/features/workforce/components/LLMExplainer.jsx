@@ -80,7 +80,7 @@ export default function LLMExplainer() {
           {content.split('\n\n').map((block, i) => {
             if (block.startsWith('## ')) {
               return (
-                <h4 key={i} className="font-serif font-medium text-text-primary text-[15px]">
+                <h4 key={i} className="font-bold text-text-primary text-[15px] tracking-[-0.125px]">
                   {block.replace('## ', '')}
                 </h4>
               )

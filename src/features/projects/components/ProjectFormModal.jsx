@@ -3,6 +3,11 @@ import { X } from 'lucide-react'
 import clsx from 'clsx'
 import { useCreateProject, useUpdateProject } from '../hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
+import {
+  PROJECT_STATUS_LABEL,
+  PROJECT_PRIORITY_LABEL,
+  toOptions,
+} from '@/constants/enums'
 
 /**
  * Modal for §3.4 Create Project and §3.5 Update Project.
@@ -24,20 +29,8 @@ const BLANK = {
   managerId:   '',
 }
 
-const STATUS_OPTIONS = [
-  { value: 'PLANNING',    label: 'Planning' },
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'ON_HOLD',     label: 'On Hold' },
-  { value: 'COMPLETED',   label: 'Completed' },
-  { value: 'CANCELLED',   label: 'Cancelled' },
-]
-
-const PRIORITY_OPTIONS = [
-  { value: 'LOW',      label: 'Low' },
-  { value: 'MEDIUM',   label: 'Medium' },
-  { value: 'HIGH',     label: 'High' },
-  { value: 'CRITICAL', label: 'Critical' },
-]
+const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
+const PRIORITY_OPTIONS = toOptions(PROJECT_PRIORITY_LABEL)
 
 function Field({ label, error, required, children }) {
   return (
@@ -131,7 +124,7 @@ export default function ProjectFormModal({ open, project, onClose }) {
       />
 
       {/* Modal */}
-      <div className="relative bg-bg-surface border border-border rounded-2xl shadow-xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
+      <div className="relative bg-bg-surface border border-border rounded-2xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
           <h2 className="text-[15px] font-semibold text-text-primary">

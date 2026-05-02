@@ -7,28 +7,16 @@ import clsx from 'clsx'
 import { useNavigate } from 'react-router-dom'
 import { useProjects } from '@/features/projects/hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
-import { useAuthStore } from '@/features/auth/store/authStore'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import ProjectFormModal from '@/features/projects/components/ProjectFormModal'
+import {
+  PROJECT_STATUSES as ALL_STATUSES,
+  PROJECT_STATUS_META as STATUS_META,
+  PROJECT_PRIORITY_META as PRIORITY_META,
+} from '@/constants/enums'
+import { useCan } from '@/utils/permissions'
 
 /* ── Constants ─────────────────────────────────────────────── */
-
-const STATUS_META = {
-  PLANNING:    { label: 'Planning',    dot: 'bg-info',    badge: 'badge-info' },
-  IN_PROGRESS: { label: 'In Progress', dot: 'bg-accent',  badge: 'badge-accent' },
-  ON_HOLD:     { label: 'On Hold',     dot: 'bg-warning', badge: 'badge-warning' },
-  COMPLETED:   { label: 'Completed',   dot: 'bg-success', badge: 'badge-success' },
-  CANCELLED:   { label: 'Cancelled',   dot: 'bg-danger',  badge: 'badge-danger' },
-}
-
-const PRIORITY_META = {
-  LOW:      { label: 'Low',      badge: 'badge-neutral' },
-  MEDIUM:   { label: 'Medium',   badge: 'badge-neutral' },
-  HIGH:     { label: 'High',     badge: 'badge-warning' },
-  CRITICAL: { label: 'Critical', badge: 'badge-danger' },
-}
-
-const ALL_STATUSES = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED']
 
 const SORT_FIELDS = {
   name:      'name',
@@ -142,8 +130,8 @@ function Pagination({ page, totalPages, totalElements, size, onChange }) {
 
 export default function ProjectsPage() {
   const navigate = useNavigate()
-  const currentUser = useAuthStore((s) => s.user)
-  const canEdit = currentUser?.role === 'ADMIN' || currentUser?.role === 'PROJECT_MANAGER'
+  const can = useCan()
+  const canEdit = can.createProject
 
   const [params, setParams] = useState(DEFAULT_PARAMS)
   const [formOpen, setFormOpen] = useState(false)
@@ -202,9 +190,7 @@ export default function ProjectsPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-            Projects
-          </h2>
+          <h2 className="text-subhead text-text-primary">Projects</h2>
           <p className="text-text-secondary text-[14px] mt-1">
             {isLoading
               ? 'Loading…'
@@ -243,7 +229,7 @@ export default function ProjectsPage() {
             className={clsx(
               'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium',
               params.statuses.length === 0
-                ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                ? 'bg-bg-surface text-text-primary border border-border-subtle'
                 : 'text-text-muted hover:text-text-secondary',
             )}
           >
@@ -258,7 +244,7 @@ export default function ProjectsPage() {
                 className={clsx(
                   'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
                   active
-                    ? 'bg-bg-surface text-text-primary border border-border-subtle shadow-sm'
+                    ? 'bg-bg-surface text-text-primary border border-border-subtle'
                     : 'text-text-muted hover:text-text-secondary',
                 )}
               >

@@ -108,9 +108,7 @@ export default function SprintBoardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-            Sprint 15
-          </h2>
+          <h2 className="text-subhead text-text-primary">Sprint 15</h2>
           <p className="text-text-secondary text-[14px] mt-1">
             Apr 15 – Apr 29, 2025 · {doneTasks}/{totalTasks} tasks complete
           </p>

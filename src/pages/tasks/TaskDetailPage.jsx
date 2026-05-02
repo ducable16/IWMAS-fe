@@ -10,22 +10,19 @@ import clsx from 'clsx'
 import { useTask, useTaskHistory, useUpdateTaskStatus, useAddTaskComment } from '@/features/tasks/hooks/useTask'
 import { LiveLoading, LiveError } from '@/components/feedback/LiveStateOverlay'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import {
+  TASK_STATUSES as STATUSES,
+  TASK_STATUS_DETAIL_META as STATUS_META,
+  TASK_PRIORITY_META,
+  TASK_TYPE_LABEL,
+} from '@/constants/enums'
 
-/* ─── constants ────────────────────────────────────────────── */
-const STATUSES = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'CANCELLED']
-
-const STATUS_META = {
-  TODO:        { label: 'To Do',       cls: 'bg-bg-subtle text-text-secondary border-border' },
-  IN_PROGRESS: { label: 'In Progress', cls: 'bg-accent/10 text-accent border-accent/20' },
-  IN_REVIEW:   { label: 'In Review',   cls: 'bg-[#1d6fa4]/10 text-[#1d6fa4] border-[#1d6fa4]/20' },
-  DONE:        { label: 'Done',        cls: 'bg-success/10 text-success border-success/20' },
-  CANCELLED:   { label: 'Cancelled',   cls: 'bg-danger/10 text-danger border-danger/20' },
-}
-
+/* Compact priority meta for the right-rail "Details" panel */
 const PRIORITY_META = {
-  HIGH:   { label: 'High',   icon: '▲', cls: 'text-danger' },
-  MEDIUM: { label: 'Medium', icon: '●', cls: 'text-warning' },
-  LOW:    { label: 'Low',    icon: '▼', cls: 'text-text-muted' },
+  LOW:      { label: 'Low',      icon: TASK_PRIORITY_META.LOW.icon,      cls: 'text-text-muted' },
+  MEDIUM:   { label: 'Medium',   icon: TASK_PRIORITY_META.MEDIUM.icon,   cls: 'text-warning' },
+  HIGH:     { label: 'High',     icon: TASK_PRIORITY_META.HIGH.icon,     cls: 'text-danger' },
+  CRITICAL: { label: 'Critical', icon: TASK_PRIORITY_META.CRITICAL.icon, cls: 'text-danger font-semibold' },
 }
 
 const ACTIVITY_TABS = [
@@ -82,7 +79,7 @@ function StatusDropdown({ current, taskId }) {
       </button>
 
       {open && (
-        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg shadow-xl py-1 min-w-[140px] animate-fade-in">
+        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[140px] animate-fade-in">
           {STATUSES.map(s => (
             <button
               key={s}
@@ -405,7 +402,7 @@ export default function TaskDetailPage() {
             </DetailRow>
 
             <DetailRow icon={GitBranch} label="Type">
-              <span className="capitalize text-text-secondary">{task?.type?.replace(/_/g, ' ') || '—'}</span>
+              <span className="text-text-secondary">{TASK_TYPE_LABEL[task?.type] || task?.type || '—'}</span>
             </DetailRow>
 
             <DetailRow icon={Calendar} label="Start date">

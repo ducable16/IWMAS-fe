@@ -26,10 +26,10 @@ export default function LoginForm() {
   return (
     <div className="animate-fade-in">
       <div className="mb-8">
-        <h1 className="font-serif font-medium text-[32px] text-text-primary tracking-tight leading-tight">
+        <h1 className="text-[32px] leading-[1.05] tracking-[-1px] font-bold text-text-primary">
           Sign in
         </h1>
-        <p className="text-text-secondary mt-2 text-[14px]">
+        <p className="text-text-secondary mt-2 text-caption-light">
           Enter your credentials to access your workspace.
         </p>
       </div>

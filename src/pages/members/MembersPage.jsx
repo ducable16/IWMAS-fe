@@ -1,43 +1,27 @@
-import { useState, useCallback, useDeferredValue } from 'react'
+import { useState, useCallback, useDeferredValue, useEffect } from 'react'
 import {
   UserPlus, Search, Shield, ChevronDown, ChevronLeft, ChevronRight,
   ArrowUpDown, ArrowUp, ArrowDown,
 } from 'lucide-react'
 import clsx from 'clsx'
+import { useSearchParams } from 'react-router-dom'
 import { useMembers } from '@/features/members/hooks/useMembers'
-import { useAuthStore } from '@/features/auth/store/authStore'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import UserDrawer from '@/features/members/components/UserDrawer'
 import InviteUserModal from '@/features/members/components/InviteUserModal'
+import {
+  USER_ROLES,
+  USER_ROLE_SHORT_LABEL as ROLE_LABELS,
+  USER_ROLE_LABEL,
+  USER_STATUS_META,
+} from '@/constants/enums'
+import { useCan } from '@/utils/permissions'
 
 /* ── Constants ─────────────────────────────────────────────── */
 
-const ROLE_LABELS = {
-  TEAM_MEMBER: 'Member',
-  PROJECT_MANAGER: 'PM',
-  HR: 'HR',
-  ADMIN: 'Admin',
-}
-
-const ROLE_BADGE = {
-  ADMIN: 'badge-neutral',
-  HR: 'badge-neutral',
-  PROJECT_MANAGER: 'badge-neutral',
-  TEAM_MEMBER: 'badge-neutral',
-}
-
-const STATUS_BADGE = {
-  ACTIVE: 'badge-success',
-  DISABLED: 'badge-danger',
-  INVITED: 'badge-info',
-}
-
 const ROLE_OPTIONS = [
   { value: '', label: 'All roles' },
-  { value: 'ADMIN', label: 'Admin' },
-  { value: 'HR', label: 'HR' },
-  { value: 'PROJECT_MANAGER', label: 'Project Manager' },
-  { value: 'TEAM_MEMBER', label: 'Team Member' },
+  ...USER_ROLES.map((r) => ({ value: r, label: USER_ROLE_LABEL[r] })),
 ]
 
 const STATUS_OPTIONS = [
@@ -188,13 +172,17 @@ function Pagination({ page, totalPages, totalElements, size, onChange }) {
 /* ── Main Page ─────────────────────────────────────────────── */
 
 export default function MembersPage() {
-  const currentUser = useAuthStore((s) => s.user)
-  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'HR'
+  const can = useCan()
+  const isAdmin = can.manageUsers
 
   // Server-side filter/sort/page params
   const [params, setParams] = useState(DEFAULT_PARAMS)
   const [selectedUser, setSelectedUser] = useState(null)
   const [inviteOpen, setInviteOpen] = useState(false)
+
+  // Deep-link support: /members?userId=42 (from /search) auto-opens that drawer
+  const [searchParams, setSearchParams] = useSearchParams()
+  const deepUserId = searchParams.get('userId')
 
   // Defer search so we don't fire on every keystroke
   const deferredParams = useDeferredValue(params)
@@ -231,10 +219,28 @@ export default function MembersPage() {
     }))
   }, [])
 
+  // Auto-open the drawer when arriving via /members?userId=...
+  useEffect(() => {
+    if (!deepUserId) return
+    const id = Number(deepUserId)
+    const match = members.find((u) => u.id === id)
+    if (match) setSelectedUser(match)
+  }, [deepUserId, members])
+
   // Keep drawer user synced with cache
   const drawerUser = selectedUser
     ? members.find((u) => u.id === selectedUser.id) || selectedUser
     : null
+
+  const closeDrawer = () => {
+    setSelectedUser(null)
+    if (deepUserId) {
+      // Clear the deep-link param so re-clicking a row works
+      const next = new URLSearchParams(searchParams)
+      next.delete('userId')
+      setSearchParams(next, { replace: true })
+    }
+  }
 
   const hasFilters = params.search || params.role || params.active
 
@@ -243,9 +249,7 @@ export default function MembersPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="font-serif font-medium text-[26px] text-text-primary tracking-tight leading-tight">
-            All Users
-          </h2>
+          <h2 className="text-subhead text-text-primary">All Users</h2>
           <p className="text-text-secondary text-[14px] mt-1">
             {isLoading
               ? 'Loading…'
@@ -375,17 +379,15 @@ export default function MembersPage() {
 
                     {/* Status badge */}
                     <td className="py-3 px-3">
-                      <span className={clsx('badge', STATUS_BADGE[user.status] || 'badge-neutral')}>
-                        <span className={clsx(
-                          'dot',
-                          user.status === 'ACTIVE'   ? 'bg-success'
-                          : user.status === 'DISABLED' ? 'bg-danger'
-                          : 'bg-info',
-                        )} />
-                        {user.status === 'ACTIVE'   ? 'Active'
-                          : user.status === 'DISABLED' ? 'Disabled'
-                          : 'Invited'}
-                      </span>
+                      {(() => {
+                        const meta = USER_STATUS_META[user.status] || USER_STATUS_META.ACTIVE
+                        return (
+                          <span className={clsx('badge', meta.badge)}>
+                            <span className={clsx('dot', meta.dot)} />
+                            {meta.label}
+                          </span>
+                        )
+                      })()}
                     </td>
 
                     {/* Last active */}
@@ -428,7 +430,7 @@ export default function MembersPage() {
       {/* ── User Drawer ── */}
       <UserDrawer
         user={drawerUser}
-        onClose={() => setSelectedUser(null)}
+        onClose={closeDrawer}
       />
 
       {/* ── Invite Modal ── */}

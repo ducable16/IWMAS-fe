@@ -1,10 +1,10 @@
 import clsx from 'clsx'
 
 function scoreColor(score) {
-  if (score >= 80) return '#B54232'
-  if (score >= 60) return '#C0552F'
-  if (score >= 40) return '#A8740F'
-  return '#2F7D5B'
+  if (score >= 80) return '#B43A18'
+  if (score >= 60) return '#DD5B00'
+  if (score >= 40) return '#DD5B00'
+  return '#1AAE39'
 }
 
 function CircularScore({ score, size = 72 }) {
@@ -16,7 +16,7 @@ function CircularScore({ score, size = 72 }) {
 
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" aria-hidden="true">
-      <circle cx="32" cy="32" r={radius} fill="none" stroke="#EEEBE2" strokeWidth="4" />
+      <circle cx="32" cy="32" r={radius} fill="none" stroke="rgba(0, 0, 0, 0.06)" strokeWidth="4" />
       <circle
         cx="32"
         cy="32"
@@ -34,10 +34,10 @@ function CircularScore({ score, size = 72 }) {
         x="32"
         y="36"
         textAnchor="middle"
-        fill="#1F1E1C"
+        fill="rgba(0, 0, 0, 0.95)"
         fontSize="14"
-        fontFamily="Inter, sans-serif"
-        fontWeight="600"
+        fontFamily="NotionInter, Inter, sans-serif"
+        fontWeight="700"
       >
         {score}
       </text>
@@ -47,9 +47,9 @@ function CircularScore({ score, size = 72 }) {
 
 const RISK_LABEL = (s) =>
   s >= 80 ? { label: 'Critical', cls: 'badge-danger' } :
-  s >= 60 ? { label: 'High', cls: 'badge bg-[#F4EAE3] text-[#C0552F]' } :
-  s >= 40 ? { label: 'Medium', cls: 'badge-warning' } :
-  { label: 'Safe', cls: 'badge-success' }
+  s >= 60 ? { label: 'High',     cls: 'badge-warning' } :
+  s >= 40 ? { label: 'Medium',   cls: 'badge-warning' } :
+            { label: 'Safe',     cls: 'badge-success' }
 
 export default function WorkloadScoreCard({ member, delay = 0 }) {
   const { score, name, role, tasksActive, hoursThisWeek, skills } = member

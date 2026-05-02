@@ -1,7 +1,11 @@
-import { Bell, Search, LogOut } from 'lucide-react'
+import { Bell, LogOut } from 'lucide-react'
+import { useState } from 'react'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import UserProfileModal from '@/features/auth/components/UserProfileModal'
+import GlobalSearchBar from '@/features/search/components/GlobalSearchBar'
+import { USER_ROLE_SHORT_LABEL } from '@/constants/enums'
 
 const ROUTE_LABELS = {
   '/dashboard': 'Dashboard',
@@ -11,6 +15,7 @@ const ROUTE_LABELS = {
   '/workforce': 'Workload Analytics',
   '/workforce/sprint-risk': 'Sprint Risk Forecast',
   '/members': 'Team Members',
+  '/search': 'Search',
   '/settings': 'Settings',
 }
 
@@ -19,6 +24,7 @@ export default function Topbar() {
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
   const location = useLocation()
+  const [profileOpen, setProfileOpen] = useState(false)
 
   const entry = Object.entries(ROUTE_LABELS)
     .sort(([a], [b]) => b.length - a.length)
@@ -39,15 +45,8 @@ export default function Topbar() {
         </h1>
       </div>
 
-      {/* Search */}
-      <div className="hidden md:flex items-center gap-2 bg-bg-subtle border border-border-subtle rounded-lg px-2.5 py-1.5 w-[260px] focus-within:border-border focus-within:bg-bg-surface transition-colors">
-        <Search className="w-3.5 h-3.5 text-text-muted" strokeWidth={1.75} />
-        <input
-          type="text"
-          placeholder="Search..."
-          className="bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none w-full"
-        />
-      </div>
+      {/* Global search (§13.1 autocomplete + §13.2 results page) */}
+      <GlobalSearchBar />
 
 
 
@@ -62,13 +61,21 @@ export default function Topbar() {
 
       {/* User menu */}
       <div className="flex items-center gap-2 pl-3 border-l border-border-subtle">
-        <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[11px] font-semibold text-white">
-          {user?.name?.[0]?.toUpperCase() || 'U'}
-        </div>
-        <div className="hidden lg:block leading-tight">
-          <p className="text-[12.5px] font-medium text-text-primary">{user?.name || 'Demo User'}</p>
-          <p className="text-[11px] text-text-muted mt-0.5">{user?.role || 'PM'}</p>
-        </div>
+        <button
+          type="button"
+          onClick={() => setProfileOpen(true)}
+          className="flex items-center gap-2 rounded-md p-1 -m-1 hover:bg-bg-hover transition-colors"
+          title="View profile"
+          aria-label="View profile"
+        >
+          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center text-[11px] font-semibold text-white">
+            {(user?.fullName || user?.name)?.[0]?.toUpperCase() || 'U'}
+          </div>
+          <div className="hidden lg:block leading-tight text-left">
+            <p className="text-[12.5px] font-medium text-text-primary">{user?.fullName || user?.name || 'Demo User'}</p>
+            <p className="text-[11px] text-text-muted mt-0.5">{USER_ROLE_SHORT_LABEL[user?.role] || user?.role || '—'}</p>
+          </div>
+        </button>
         <button
           onClick={handleLogout}
           className="ml-1 text-text-muted hover:text-text-primary transition-colors p-1.5 rounded-md hover:bg-bg-hover"
@@ -78,6 +85,8 @@ export default function Topbar() {
           <LogOut className="w-4 h-4" strokeWidth={1.75} />
         </button>
       </div>
+
+      <UserProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </header>
   )
 }

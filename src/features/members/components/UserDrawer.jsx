@@ -9,22 +9,13 @@ import { useActivateMember } from '../hooks/useActivateMember'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
+import {
+  USER_ROLE_LABEL as ROLE_LABELS,
+  USER_ROLE_BADGE as ROLE_BADGE,
+} from '@/constants/enums'
+import { canManageUsers, canChangeUserRole } from '@/utils/permissions'
 
 const ROLES = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN']
-
-const ROLE_LABELS = {
-  TEAM_MEMBER: 'Team Member',
-  PROJECT_MANAGER: 'Project Manager',
-  HR: 'HR',
-  ADMIN: 'Admin',
-}
-
-const ROLE_BADGE = {
-  ADMIN: 'badge-danger',
-  HR: 'badge-warning',
-  PROJECT_MANAGER: 'badge-accent',
-  TEAM_MEMBER: 'badge-neutral',
-}
 
 function formatTimeAgo(dateStr) {
   if (!dateStr) return '—'
@@ -54,7 +45,9 @@ function formatDate(dateStr) {
  */
 export default function UserDrawer({ user, onClose }) {
   const currentUser = useAuthStore((s) => s.user)
-  const isAdmin = currentUser?.role === 'ADMIN' || currentUser?.role === 'HR'
+  // §12: ADMIN + HR can manage users; HR cannot change role.
+  const isAdmin = canManageUsers(currentUser?.role)
+  const canEditRole = canChangeUserRole(currentUser?.role)
   const isSelf = currentUser?.id === user?.id
 
   const { mutate: updateUser, isPending: isUpdating } = useUpdateMember()
@@ -90,8 +83,11 @@ export default function UserDrawer({ user, onClose }) {
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
   const handleSave = () => {
+    // §12: HR may edit profile fields but not role — strip it from the payload.
+    const { role, ...rest } = form
+    const payload = canEditRole ? form : rest
     updateUser(
-      { id: user.id, data: form },
+      { id: user.id, data: payload },
       { onSuccess: () => setIsEditing(false) },
     )
   }
@@ -125,7 +121,7 @@ export default function UserDrawer({ user, onClose }) {
       {/* Drawer panel */}
       <aside
         ref={drawerRef}
-        className="fixed top-0 right-0 z-50 h-full w-full max-w-[420px] bg-bg-surface border-l border-border shadow-2xl overflow-y-auto animate-slide-in-right"
+        className="fixed top-0 right-0 z-50 h-full w-full max-w-[420px] bg-bg-surface border-l border-border overflow-y-auto animate-slide-in-right"
         role="dialog"
         aria-label="User details"
       >
@@ -207,16 +203,30 @@ export default function UserDrawer({ user, onClose }) {
             <div className="space-y-3">
               {isEditing ? (
                 <>
-                  <SelectField
-                    label="System role"
-                    id="drawer-role"
-                    value={form.role}
-                    onChange={set('role')}
-                  >
-                    {ROLES.map((r) => (
-                      <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-                    ))}
-                  </SelectField>
+                  {canEditRole ? (
+                    <SelectField
+                      label="System role"
+                      id="drawer-role"
+                      value={form.role}
+                      onChange={set('role')}
+                    >
+                      {ROLES.map((r) => (
+                        <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+                      ))}
+                    </SelectField>
+                  ) : (
+                    <Field
+                      label="System role"
+                      id="drawer-role"
+                      hint="HR cannot modify roles. Contact an Admin."
+                    >
+                      <input
+                        readOnly
+                        value={ROLE_LABELS[form.role] || form.role}
+                        className="input-readonly"
+                      />
+                    </Field>
+                  )}
 
                   <Field label="Position" id="drawer-position">
                     <input

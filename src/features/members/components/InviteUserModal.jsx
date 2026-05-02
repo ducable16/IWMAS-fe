@@ -3,15 +3,10 @@ import { X, UserPlus, Loader2 } from 'lucide-react'
 import { useInviteUser } from '../hooks/useInviteUser'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
+import { USER_ROLES, USER_ROLE_LABEL } from '@/constants/enums'
 
-const ROLES = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN']
-
-const ROLE_LABELS = {
-  TEAM_MEMBER: 'Team Member',
-  PROJECT_MANAGER: 'Project Manager',
-  HR: 'HR',
-  ADMIN: 'Admin',
-}
+// Keep TM at the top of the dropdown — it's the most common invite.
+const ROLES = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN'].filter((r) => USER_ROLES.includes(r))
 
 export default function InviteUserModal({ open, onClose }) {
   const { mutate, isPending } = useInviteUser()
@@ -70,7 +65,7 @@ export default function InviteUserModal({ open, onClose }) {
       style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
       onClick={(e) => e.target === e.currentTarget && handleClose()}
     >
-      <div className="bg-bg-surface border border-border rounded-xl shadow-2xl w-full max-w-md animate-fade-in">
+      <div className="bg-bg-surface border border-border rounded-xl w-full max-w-md animate-fade-in">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
@@ -164,7 +159,7 @@ export default function InviteUserModal({ open, onClose }) {
             onChange={set('role')}
           >
             {ROLES.map((r) => (
-              <option key={r} value={r}>{ROLE_LABELS[r]}</option>
+              <option key={r} value={r}>{USER_ROLE_LABEL[r]}</option>
             ))}
           </SelectField>
 

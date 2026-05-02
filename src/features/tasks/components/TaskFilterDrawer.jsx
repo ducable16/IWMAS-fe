@@ -14,12 +14,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, RotateCcw, Search } from 'lucide-react'
 import clsx from 'clsx'
+import {
+  TASK_STATUSES,
+  TASK_PRIORITIES,
+  TASK_TYPES,
+  TASK_STATUS_META as STATUS_META,
+  TASK_PRIORITY_META as PRIORITY_META,
+  TASK_TYPE_META as TYPE_META,
+} from '@/constants/enums'
 
-// ─── Enum options (mirror API enums) ─────────────────────────────────────────
+// Re-export so callers (TasksPage, etc.) can keep their existing imports.
+export { TASK_STATUSES, TASK_PRIORITIES, TASK_TYPES, STATUS_META, PRIORITY_META, TYPE_META }
 
-export const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'CANCELLED']
-export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
-export const TASK_TYPES = ['FEATURE', 'BUG', 'IMPROVEMENT', 'RESEARCH', 'TASK']
 export const SORT_FIELDS = [
   { value: 'createdAt', label: 'Created At' },
   { value: 'updatedAt', label: 'Updated At' },
@@ -27,29 +33,6 @@ export const SORT_FIELDS = [
   { value: 'priority',  label: 'Priority'   },
   { value: 'title',     label: 'Title'      },
 ]
-
-export const STATUS_META = {
-  TODO:        { label: 'To Do',       color: 'bg-bg-hover text-text-secondary'          },
-  IN_PROGRESS: { label: 'In Progress', color: 'bg-accent/15 text-accent'                 },
-  IN_REVIEW:   { label: 'In Review',   color: 'bg-info-subtle text-info'                 },
-  DONE:        { label: 'Done',        color: 'bg-success-subtle text-success'            },
-  CANCELLED:   { label: 'Cancelled',   color: 'bg-danger-subtle text-danger'              },
-}
-
-export const PRIORITY_META = {
-  LOW:      { label: 'Low',      dot: 'bg-border-strong', color: 'text-text-secondary' },
-  MEDIUM:   { label: 'Medium',   dot: 'bg-warning',       color: 'text-warning'        },
-  HIGH:     { label: 'High',     dot: 'bg-danger',        color: 'text-danger'         },
-  CRITICAL: { label: 'Critical', dot: 'bg-danger',        color: 'text-danger font-semibold' },
-}
-
-export const TYPE_META = {
-  FEATURE:     { label: 'Feature',     cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25' },
-  BUG:         { label: 'Bug',         cls: 'bg-rose-500/15 text-rose-400 border-rose-500/25'       },
-  IMPROVEMENT: { label: 'Improvement', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/25'   },
-  RESEARCH:    { label: 'Research',    cls: 'bg-violet-500/15 text-violet-400 border-violet-500/25' },
-  TASK:        { label: 'Task',        cls: 'bg-sky-500/15 text-sky-400 border-sky-500/25'          },
-}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -69,7 +52,7 @@ function ToggleChip({ active, onClick, children, colorCls = '' }) {
       className={clsx(
         'inline-flex items-center gap-1.5 text-[12px] px-2.5 py-1 rounded-lg border transition-all duration-150 font-medium',
         active
-          ? clsx('border-transparent shadow-sm', colorCls || 'bg-accent text-white')
+          ? clsx('border-transparent', colorCls || 'bg-accent text-white')
           : 'border-border bg-bg-surface text-text-secondary hover:border-border-strong hover:text-text-primary',
       )}
     >
@@ -155,7 +138,7 @@ function UserSearchSelect({ filterKey, selectedId, users, onChange }) {
 
       {/* Dropdown list */}
       {open && (
-        <div className="absolute z-50 mt-1 w-full bg-bg-surface border border-border rounded-xl shadow-xl overflow-hidden">
+        <div className="absolute z-50 mt-1 w-full bg-bg-surface border border-border rounded-xl overflow-hidden">
           {/* Search input inside dropdown when a chip is shown (i.e. user clicked chip to reopen) */}
           {selectedName && (
             <div className="p-2 border-b border-border-subtle relative">
@@ -276,7 +259,7 @@ export default function TaskFilterDrawer({
         tabIndex={-1}
         className={clsx(
           'fixed top-0 right-0 h-full w-[380px] max-w-[95vw] bg-bg-surface border-l border-border z-40',
-          'flex flex-col shadow-2xl transition-transform duration-300 ease-out outline-none',
+          'flex flex-col transition-transform duration-300 ease-out outline-none',
           open ? 'translate-x-0' : 'translate-x-full',
         )}
       >

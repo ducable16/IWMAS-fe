@@ -17,10 +17,10 @@ export default function AuthLayout() {
 
         <div className="space-y-10 max-w-md">
           <div>
-            <h2 className="font-serif font-medium text-4xl text-text-primary leading-tight tracking-tight text-balance">
+            <h2 className="text-section text-text-primary text-balance">
               Smart workload. Balanced teams.
             </h2>
-            <p className="mt-5 text-[15px] text-text-secondary leading-relaxed">
+            <p className="mt-5 text-body-base text-text-secondary leading-relaxed">
               AI-powered sprint allocation that prevents burnout before it happens.
             </p>
           </div>
