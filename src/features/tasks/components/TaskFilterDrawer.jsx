@@ -403,7 +403,7 @@ export default function TaskFilterDrawer({
 
           {/* Reporter */}
           <div>
-            <SectionLabel>Reporter / Creator</SectionLabel>
+            <SectionLabel>Reporter</SectionLabel>
             {users.length === 0 ? (
               <p className="text-[12px] text-text-muted italic">No users available</p>
             ) : (

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { taskService } from '../services/taskService'
 
 export function useTask(id) {
@@ -41,5 +42,30 @@ export function useAddTaskComment(taskId) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
     },
+  })
+}
+
+export function useUpdateTask(id) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => taskService.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', id] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to update task'),
+  })
+}
+
+export function useCreateTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (data) => taskService.create(data),
+    onSuccess: () => {
+      toast.success('Task created')
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to create task'),
   })
 }

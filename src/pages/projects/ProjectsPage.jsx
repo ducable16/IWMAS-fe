@@ -5,7 +5,8 @@ import {
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate } from 'react-router-dom'
-import { useProjects } from '@/features/projects/hooks/useProjects'
+import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import ProjectFormModal from '@/features/projects/components/ProjectFormModal'
@@ -132,6 +133,8 @@ export default function ProjectsPage() {
   const navigate = useNavigate()
   const can = useCan()
   const canEdit = can.createProject
+  const user = useAuthStore((s) => s.user)
+  const isTeamMember = user?.role === 'TEAM_MEMBER'
 
   const [params, setParams] = useState(DEFAULT_PARAMS)
   const [formOpen, setFormOpen] = useState(false)
@@ -139,7 +142,11 @@ export default function ProjectsPage() {
 
   const deferredParams = useDeferredValue(params)
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useProjects(deferredParams)
+  // §3.1 for ADMIN/PM (PM gets auto-filtered to their managed projects by backend)
+  // §3.2 for TEAM_MEMBER (projects they are an active member of)
+  const allQ = useProjects(deferredParams, !isTeamMember)
+  const myQ  = useMyProjects(deferredParams,  isTeamMember)
+  const { data, isLoading, isError, error, refetch, isFetching } = isTeamMember ? myQ : allQ
 
   // Fetch all users once for manager name lookup (uses React Query cache)
   const { data: usersData } = useMembers({ size: 100 })
@@ -190,10 +197,16 @@ export default function ProjectsPage() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-subhead text-text-primary">Projects</h2>
+          <h2 className="text-subhead text-text-primary">
+            {isTeamMember ? 'My Projects' : can.isPm ? 'Projects I Manage' : 'Projects'}
+          </h2>
           <p className="text-text-secondary text-[14px] mt-1">
             {isLoading
               ? 'Loading…'
+              : isTeamMember
+              ? `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} you\'re a member of`
+              : can.isPm
+              ? `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} you manage`
               : `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} in workspace`}
           </p>
         </div>

@@ -20,6 +20,7 @@ import {
   toOptions,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { useAuthStore } from '@/features/auth/store/authStore'
 
 /* ── Helpers ───────────────────────────────────────────────── */
 
@@ -61,9 +62,8 @@ function Field({ label, required, error, children }) {
 export default function ProjectDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const can = useCan()
-  const canEdit          = can.editProject
-  const canManageMembers = can.manageProjectMembers
+  const can  = useCan()
+  const user = useAuthStore((s) => s.user)
 
   const { data: project, isLoading, isError, error, refetch } = useProject(Number(id))
   const { data: members = [], isLoading: membersLoading } = useProjectMembers(Number(id))
@@ -71,6 +71,12 @@ export default function ProjectDetailPage() {
   const { mutate: removeMember }   = useRemoveProjectMember(Number(id))
   const updateProject              = useUpdateProject()
   const isPending                  = updateProject.isPending
+
+  // §3.5 / §3.8-3.10: ADMIN always; PM only when they are the project manager.
+  // Computed AFTER project loads (project may be undefined during fetch).
+  const isOwnProject     = !!project && project.managerId === user?.id
+  const canEdit          = can.isAdmin || (can.isPm && isOwnProject)
+  const canManageMembers = can.isAdmin || (can.isPm && isOwnProject)
 
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })

@@ -2,7 +2,6 @@ import { NavLink, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
   FolderKanban,
-  Layers,
   CheckSquare,
   Users,
   Brain,
@@ -19,7 +18,6 @@ import clsx from 'clsx'
 const NAV_ITEMS = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
   { label: 'Projects', icon: FolderKanban, to: '/projects' },
-  { label: 'Sprint Board', icon: Layers, to: '/sprints' },
   { label: 'Tasks', icon: CheckSquare, to: '/tasks' },
   { divider: true, label: 'Workforce' },
   { label: 'Workload', icon: Brain, to: '/workforce' },
@@ -50,21 +48,26 @@ export default function Sidebar() {
           collapsed ? 'justify-center' : 'justify-between',
         )}
       >
-        <div className={clsx('flex items-center gap-2', collapsed && 'justify-center')}>
-          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center shrink-0">
-            <span className="text-white text-[13px] font-semibold leading-none">I</span>
-          </div>
-          {!collapsed && (
-            <span className="text-[14px] font-semibold text-text-primary tracking-tight">IWAS</span>
-          )}
-        </div>
-        {!collapsed && (
+        {!collapsed ? (
+          <>
+            <div className="flex items-center gap-2">
+              <span className="text-[16px] font-bold text-text-primary tracking-tight">IWAS</span>
+            </div>
+            <button
+              onClick={toggle}
+              className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+          </>
+        ) : (
           <button
             onClick={toggle}
-            className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
-            aria-label="Collapse sidebar"
+            className="p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center"
+            aria-label="Expand sidebar"
           >
-            <ChevronsLeft className="w-4 h-4" />
+            <ChevronsRight className="w-5 h-5" />
           </button>
         )}
       </div>
@@ -137,15 +140,6 @@ export default function Sidebar() {
         </div>
       )}
 
-      {collapsed && (
-        <button
-          onClick={toggle}
-          className="m-2 p-2 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors flex items-center justify-center"
-          aria-label="Expand sidebar"
-        >
-          <ChevronsRight className="w-4 h-4" />
-        </button>
-      )}
     </aside>
   )
 }

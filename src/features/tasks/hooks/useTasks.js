@@ -24,6 +24,8 @@ function normaliseTask(t) {
     labels: t.labels || [],
     projectId: t.projectId,
     customFields: t.customFields || {},
+    startDate: t.startDate || null,
+    createdAt: t.createdAt || null,
   }
 }
 
@@ -31,7 +33,7 @@ function normaliseTask(t) {
  * Server-side search & filter — calls GET /api/tasks
  * @param {object} params – same shape as taskService.search
  */
-export function useSearchTasks(params = {}) {
+export function useSearchTasks(params = {}, enabled = true) {
   return useQuery({
     queryKey: ['tasks', 'search', params],
     queryFn: async () => {
@@ -52,7 +54,7 @@ export function useSearchTasks(params = {}) {
         totalPages: raw.totalPages ?? 1,
       }
     },
-    // Keep previous data visible while re-fetching (React Query v4 / v5)
+    enabled,
     placeholderData: (prev) => prev,
     staleTime: 30_000,
   })

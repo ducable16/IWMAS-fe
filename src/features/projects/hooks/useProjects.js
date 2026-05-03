@@ -10,14 +10,14 @@ import { projectService } from '../services/projectService'
  *   startDateFrom, startDateTo, endDateFrom, endDateTo,
  *   sortBy, sortDirection, page, size
  */
-export function useProjects(params = {}) {
+export function useProjects(params = {}, enabled = true) {
   return useQuery({
     queryKey: ['projects', params],
     queryFn: async () => {
       const res = await projectService.getAll(params)
       const raw = res.data ?? {}
       const items = Array.isArray(raw)
-        ? raw                           // fallback if server returns plain array
+        ? raw
         : Array.isArray(raw.content)
         ? raw.content
         : []
@@ -29,6 +29,7 @@ export function useProjects(params = {}) {
         totalPages:    raw.totalPages    ?? 1,
       }
     },
+    enabled,
     placeholderData: (prev) => prev,
     staleTime: 60_000,
   })
@@ -38,7 +39,7 @@ export function useProjects(params = {}) {
  * §3.2 GET /api/projects/my — current user's projects (all roles)
  * Same paginated response shape and params as §3.1
  */
-export function useMyProjects(params = {}) {
+export function useMyProjects(params = {}, enabled = true) {
   return useQuery({
     queryKey: ['projects', 'my', params],
     queryFn: async () => {
@@ -57,6 +58,7 @@ export function useMyProjects(params = {}) {
         totalPages:    raw.totalPages    ?? 1,
       }
     },
+    enabled,
     placeholderData: (prev) => prev,
     staleTime: 60_000,
   })

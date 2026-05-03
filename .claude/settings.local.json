@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(Get-ChildItem -Path \"D:\\\\Uni\\\\DATN\\\\IWAS-fe\\\\src\" -Recurse -Directory)",
+      "Bash(Select-Object -ExpandProperty FullName)",
+      "Bash(npx vite *)"
     ]
   }
 }

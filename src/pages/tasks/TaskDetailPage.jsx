@@ -1,39 +1,48 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
-  ArrowLeft, ChevronDown, Zap, MoreHorizontal, Plus,
-  User, Flag, Calendar, Tag, Users, GitBranch,
-  Clock, CheckSquare, Link2, MessageSquare, History, Timer,
+  ArrowLeft, ChevronDown, MoreHorizontal, Check, X,
+  User, Flag, Calendar, Tag, GitBranch,
+  Clock, CheckSquare, MessageSquare, History, Timer,
   AlertTriangle, Loader2, ChevronRight,
 } from 'lucide-react'
 import clsx from 'clsx'
-import { useTask, useTaskHistory, useUpdateTaskStatus, useAddTaskComment } from '@/features/tasks/hooks/useTask'
+import {
+  useTask, useTaskHistory, useUpdateTaskStatus,
+  useUpdateTask, useAddTaskComment,
+} from '@/features/tasks/hooks/useTask'
+import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError } from '@/components/feedback/LiveStateOverlay'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { useCan } from '@/utils/permissions'
 import {
-  TASK_STATUSES as STATUSES,
+  TASK_STATUSES,
   TASK_STATUS_DETAIL_META as STATUS_META,
   TASK_PRIORITY_META,
   TASK_TYPE_LABEL,
+  TASK_TYPES,
+  TASK_PRIORITIES,
 } from '@/constants/enums'
 
-/* Compact priority meta for the right-rail "Details" panel */
 const PRIORITY_META = {
-  LOW:      { label: 'Low',      icon: TASK_PRIORITY_META.LOW.icon,      cls: 'text-text-muted' },
-  MEDIUM:   { label: 'Medium',   icon: TASK_PRIORITY_META.MEDIUM.icon,   cls: 'text-warning' },
-  HIGH:     { label: 'High',     icon: TASK_PRIORITY_META.HIGH.icon,     cls: 'text-danger' },
-  CRITICAL: { label: 'Critical', icon: TASK_PRIORITY_META.CRITICAL.icon, cls: 'text-danger font-semibold' },
+  LOW:      { label: 'Low',      icon: '▼', cls: 'text-text-muted'                 },
+  MEDIUM:   { label: 'Medium',   icon: '●', cls: 'text-warning'                    },
+  HIGH:     { label: 'High',     icon: '▲', cls: 'text-danger'                     },
+  CRITICAL: { label: 'Critical', icon: '⬤', cls: 'text-danger font-semibold'       },
 }
 
 const ACTIVITY_TABS = [
   { id: 'comments', label: 'Comments', icon: MessageSquare },
-  { id: 'history',  label: 'History',  icon: History },
-  { id: 'worklog',  label: 'Work log', icon: Timer },
+  { id: 'history',  label: 'History',  icon: History       },
+  { id: 'worklog',  label: 'Work log', icon: Timer         },
 ]
 
-/* ─── small helpers ─────────────────────────────────────────── */
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 function Avatar({ name, size = 'sm' }) {
-  const initials = name ? name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() : '?'
+  const initials = name
+    ? name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
   const sz = size === 'sm' ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-[12px]'
   return (
     <div className={clsx('rounded-full bg-accent flex items-center justify-center font-semibold text-white shrink-0', sz)}>
@@ -44,7 +53,7 @@ function Avatar({ name, size = 'sm' }) {
 
 function DetailRow({ icon: Icon, label, children }) {
   return (
-    <div className="grid grid-cols-[120px_1fr] items-start gap-2 py-2.5 border-b border-border-subtle last:border-0">
+    <div className="grid grid-cols-[120px_1fr] items-start gap-2 py-2 border-b border-border-subtle last:border-0">
       <div className="flex items-center gap-1.5 text-[12px] text-text-muted pt-0.5">
         {Icon && <Icon className="w-3.5 h-3.5" strokeWidth={1.75} />}
         {label}
@@ -54,15 +63,12 @@ function DetailRow({ icon: Icon, label, children }) {
   )
 }
 
+// ─── Status dropdown ──────────────────────────────────────────────────────────
+
 function StatusDropdown({ current, taskId }) {
   const [open, setOpen] = useState(false)
   const { mutate, isPending } = useUpdateTaskStatus(taskId)
   const meta = STATUS_META[current] || STATUS_META.TODO
-
-  const select = (s) => {
-    setOpen(false)
-    mutate({ status: s })
-  }
 
   return (
     <div className="relative">
@@ -77,19 +83,19 @@ function StatusDropdown({ current, taskId }) {
         {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : meta.label}
         <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
       </button>
-
       {open && (
-        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[140px] animate-fade-in">
-          {STATUSES.map(s => (
+        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[150px] shadow-card animate-fade-in">
+          {TASK_STATUSES.map(s => (
             <button
               key={s}
-              onClick={() => select(s)}
+              onClick={() => { mutate({ status: s }); setOpen(false) }}
               className={clsx(
                 'flex items-center gap-2 w-full px-3 py-1.5 text-[12.5px] hover:bg-bg-subtle transition-colors',
                 s === current ? 'font-semibold text-text-primary' : 'text-text-secondary',
               )}
             >
               {STATUS_META[s]?.label || s}
+              {s === current && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
             </button>
           ))}
         </div>
@@ -97,6 +103,8 @@ function StatusDropdown({ current, taskId }) {
     </div>
   )
 }
+
+// ─── Collapsible section ──────────────────────────────────────────────────────
 
 function CollapsibleSection({ title, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen)
@@ -107,20 +115,23 @@ function CollapsibleSection({ title, defaultOpen = true, children }) {
         className="flex items-center justify-between w-full px-4 py-3 bg-bg-subtle/60 hover:bg-bg-hover/40 transition-colors"
       >
         <span className="text-[12.5px] font-semibold text-text-primary uppercase tracking-wider">{title}</span>
-        <ChevronRight className={clsx('w-4 h-4 text-text-muted transition-transform', open && 'rotate-90')} strokeWidth={1.75} />
+        <ChevronRight
+          className={clsx('w-4 h-4 text-text-muted transition-transform', open && 'rotate-90')}
+          strokeWidth={1.75}
+        />
       </button>
       {open && <div className="px-4 py-3">{children}</div>}
     </div>
   )
 }
 
-/* ─── History tab ───────────────────────────────────────────── */
+// ─── History tab ──────────────────────────────────────────────────────────────
+
 function HistoryTab({ taskId }) {
   const { data: history = [], isLoading } = useTaskHistory(taskId)
   if (isLoading) return <LiveLoading label="Loading history…" />
-  if (history.length === 0) return (
-    <p className="text-[13px] text-text-muted py-4 text-center">No history yet.</p>
-  )
+  if (history.length === 0)
+    return <p className="text-[13px] text-text-muted py-4 text-center">No history yet.</p>
   return (
     <div className="space-y-3">
       {history.map((h, i) => (
@@ -146,33 +157,23 @@ function HistoryTab({ taskId }) {
   )
 }
 
-/* ─── Comments tab ──────────────────────────────────────────── */
+// ─── Comments tab ─────────────────────────────────────────────────────────────
+
 function CommentsTab({ taskId, comments = [] }) {
   const [content, setContent] = useState('')
   const { mutate, isPending } = useAddTaskComment(taskId)
   const user = useAuthStore(s => s.user)
 
-  const handleSubmit = (e) => {
-    e?.preventDefault()
+  const handleSubmit = () => {
     if (!content.trim() || isPending) return
-    mutate(content, {
-      onSuccess: () => setContent('')
-    })
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      handleSubmit()
-    }
+    mutate(content, { onSuccess: () => setContent('') })
   }
 
   return (
     <div className="space-y-6">
-      {/* Existing Comments */}
       {comments.length > 0 ? (
         <div className="space-y-4">
-          {comments.map((c) => (
+          {comments.map(c => (
             <div key={c.id} className="flex items-start gap-3">
               <Avatar name={c.author?.fullName} size="sm" />
               <div className="flex-1">
@@ -193,79 +194,135 @@ function CommentsTab({ taskId, comments = [] }) {
         <p className="text-[13px] text-text-muted italic">No comments yet.</p>
       )}
 
-      {/* Add Comment Input */}
       <div className="flex items-start gap-3">
         <Avatar name={user?.name || user?.email} size="sm" />
         <div className="flex-1">
           <div className="border border-border rounded-lg bg-bg-surface focus-within:border-border-strong transition-colors overflow-hidden">
             <textarea
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onChange={e => setContent(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
+              }}
               placeholder="Add a comment…"
               rows={2}
               className="w-full bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none p-3 resize-none"
             />
-            <div className="flex items-center justify-between bg-bg-subtle/50 border-t border-border-subtle px-3 py-2">
-              <div className="flex gap-2">
-                {['Who is working on this…?', 'Can I get more info…?', 'Status update…'].map(s => (
-                  <button 
-                    key={s} 
-                    onClick={() => setContent(s)}
-                    className="text-[11.5px] text-text-muted border border-border rounded px-2 py-0.5 hover:bg-bg-subtle transition-colors"
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-              <button 
+            <div className="flex items-center justify-end bg-bg-subtle/50 border-t border-border-subtle px-3 py-2">
+              <button
                 onClick={handleSubmit}
                 disabled={!content.trim() || isPending}
-                className="btn-primary text-[12px] px-3 py-1"
+                className="btn-primary text-[12px] px-3 py-1 disabled:opacity-40"
               >
                 {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
               </button>
             </div>
           </div>
-          <p className="text-[11px] text-text-muted mt-2">Pro tip: press <kbd className="kbd">Enter</kbd> to save, <kbd className="kbd">Shift</kbd> + <kbd className="kbd">Enter</kbd> for new line.</p>
+          <p className="text-[11px] text-text-muted mt-1.5">
+            Press <kbd className="kbd">Enter</kbd> to save,{' '}
+            <kbd className="kbd">Shift+Enter</kbd> for new line.
+          </p>
         </div>
       </div>
     </div>
   )
 }
 
-/* ─── main page ─────────────────────────────────────────────── */
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function TaskDetailPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id }     = useParams()
+  const navigate   = useNavigate()
   const [activeTab, setActiveTab] = useState('comments')
 
+  // Which right-panel field is open for editing (one at a time)
+  const [editingField, setEditingField] = useState(null)
+
+  // Title inline editing
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft]     = useState('')
+
+  // Description inline editing
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descDraft, setDescDraft]     = useState('')
+
+  // Assignee search
+  const [memberSearch, setMemberSearch] = useState('')
+
+  // Labels draft (controlled during label editing session)
+  const [labelsDraft, setLabelsDraft] = useState(null)
+  const [labelInput, setLabelInput]   = useState('')
+
+  const titleRef = useRef(null)
+
   const { data: task, isLoading, isError, error, refetch } = useTask(id)
+  const { mutate: updateTask, isPending: isUpdating } = useUpdateTask(id)
+  const { data: membersData } = useMembers({ size: 100 })
+  const members = membersData?.members ?? []
+  const user    = useAuthStore(s => s.user)
+  const can     = useCan()
+
+  // §4.8 / §4.9: ADMIN, project manager, or task assignee may edit / change status
+  const isAssignee  = !!user && !!task && user.id === task.assignee?.id
+  const canEditTask = can.isAdmin || can.isPm || isAssignee
 
   if (isLoading) return (
-    <div className="max-w-[1200px] mx-auto pt-6">
-      <LiveLoading label="Loading task…" />
-    </div>
+    <div className="max-w-[1200px] mx-auto pt-6"><LiveLoading label="Loading task…" /></div>
   )
   if (isError) return (
-    <div className="max-w-[1200px] mx-auto pt-6">
-      <LiveError error={error} onRetry={refetch} />
-    </div>
+    <div className="max-w-[1200px] mx-auto pt-6"><LiveError error={error} onRetry={refetch} /></div>
   )
 
-  const status     = task?.status     || 'TODO'
-  const priority   = task?.priority   || 'MEDIUM'
-  const assignee   = task?.assignee
-  const reporter   = task?.reporter
-  const priorityM  = PRIORITY_META[priority] || PRIORITY_META.MEDIUM
+  // Build a full PUT payload, merging in any override fields
+  const buildPayload = (overrides = {}) => ({
+    title:          task.title,
+    description:    task.description     || null,
+    status:         task.status,
+    priority:       task.priority,
+    type:           task.type,
+    startDate:      task.startDate       || null,
+    dueDate:        task.dueDate         || null,
+    estimatedHours: task.estimatedHours  || null,
+    actualHours:    task.actualHours     || null,
+    assigneeId:     task.assignee?.id    || null,
+    labels:         task.labels          || [],
+    projectId:      task.projectId       || null,
+    sprint:         task.sprint          || null,
+    ...overrides,
+  })
 
+  // Save a right-panel field and close editor
+  const save = (overrides) => {
+    updateTask(buildPayload(overrides))
+    setEditingField(null)
+  }
+
+  const saveLabels = () => {
+    if (labelsDraft !== null) updateTask(buildPayload({ labels: labelsDraft }))
+    setEditingField(null)
+    setLabelsDraft(null)
+    setLabelInput('')
+  }
+
+  const status    = task?.status   || 'TODO'
+  const priority  = task?.priority || 'MEDIUM'
+  const assignee  = task?.assignee
+  const reporter  = task?.reporter
+  const priorityM = PRIORITY_META[priority] || PRIORITY_META.MEDIUM
   const isDueOverdue = task?.dueDate && new Date(task.dueDate) < new Date()
+
+  const filteredMembers = memberSearch
+    ? members.filter(m => m.fullName.toLowerCase().includes(memberSearch.toLowerCase()))
+    : members.slice(0, 8)
 
   return (
     <div className="max-w-[1200px] mx-auto">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-[12px] text-text-muted mb-4">
-        <button onClick={() => navigate(-1)} className="flex items-center gap-1 hover:text-text-primary transition-colors">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex items-center gap-1 hover:text-text-primary transition-colors"
+        >
           <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.75} />
           Back
         </button>
@@ -275,35 +332,112 @@ export default function TaskDetailPage() {
         <span className="text-text-primary font-mono">{task?.id}</span>
       </div>
 
-      {/* Two-column layout */}
       <div className="flex gap-6 items-start">
 
         {/* ── Left column ── */}
         <div className="flex-1 min-w-0 space-y-5">
 
-          {/* Title */}
-          <h1 className="text-[22px] font-semibold text-text-primary leading-tight tracking-tight">
-            {task?.title || 'Untitled task'}
-          </h1>
+          {/* Editable title */}
+          {editingTitle ? (
+            <textarea
+              ref={titleRef}
+              autoFocus
+              value={titleDraft}
+              onChange={e => setTitleDraft(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault()
+                  const t = titleDraft.trim()
+                  if (t && t !== task.title) updateTask(buildPayload({ title: t }))
+                  setEditingTitle(false)
+                }
+                if (e.key === 'Escape') { setEditingTitle(false); setTitleDraft(task.title) }
+              }}
+              onBlur={() => {
+                const t = titleDraft.trim()
+                if (t && t !== task.title) updateTask(buildPayload({ title: t }))
+                setEditingTitle(false)
+              }}
+              className="w-full text-[22px] font-semibold text-text-primary leading-tight tracking-tight bg-bg-surface border border-accent/40 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-accent"
+              rows={2}
+            />
+          ) : (
+            <h1
+              onClick={canEditTask ? () => { setTitleDraft(task?.title || ''); setEditingTitle(true) } : undefined}
+              title={canEditTask ? 'Click to edit' : undefined}
+              className={clsx(
+                'text-[22px] font-semibold text-text-primary leading-tight tracking-tight rounded-lg px-3 py-2 -mx-3 transition-colors',
+                canEditTask && 'cursor-text hover:bg-bg-hover/50',
+              )}
+            >
+              {task?.title || 'Untitled task'}
+            </h1>
+          )}
 
           {/* Action strip */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <button className="btn-ghost text-[12.5px] px-2.5 py-1.5 gap-1">
-              <Plus className="w-3.5 h-3.5" strokeWidth={1.75} />
-            </button>
-            <button className="btn-ghost text-[12.5px] px-2.5 py-1.5">
+          <div className="flex items-center gap-2">
+            {isUpdating && (
+              <span className="flex items-center gap-1.5 text-[12px] text-text-muted">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Saving…
+              </span>
+            )}
+            <button className="btn-ghost text-[12.5px] px-2.5 py-1.5 ml-auto">
               <MoreHorizontal className="w-3.5 h-3.5" strokeWidth={1.75} />
             </button>
           </div>
 
-          {/* Description */}
+          {/* Editable description */}
           <CollapsibleSection title="Description">
-            {task?.description ? (
-              <p className="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap">
-                {task.description}
-              </p>
+            {editingDesc ? (
+              <div className="space-y-2.5">
+                <textarea
+                  autoFocus
+                  value={descDraft}
+                  onChange={e => setDescDraft(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Escape') { setEditingDesc(false); setDescDraft(task.description || '') }
+                  }}
+                  placeholder="Add a description…"
+                  rows={5}
+                  className="w-full text-[13px] text-text-primary bg-bg-surface border border-accent/40 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-accent leading-relaxed"
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      updateTask(buildPayload({ description: descDraft.trim() || null }))
+                      setEditingDesc(false)
+                    }}
+                    className="btn-primary text-[12px] py-1 px-3 flex items-center gap-1.5"
+                  >
+                    <Check className="w-3 h-3" strokeWidth={2.5} />
+                    Save
+                  </button>
+                  <button
+                    onClick={() => { setEditingDesc(false); setDescDraft(task.description || '') }}
+                    className="btn-ghost text-[12px] py-1 px-3"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             ) : (
-              <p className="text-[13px] text-text-muted italic">Add a description…</p>
+              <div
+                onClick={canEditTask ? () => { setDescDraft(task?.description || ''); setEditingDesc(true) } : undefined}
+                title={canEditTask ? 'Click to edit' : undefined}
+                className={clsx(
+                  'rounded-lg px-2 py-1.5 -mx-2 transition-colors',
+                  canEditTask && 'cursor-text hover:bg-bg-hover/40',
+                )}
+              >
+                {task?.description ? (
+                  <p className="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap">
+                    {task.description}
+                  </p>
+                ) : (
+                  <p className="text-[13px] text-text-muted italic">Add a description…</p>
+                )}
+              </div>
             )}
           </CollapsibleSection>
 
@@ -311,7 +445,7 @@ export default function TaskDetailPage() {
           {task?.skillRequirements?.length > 0 && (
             <CollapsibleSection title="Skill requirements">
               <div className="flex flex-wrap gap-2">
-                {task.skillRequirements.map((sr) => (
+                {task.skillRequirements.map(sr => (
                   <div key={sr.id} className="flex items-center gap-1.5 bg-bg-subtle border border-border-subtle rounded-md px-2.5 py-1">
                     <span className="text-[12px] font-medium text-text-primary">{sr.skillName}</span>
                     <span className="text-[11px] text-text-muted">·</span>
@@ -325,12 +459,10 @@ export default function TaskDetailPage() {
             </CollapsibleSection>
           )}
 
-          {/* Child tasks placeholder */}
           <CollapsibleSection title="Subtasks">
             <p className="text-[13px] text-text-muted italic">No subtasks yet.</p>
           </CollapsibleSection>
 
-          {/* Linked work items placeholder */}
           <CollapsibleSection title="Linked items">
             <p className="text-[13px] text-text-muted italic">No linked items.</p>
           </CollapsibleSection>
@@ -338,8 +470,6 @@ export default function TaskDetailPage() {
           {/* Activity */}
           <div className="space-y-3">
             <h3 className="text-[13px] font-semibold text-text-primary">Activity</h3>
-
-            {/* Tabs */}
             <div className="flex items-center gap-0.5 border-b border-border-subtle">
               {ACTIVITY_TABS.map(tab => (
                 <button
@@ -357,14 +487,10 @@ export default function TaskDetailPage() {
                 </button>
               ))}
             </div>
-
-            {/* Tab content */}
             <div className="min-h-[80px]">
               {activeTab === 'comments' && <CommentsTab taskId={id} comments={task?.comments} />}
-
-              {activeTab === 'history' && <HistoryTab taskId={id} />}
-
-              {activeTab === 'worklog' && (
+              {activeTab === 'history'  && <HistoryTab taskId={id} />}
+              {activeTab === 'worklog'  && (
                 <p className="text-[13px] text-text-muted py-4 text-center italic">No work logs yet.</p>
               )}
             </div>
@@ -374,79 +500,339 @@ export default function TaskDetailPage() {
         {/* ── Right sidebar ── */}
         <div className="w-[280px] shrink-0 space-y-4 sticky top-[68px]">
 
-          {/* Status + actions */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <StatusDropdown current={status} taskId={id} />
-          </div>
+          {/* Status dropdown — §4.9: ADMIN/PM/assignee only */}
+          <StatusDropdown current={status} taskId={id} canChange={canEditTask} />
 
           {/* Details panel */}
           <div className="card p-4 space-y-0">
             <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-2">Details</p>
 
+            {/* ── Assignee ── */}
             <DetailRow icon={User} label="Assignee">
-              {assignee ? (
-                <div className="flex items-center gap-2">
-                  <Avatar name={assignee.fullName} />
-                  <span>{assignee.fullName}</span>
+              {editingField === 'assignee' ? (
+                <div className="space-y-1.5">
+                  <input
+                    autoFocus
+                    value={memberSearch}
+                    onChange={e => setMemberSearch(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Escape') { setEditingField(null); setMemberSearch('') } }}
+                    placeholder="Search members…"
+                    className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
+                  />
+                  <div className="max-h-[160px] overflow-y-auto space-y-0.5">
+                    <button
+                      onClick={() => { save({ assigneeId: null }); setMemberSearch('') }}
+                      className="flex items-center gap-2 w-full px-2 py-1 rounded text-[12px] text-text-muted hover:bg-bg-hover transition-colors"
+                    >
+                      Unassigned
+                    </button>
+                    {filteredMembers.map(m => (
+                      <button
+                        key={m.id}
+                        onClick={() => { save({ assigneeId: m.id }); setMemberSearch('') }}
+                        className={clsx(
+                          'flex items-center gap-2 w-full px-2 py-1 rounded text-[12px] hover:bg-bg-hover transition-colors',
+                          m.id === assignee?.id ? 'bg-accent/10 text-accent font-medium' : 'text-text-secondary',
+                        )}
+                      >
+                        <Avatar name={m.fullName} />
+                        <span className="truncate">{m.fullName}</span>
+                        {m.id === assignee?.id && <Check className="w-3 h-3 ml-auto shrink-0 text-accent" strokeWidth={2.5} />}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => { setEditingField(null); setMemberSearch('') }}
+                    className="text-[11px] text-text-muted hover:text-text-primary transition-colors"
+                  >
+                    Cancel
+                  </button>
                 </div>
               ) : (
-                <span className="text-text-muted">Unassigned</span>
+                <button
+                  onClick={canEditTask ? () => { setEditingField('assignee'); setMemberSearch('') } : undefined}
+                  className={clsx(
+                    'flex items-center gap-2 w-full text-left rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  {assignee ? (
+                    <>
+                      <Avatar name={assignee.fullName} />
+                      <span className="text-[13px] truncate">{assignee.fullName}</span>
+                    </>
+                  ) : (
+                    <span className="text-text-muted text-[13px]">Unassigned</span>
+                  )}
+                </button>
               )}
             </DetailRow>
 
+            {/* ── Priority ── */}
             <DetailRow icon={Flag} label="Priority">
-              <span className={clsx('flex items-center gap-1.5 font-medium', priorityM.cls)}>
-                <span>{priorityM.icon}</span>
-                {priorityM.label}
-              </span>
-            </DetailRow>
-
-            <DetailRow icon={GitBranch} label="Type">
-              <span className="text-text-secondary">{TASK_TYPE_LABEL[task?.type] || task?.type || '—'}</span>
-            </DetailRow>
-
-            <DetailRow icon={Calendar} label="Start date">
-              <span className="text-text-secondary">{task?.startDate || '—'}</span>
-            </DetailRow>
-
-            <DetailRow icon={Calendar} label="Due date">
-              {task?.dueDate ? (
-                <span className={clsx(
-                  'inline-flex items-center gap-1.5 font-medium',
-                  isDueOverdue ? 'text-danger' : 'text-text-secondary',
-                )}>
-                  {isDueOverdue && <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />}
-                  {task.dueDate}
-                </span>
+              {editingField === 'priority' ? (
+                <div className="space-y-0.5">
+                  {TASK_PRIORITIES.map(p => {
+                    const m = PRIORITY_META[p] || { icon: '', label: p, cls: '' }
+                    return (
+                      <button
+                        key={p}
+                        onClick={() => save({ priority: p })}
+                        className={clsx(
+                          'flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors',
+                          p === priority && 'bg-bg-subtle',
+                        )}
+                      >
+                        <span>{m.icon}</span>
+                        <span className={m.cls}>{m.label}</span>
+                        {p === priority && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
+                      </button>
+                    )
+                  })}
+                  <button
+                    onClick={() => setEditingField(null)}
+                    className="text-[11px] text-text-muted hover:text-text-primary px-2 pt-1 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
               ) : (
-                <span className="text-text-muted">—</span>
+                <button
+                  onClick={canEditTask ? () => setEditingField('priority') : undefined}
+                  className={clsx(
+                    'flex items-center gap-1.5 font-medium rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  <span>{priorityM.icon}</span>
+                  <span className={priorityM.cls}>{priorityM.label}</span>
+                </button>
               )}
             </DetailRow>
 
-            <DetailRow icon={Timer} label="Estimate">
-              <span className="text-text-secondary">
-                {task?.estimatedHours ? `${task.estimatedHours}h` : '—'}
-              </span>
+            {/* ── Type ── */}
+            <DetailRow icon={GitBranch} label="Type">
+              {editingField === 'type' ? (
+                <div className="space-y-0.5">
+                  {TASK_TYPES.map(t => (
+                    <button
+                      key={t}
+                      onClick={() => save({ type: t })}
+                      className={clsx(
+                        'flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors',
+                        t === task.type ? 'bg-bg-subtle text-text-primary' : 'text-text-secondary',
+                      )}
+                    >
+                      {TASK_TYPE_LABEL[t] || t}
+                      {t === task.type && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setEditingField(null)}
+                    className="text-[11px] text-text-muted hover:text-text-primary px-2 pt-1 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={canEditTask ? () => setEditingField('type') : undefined}
+                  className={clsx(
+                    'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  {TASK_TYPE_LABEL[task?.type] || task?.type || '—'}
+                </button>
+              )}
             </DetailRow>
 
+            {/* ── Start date ── */}
+            <DetailRow icon={Calendar} label="Start date">
+              {editingField === 'startDate' ? (
+                <input
+                  type="date"
+                  autoFocus
+                  defaultValue={task.startDate || ''}
+                  onBlur={e => { save({ startDate: e.target.value || null }) }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') e.currentTarget.blur()
+                    if (e.key === 'Escape') setEditingField(null)
+                  }}
+                  className="text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
+                />
+              ) : (
+                <button
+                  onClick={canEditTask ? () => setEditingField('startDate') : undefined}
+                  className={clsx(
+                    'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  {task?.startDate || '—'}
+                </button>
+              )}
+            </DetailRow>
+
+            {/* ── Due date ── */}
+            <DetailRow icon={Calendar} label="Due date">
+              {editingField === 'dueDate' ? (
+                <input
+                  type="date"
+                  autoFocus
+                  defaultValue={task.dueDate || ''}
+                  onBlur={e => { save({ dueDate: e.target.value || null }) }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') e.currentTarget.blur()
+                    if (e.key === 'Escape') setEditingField(null)
+                  }}
+                  className="text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
+                />
+              ) : (
+                <button
+                  onClick={canEditTask ? () => setEditingField('dueDate') : undefined}
+                  className={clsx(
+                    'flex items-center gap-1.5 rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px]',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                    isDueOverdue ? 'text-danger font-medium' : 'text-text-secondary',
+                  )}
+                >
+                  {isDueOverdue && <AlertTriangle className="w-3.5 h-3.5" strokeWidth={1.75} />}
+                  {task?.dueDate || '—'}
+                </button>
+              )}
+            </DetailRow>
+
+            {/* ── Estimate ── */}
+            <DetailRow icon={Timer} label="Estimate">
+              {editingField === 'estimate' ? (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    autoFocus
+                    min="0"
+                    step="0.5"
+                    defaultValue={task.estimatedHours || ''}
+                    onBlur={e => {
+                      const v = parseFloat(e.target.value)
+                      save({ estimatedHours: isNaN(v) ? null : v })
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') e.currentTarget.blur()
+                      if (e.key === 'Escape') setEditingField(null)
+                    }}
+                    className="w-20 text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
+                  />
+                  <span className="text-[12px] text-text-muted">hours</span>
+                </div>
+              ) : (
+                <button
+                  onClick={canEditTask ? () => setEditingField('estimate') : undefined}
+                  className={clsx(
+                    'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  {task?.estimatedHours ? `${task.estimatedHours}h` : '—'}
+                </button>
+              )}
+            </DetailRow>
+
+            {/* ── Actual hours (read-only — set by work log) ── */}
             <DetailRow icon={CheckSquare} label="Actual">
-              <span className="text-text-secondary">
+              <span className="text-text-secondary text-[13px]">
                 {task?.actualHours ? `${task.actualHours}h` : '—'}
               </span>
             </DetailRow>
 
+            {/* ── Labels ── */}
             <DetailRow icon={Tag} label="Labels">
-              <span className="text-text-muted">None</span>
+              {editingField === 'labels' && labelsDraft !== null ? (
+                <div className="space-y-1.5">
+                  {/* Current labels with remove buttons */}
+                  {labelsDraft.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {labelsDraft.map(l => (
+                        <span
+                          key={l}
+                          className="inline-flex items-center gap-1 text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
+                        >
+                          #{l}
+                          <button
+                            onClick={() => setLabelsDraft(prev => prev.filter(x => x !== l))}
+                            className="text-accent/60 hover:text-accent"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                  {/* Add label input */}
+                  <input
+                    autoFocus
+                    value={labelInput}
+                    onChange={e => setLabelInput(e.target.value)}
+                    placeholder="Add label, Enter to confirm…"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        const v = labelInput.trim()
+                        if (v && !labelsDraft.includes(v))
+                          setLabelsDraft(prev => [...prev, v])
+                        setLabelInput('')
+                      }
+                      if (e.key === 'Escape') { setEditingField(null); setLabelsDraft(null); setLabelInput('') }
+                    }}
+                    className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
+                  />
+                  <div className="flex items-center gap-2">
+                    <button onClick={saveLabels} className="text-[11.5px] text-accent font-medium hover:underline transition-colors">
+                      Done
+                    </button>
+                    <button
+                      onClick={() => { setEditingField(null); setLabelsDraft(null); setLabelInput('') }}
+                      className="text-[11px] text-text-muted hover:text-text-primary transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={canEditTask
+                    ? () => { setLabelsDraft([...(task?.labels || [])]); setEditingField('labels') }
+                    : undefined
+                  }
+                  className={clsx(
+                    'flex flex-wrap gap-1 rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors w-full text-left',
+                    canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
+                  )}
+                >
+                  {(task?.labels || []).length > 0 ? (
+                    task.labels.map(l => (
+                      <span
+                        key={l}
+                        className="text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
+                      >
+                        #{l}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-text-muted text-[13px]">None</span>
+                  )}
+                </button>
+              )}
             </DetailRow>
 
+            {/* ── Reporter (read-only) ── */}
             <DetailRow icon={User} label="Reporter">
               {reporter ? (
                 <div className="flex items-center gap-2">
                   <Avatar name={reporter.fullName} />
-                  <span>{reporter.fullName}</span>
+                  <span className="text-[13px]">{reporter.fullName}</span>
                 </div>
               ) : (
-                <span className="text-text-muted">—</span>
+                <span className="text-text-muted text-[13px]">—</span>
               )}
             </DetailRow>
           </div>
