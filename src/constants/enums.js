@@ -35,12 +35,12 @@ export const USER_ROLE_BADGE = {
 }
 
 // ── Project status ────────────────────────────────────────────────────────────
-export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
+export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED']
 
 export const PROJECT_STATUS_LABEL = {
   PLANNING:    'Planning',
   IN_PROGRESS: 'In Progress',
-
+  ON_HOLD:     'On Hold',
   COMPLETED:   'Completed',
   CANCELLED:   'Cancelled',
 }
@@ -48,11 +48,28 @@ export const PROJECT_STATUS_LABEL = {
 export const PROJECT_STATUS_META = {
   PLANNING:    { label: 'Planning',    dot: 'bg-info',    badge: 'badge-info'    },
   IN_PROGRESS: { label: 'In Progress', dot: 'bg-accent',  badge: 'badge-accent'  },
-
+  ON_HOLD:     { label: 'On Hold',     dot: 'bg-warning', badge: 'badge-warning' },
   COMPLETED:   { label: 'Completed',   dot: 'bg-success', badge: 'badge-success' },
   CANCELLED:   { label: 'Cancelled',   dot: 'bg-danger',  badge: 'badge-danger'  },
 }
 
+
+// ── Project priority ──────────────────────────────────────────────────────────
+export const PROJECT_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
+
+export const PROJECT_PRIORITY_LABEL = {
+  LOW:      'Low',
+  MEDIUM:   'Medium',
+  HIGH:     'High',
+  CRITICAL: 'Critical',
+}
+
+export const PROJECT_PRIORITY_META = {
+  LOW:      { label: 'Low',      badge: 'badge-neutral' },
+  MEDIUM:   { label: 'Medium',   badge: 'badge-neutral' },
+  HIGH:     { label: 'High',     badge: 'badge-warning' },
+  CRITICAL: { label: 'Critical', badge: 'badge-danger'  },
+}
 
 // ── Project role-in-project ───────────────────────────────────────────────────
 export const PROJECT_ROLES = ['MANAGER', 'TECH_LEAD', 'DEVELOPER', 'DESIGNER', 'QA', 'MEMBER']

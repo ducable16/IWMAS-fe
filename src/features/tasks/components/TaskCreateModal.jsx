@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { X, Plus, Loader2 } from 'lucide-react'
 import { useCreateTask } from '@/features/tasks/hooks/useTask'
-import { useProjects } from '@/features/projects/hooks/useProjects'
-import { useMembers } from '@/features/members/hooks/useMembers'
+import { useAutocomplete, useProjectAutocomplete } from '@/features/search/hooks/useSearch'
+import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
 import {
   TASK_STATUSES,
   TASK_STATUS_LABEL,
@@ -23,13 +23,10 @@ const EMPTY = {
   dueDate:     '',
 }
 
-export default function TaskCreateModal({ open, onClose, defaultStatus, defaultProjectId }) {
+export default function TaskCreateModal({ open, onClose, defaultStatus, defaultProjectId, defaultProjectName }) {
   const [form, setForm] = useState(EMPTY)
   const { mutate: createTask, isPending } = useCreateTask()
-  const { data: projectsData } = useProjects({ size: 100 })
-  const projects = projectsData?.projects ?? []
-  const { data: membersData } = useMembers({ size: 100 })
-  const members = membersData?.members ?? []
+
 
   // Apply defaults whenever the modal opens
   useEffect(() => {
@@ -143,32 +140,23 @@ export default function TaskCreateModal({ open, onClose, defaultStatus, defaultP
 
           {/* Project · Assignee */}
           <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Project</label>
-              <select
-                value={form.projectId}
-                onChange={e => set('projectId', e.target.value)}
-                className="input-select w-full text-[12.5px]"
-              >
-                <option value="">No project</option>
-                {projects.map(p => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Assignee</label>
-              <select
-                value={form.assigneeId}
-                onChange={e => set('assigneeId', e.target.value)}
-                className="input-select w-full text-[12.5px]"
-              >
-                <option value="">Unassigned</option>
-                {members.map(m => (
-                  <option key={m.id} value={m.id}>{m.fullName}</option>
-                ))}
-              </select>
-            </div>
+            <AutocompleteSelect
+              id="projectId"
+              label="Project"
+              placeholder="Search projects..."
+              value={form.projectId}
+              onChange={val => set('projectId', val)}
+              useSearchHook={useProjectAutocomplete}
+              initialDisplay={defaultProjectName || ''}
+            />
+            <AutocompleteSelect
+              id="assigneeId"
+              label="Assignee"
+              placeholder="Search user..."
+              value={form.assigneeId}
+              onChange={val => set('assigneeId', val)}
+              useSearchHook={(q) => useAutocomplete(q, form.projectId)}
+            />
           </div>
 
           {/* Due date */}

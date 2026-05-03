@@ -29,20 +29,40 @@ export function useDebouncedValue(value, delay = SEARCH_DEBOUNCE_MS) {
  * Returns the raw §13.1 response shape (or undefined while loading):
  *   { prefix, suggestions: [{ term, entityId }], source, tookMs }
  */
-export function useAutocomplete(query) {
+export function useAutocomplete(query, projectId) {
   const trimmed = (query ?? '').trim()
   const enabled = trimmed.length >= SEARCH_MIN_PREFIX
 
   return useQuery({
-    queryKey: ['search', 'autocomplete', trimmed],
+    queryKey: ['search', 'autocomplete', trimmed, projectId],
     enabled,
     queryFn: async ({ signal }) => {
-      const res = await searchService.autocomplete(trimmed, signal)
+      const res = await searchService.autocomplete(trimmed, signal, projectId)
       return res.data
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false, // user is still typing; don't waste retries
+  })
+}
+
+/**
+ * §13.3 Project Autocomplete — typeahead suggestions.
+ */
+export function useProjectAutocomplete(query) {
+  const trimmed = (query ?? '').trim()
+  const enabled = trimmed.length >= SEARCH_MIN_PREFIX
+
+  return useQuery({
+    queryKey: ['search', 'autocomplete-projects', trimmed],
+    enabled,
+    queryFn: async ({ signal }) => {
+      const res = await searchService.autocompleteProjects(trimmed, signal)
+      return res.data
+    },
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+    retry: false,
   })
 }
 

@@ -238,6 +238,7 @@ export default function TasksPage() {
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         defaultProjectId={filters.projectId}
+        defaultProjectName={projects.find(p => String(p.id) === String(filters.projectId))?.name || ''}
       />
 
       <TaskFilterDrawer

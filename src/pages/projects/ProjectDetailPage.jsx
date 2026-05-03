@@ -13,8 +13,10 @@ import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import {
   PROJECT_STATUS_META as STATUS_META,
+  PROJECT_PRIORITY_META as PRIORITY_META,
   PROJECT_ROLE_LABEL,
   PROJECT_STATUS_LABEL,
+  PROJECT_PRIORITY_LABEL,
   toOptions,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
@@ -30,6 +32,7 @@ function formatDate(d) {
 }
 
 const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
+const PRIORITY_OPTIONS = toOptions(PROJECT_PRIORITY_LABEL)
 
 /** Inline view row */
 function InfoRow({ label, children }) {
@@ -97,7 +100,7 @@ export default function ProjectDetailPage() {
       code:        project.code        || '',
       description: project.description || '',
       status:      project.status      || 'PLANNING',
-
+      priority:    project.priority    || 'MEDIUM',
       startDate:   project.startDate   || '',
       endDate:     project.endDate     || '',
       managerId:   project.managerId   ? String(project.managerId) : '',
@@ -126,7 +129,7 @@ export default function ProjectDetailPage() {
       code:        form.code.trim()        || undefined,
       description: form.description.trim() || undefined,
       status:      form.status,
-
+      priority:    form.priority,
       startDate:   form.startDate || undefined,
       endDate:     form.endDate   || undefined,
       managerId:   Number(form.managerId),
@@ -144,7 +147,7 @@ export default function ProjectDetailPage() {
       code:        project.code        || '',
       description: project.description || '',
       status:      project.status      || 'PLANNING',
-
+      priority:    project.priority    || 'MEDIUM',
       startDate:   project.startDate   || '',
       endDate:     project.endDate     || '',
       managerId:   project.managerId   ? String(project.managerId) : '',
@@ -168,9 +171,11 @@ export default function ProjectDetailPage() {
   if (!project)  return <LiveEmpty label="Project not found." />
 
   const statusMeta = STATUS_META[project.status]   || STATUS_META.PLANNING
+  const prioMeta   = PRIORITY_META[project.priority] || PRIORITY_META.MEDIUM
 
   // Edit-mode derived values
   const editStatusMeta = STATUS_META[form.status]   || STATUS_META.PLANNING
+  const editPrioMeta   = PRIORITY_META[form.priority] || PRIORITY_META.MEDIUM
   const editManagerName = form.managerId
     ? (allUsers.find((u) => String(u.id) === form.managerId)?.fullName ?? '—')
     : '—'
@@ -296,6 +301,14 @@ export default function ProjectDetailPage() {
                 </select>
               </Field>
 
+              <Field label="Priority">
+                <select value={form.priority} onChange={set('priority')} className="field">
+                  {PRIORITY_OPTIONS.map((o) => (
+                    <option key={o.value} value={o.value}>{o.label}</option>
+                  ))}
+                </select>
+              </Field>
+
 
               <Field label="Manager" required error={errors.managerId}>
                 <select
@@ -336,6 +349,11 @@ export default function ProjectDetailPage() {
                 <span className={clsx('badge', statusMeta.badge)}>
                   <span className={clsx('dot', statusMeta.dot)} />
                   {statusMeta.label}
+                </span>
+              </InfoRow>
+              <InfoRow label="Priority">
+                <span className={clsx('badge', prioMeta.badge)}>
+                  {prioMeta.label}
                 </span>
               </InfoRow>
 

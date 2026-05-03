@@ -19,8 +19,18 @@ export const searchService = {
    * 400 SEARCH_QUERY_TOO_SHORT (9501) nếu `q.trim().length < 2` —
    * hook sẽ tự skip nên không thường gặp.
    */
-  autocomplete: (q, signal) =>
-    api.get('/autocomplete', { params: { q }, signal }),
+  autocomplete: (q, signal, projectId) => {
+    const params = { q }
+    if (projectId) params.projectId = projectId
+    return api.get('/autocomplete', { params, signal })
+  },
+
+  /**
+   * §13.3 GET /api/autocomplete/projects?q={prefix}
+   * Project autocomplete.
+   */
+  autocompleteProjects: (q, signal) =>
+    api.get('/autocomplete/projects', { params: { q }, signal }),
 
   /**
    * §13.2 GET /api/search?q&page&size&sortBy&sortDir
