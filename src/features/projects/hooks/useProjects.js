@@ -6,7 +6,7 @@ import { projectService } from '../services/projectService'
  * §3.1 GET /api/projects — all projects (ADMIN / PROJECT_MANAGER)
  * Returns paginated { content, page, size, totalElements, totalPages }
  *
- * Supported params: search, statuses[], priorities[], managerId,
+ * Supported params: search, statuses[], managerId,
  *   startDateFrom, startDateTo, endDateFrom, endDateTo,
  *   sortBy, sortDirection, page, size
  */

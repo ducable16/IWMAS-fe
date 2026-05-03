@@ -10,14 +10,14 @@ export const projectService = {
    *
    * @param {{
    *   search?: string,
-   *   statuses?: string[],      // repeatable: PLANNING|IN_PROGRESS|ON_HOLD|COMPLETED|CANCELLED
-   *   priorities?: string[],    // repeatable: LOW|MEDIUM|HIGH|CRITICAL
+   *   statuses?: string[],      // repeatable: PLANNING|IN_PROGRESS|COMPLETED|CANCELLED
+
    *   managerId?: number,
    *   startDateFrom?: string,   // YYYY-MM-DD
    *   startDateTo?: string,
    *   endDateFrom?: string,
    *   endDateTo?: string,
-   *   sortBy?: string,          // name|status|priority|startDate|endDate|createdAt|updatedAt
+   *   sortBy?: string,          // name|status|startDate|endDate|createdAt|updatedAt
    *   sortDirection?: string,   // ASC|DESC
    *   page?: number,
    *   size?: number,
@@ -40,14 +40,14 @@ export const projectService = {
     append('size',          params.size ?? 20)
     // Repeatable params
     ;(params.statuses   || []).forEach((v) => qs.append('statuses',   v))
-    ;(params.priorities || []).forEach((v) => qs.append('priorities', v))
+
     const q = qs.toString()
     return api.get(q ? `/projects?${q}` : '/projects')
   },
 
   /**
    * §3.2 GET /api/projects/my — all roles
-   * Same params as §3.1 (search, statuses, priorities, sortBy, sortDirection, page, size,
+   * Same params as §3.1 (search, statuses, sortBy, sortDirection, page, size,
    * managerId, startDateFrom, startDateTo, endDateFrom, endDateTo)
    */
   getMy: (params = {}) => {
@@ -66,7 +66,7 @@ export const projectService = {
     append('page',          params.page ?? 0)
     append('size',          params.size ?? 20)
     ;(params.statuses   || []).forEach((v) => qs.append('statuses',   v))
-    ;(params.priorities || []).forEach((v) => qs.append('priorities', v))
+
     const q = qs.toString()
     return api.get(q ? `/projects/my?${q}` : '/projects/my')
   },
@@ -76,7 +76,7 @@ export const projectService = {
 
   /**
    * §3.4 POST /api/projects — ADMIN or PROJECT_MANAGER
-   * @param {{ name, code?, description?, status?, priority?, startDate?, endDate?, managerId }} data
+   * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId }} data
    */
   create: (data) => api.post('/projects', data),
 

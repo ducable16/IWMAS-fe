@@ -13,7 +13,6 @@ import ProjectFormModal from '@/features/projects/components/ProjectFormModal'
 import {
   PROJECT_STATUSES as ALL_STATUSES,
   PROJECT_STATUS_META as STATUS_META,
-  PROJECT_PRIORITY_META as PRIORITY_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
 
@@ -22,7 +21,7 @@ import { useCan } from '@/utils/permissions'
 const SORT_FIELDS = {
   name:      'name',
   status:    'status',
-  priority:  'priority',
+
   startDate: 'startDate',
   endDate:   'endDate',
   createdAt: 'createdAt',
@@ -31,7 +30,7 @@ const SORT_FIELDS = {
 const DEFAULT_PARAMS = {
   search:        '',
   statuses:      [],
-  priorities:    [],
+
   sortBy:        'createdAt',
   sortDirection: 'DESC',
   page:          0,
@@ -189,8 +188,7 @@ export default function ProjectsPage() {
 
   const hasFilters =
     params.search ||
-    params.statuses.length > 0 ||
-    params.priorities.length > 0
+    params.statuses.length > 0
 
   return (
     <div className="max-w-[1200px] mx-auto">
@@ -301,7 +299,7 @@ export default function ProjectsPage() {
                 <tr className="border-b border-border-subtle bg-bg-subtle/50">
                   <SortHeader label="Project"    field="name"      params={params} onSort={handleSort} className="pl-5" />
                   <SortHeader label="Status"     field="status"    params={params} onSort={handleSort} />
-                  <SortHeader label="Priority"   field="priority"  params={params} onSort={handleSort} />
+
                   <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Manager</th>
                   <SortHeader label="Start"      field="startDate" params={params} onSort={handleSort} />
                   <SortHeader label="End"        field="endDate"   params={params} onSort={handleSort} />
@@ -313,7 +311,6 @@ export default function ProjectsPage() {
               <tbody className="divide-y divide-border-subtle">
                 {projects.map((project) => {
                   const statusMeta = STATUS_META[project.status] || STATUS_META.PLANNING
-                  const prioMeta   = PRIORITY_META[project.priority] || PRIORITY_META.MEDIUM
 
                   return (
                     <tr
@@ -347,12 +344,6 @@ export default function ProjectsPage() {
                         </span>
                       </td>
 
-                      {/* Priority */}
-                      <td className="py-3 px-3">
-                        <span className={clsx('badge', prioMeta.badge)}>
-                          {prioMeta.label}
-                        </span>
-                      </td>
 
                       {/* Manager name */}
                       <td className="py-3 px-3">
