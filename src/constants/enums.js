@@ -54,22 +54,6 @@ export const PROJECT_STATUS_META = {
 }
 
 
-// ── Project priority ──────────────────────────────────────────────────────────
-export const PROJECT_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']
-
-export const PROJECT_PRIORITY_LABEL = {
-  LOW:      'Low',
-  MEDIUM:   'Medium',
-  HIGH:     'High',
-  CRITICAL: 'Critical',
-}
-
-export const PROJECT_PRIORITY_META = {
-  LOW:      { label: 'Low',      badge: 'badge-neutral' },
-  MEDIUM:   { label: 'Medium',   badge: 'badge-neutral' },
-  HIGH:     { label: 'High',     badge: 'badge-warning' },
-  CRITICAL: { label: 'Critical', badge: 'badge-danger'  },
-}
 
 // ── Project role-in-project ───────────────────────────────────────────────────
 export const PROJECT_ROLES = ['MANAGER', 'TECH_LEAD', 'DEVELOPER', 'DESIGNER', 'QA', 'MEMBER']

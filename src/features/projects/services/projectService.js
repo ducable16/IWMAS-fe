@@ -11,13 +11,12 @@ export const projectService = {
    * @param {{
    *   search?: string,
    *   statuses?: string[],      // repeatable: PLANNING|IN_PROGRESS|ON_HOLD|COMPLETED|CANCELLED
-   *   priorities?: string[],    // repeatable: LOW|MEDIUM|HIGH|CRITICAL
    *   managerId?: number,
    *   startDateFrom?: string,   // YYYY-MM-DD
    *   startDateTo?: string,
    *   endDateFrom?: string,
    *   endDateTo?: string,
-   *   sortBy?: string,          // name|status|priority|startDate|endDate|createdAt|updatedAt
+   *   sortBy?: string,          // name|status|startDate|endDate|createdAt|updatedAt
    *   sortDirection?: string,   // ASC|DESC
    *   page?: number,
    *   size?: number,
@@ -40,7 +39,6 @@ export const projectService = {
     append('size',          params.size ?? 20)
     // Repeatable params
     ;(params.statuses   || []).forEach((v) => qs.append('statuses',   v))
-    ;(params.priorities || []).forEach((v) => qs.append('priorities', v))
 
     const q = qs.toString()
     return api.get(q ? `/projects?${q}` : '/projects')
@@ -48,7 +46,7 @@ export const projectService = {
 
   /**
    * §3.2 GET /api/projects/my — all roles
-   * Same params as §3.1 (search, statuses, priorities, sortBy, sortDirection, page, size,
+   * Same params as §3.1 (search, statuses, sortBy, sortDirection, page, size,
    * managerId, startDateFrom, startDateTo, endDateFrom, endDateTo)
    */
   getMy: (params = {}) => {
@@ -67,7 +65,6 @@ export const projectService = {
     append('page',          params.page ?? 0)
     append('size',          params.size ?? 20)
     ;(params.statuses   || []).forEach((v) => qs.append('statuses',   v))
-    ;(params.priorities || []).forEach((v) => qs.append('priorities', v))
 
     const q = qs.toString()
     return api.get(q ? `/projects/my?${q}` : '/projects/my')
@@ -78,7 +75,7 @@ export const projectService = {
 
   /**
    * §3.4 POST /api/projects — ADMIN or PROJECT_MANAGER
-   * @param {{ name, code?, description?, status?, priority?, startDate?, endDate?, managerId }} data
+   * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId }} data
    */
   create: (data) => api.post('/projects', data),
 
@@ -94,18 +91,58 @@ export const projectService = {
   getMembers: (id) => api.get(`/projects/${id}/members`),
 
   /**
-   * §3.8 POST /api/projects/{id}/members
+   * §3.8 GET /api/projects/{id}/members/search — Assignee autocomplete
+   * Returns users who can be assigned tasks in this project
+   * (project manager + active members).
+   *
+   * @param {number} id        — project ID
+   * @param {string} q         — keyword matched against fullName, email, position
+   * @param {number} [size=10] — max results (capped at 20 by server)
+   */
+  searchMembers: (id, q = '', size = 10) =>
+    api.get(`/projects/${id}/members/search`, { params: { q, size } }),
+
+  /**
+   * §3.9 POST /api/projects/{id}/members
+   * Errors: 4004 (already member), 4005 (over 100% allocation)
    * @param {{ userId, roleInProject?, allocatedEffortPercent?, joinDate?, note? }} data
    */
   addMember: (id, data) => api.post(`/projects/${id}/members`, data),
 
-  /** §3.9 PUT /api/projects/{id}/members/{memberId} */
+  /**
+   * §3.10 PUT /api/projects/{id}/members/{memberId}
+   * Errors: 4005 (over 100% allocation)
+   */
   updateMember: (id, memberId, data) =>
     api.put(`/projects/${id}/members/${memberId}`, data),
 
-  /** §3.10 DELETE /api/projects/{id}/members/{memberId} */
+  /** §3.11 DELETE /api/projects/{id}/members/{memberId} — soft-delete */
   removeMember: (id, memberId) =>
     api.delete(`/projects/${id}/members/${memberId}`),
+
+  /**
+   * §3.12 GET /api/projects/users/{userId}/effort-remaining
+   * Returns remaining effort capacity for a user.
+   *
+   * @param {number} userId
+   * @param {{
+   *   startDate?: string,  // YYYY-MM-DD — start of proposed period
+   *   endDate?:   string,  // YYYY-MM-DD — end of proposed period
+   *   detail?:    boolean, // include allocationTimeline breakdown
+   * }} params
+   */
+  getUserEffortRemaining: (userId, params = {}) => {
+    const qs = new URLSearchParams()
+    if (params.startDate) qs.append('startDate', params.startDate)
+    if (params.endDate)   qs.append('endDate',   params.endDate)
+    if (params.detail)    qs.append('detail',    'true')
+    const q = qs.toString()
+    return api.get(
+      q
+        ? `/projects/users/${userId}/effort-remaining?${q}`
+        : `/projects/users/${userId}/effort-remaining`,
+    )
+  },
 
   // Convenience shortcut (used by sprint board)
   getTasks: (id) => api.get(`/projects/${id}/tasks`),

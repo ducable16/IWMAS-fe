@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { projectService } from '../services/projectService'
 
@@ -6,7 +6,7 @@ import { projectService } from '../services/projectService'
  * §3.1 GET /api/projects — all projects (ADMIN / PROJECT_MANAGER)
  * Returns paginated { content, page, size, totalElements, totalPages }
  *
- * Supported params: search, statuses[], priorities[], managerId,
+ * Supported params: search, statuses[], managerId,
  *   startDateFrom, startDateTo, endDateFrom, endDateTo,
  *   sortBy, sortDirection, page, size
  */
@@ -95,6 +95,52 @@ export function useProjectMembers(projectId) {
   })
 }
 
+/**
+ * §3.8 GET /api/projects/{id}/members/search — Assignee autocomplete
+ * Returns users who can be assigned tasks in this project (manager + active members).
+ *
+ * @param {number}  projectId
+ * @param {string}  q         — keyword (empty = all participants)
+ * @param {number}  [size=10]
+ * @param {boolean} [enabled=true]
+ */
+export function useProjectMemberSearch(projectId, q = '', size = 10, enabled = true) {
+  return useQuery({
+    queryKey: ['projects', projectId, 'members', 'search', q, size],
+    queryFn: async () => {
+      const res = await projectService.searchMembers(projectId, q, size)
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: !!projectId && enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  })
+}
+
+/**
+ * §3.12 GET /api/projects/users/{userId}/effort-remaining
+ * Returns remaining effort capacity for a user within a period.
+ *
+ * Response: { userId, userName, queryStart, queryEnd,
+ *             peakAllocatedPercent, remainingPercent,
+ *             overlappingAllocations, futureAvailabilityNotes }
+ *
+ * @param {number}  userId
+ * @param {{ startDate?, endDate?, detail? }} params
+ * @param {boolean} [enabled=true]
+ */
+export function useUserEffortRemaining(userId, params = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['projects', 'effort-remaining', userId, params],
+    queryFn: async () => {
+      const res = await projectService.getUserEffortRemaining(userId, params)
+      return res.data ?? null
+    },
+    enabled: !!userId && enabled,
+    staleTime: 30_000,
+  })
+}
+
 // ── Mutations ────────────────────────────────────────────────
 
 /** §3.4 POST /api/projects */
@@ -137,7 +183,10 @@ export function useDeleteProject() {
   })
 }
 
-/** §3.8 POST /api/projects/{id}/members */
+/**
+ * §3.9 POST /api/projects/{id}/members
+ * Error codes: 4004 = already a member, 4005 = over 100% allocation
+ */
 export function useAddProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -146,11 +195,23 @@ export function useAddProjectMember(projectId) {
       toast.success('Member added')
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
-    onError: (err) => toast.error(err?.message || 'Failed to add member'),
+    onError: (err) => {
+      const code = err?.response?.data?.code
+      if (code === 4004) {
+        toast.error('This user is already a member of this project.')
+      } else if (code === 4005) {
+        toast.error("Adding this allocation would push the user's total above 100%.")
+      } else {
+        toast.error(err?.message || 'Failed to add member')
+      }
+    },
   })
 }
 
-/** §3.9 PUT /api/projects/{id}/members/{memberId} */
+/**
+ * §3.10 PUT /api/projects/{id}/members/{memberId}
+ * Error codes: 4005 = over 100% allocation
+ */
 export function useUpdateProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -160,11 +221,18 @@ export function useUpdateProjectMember(projectId) {
       toast.success('Member updated')
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
-    onError: (err) => toast.error(err?.message || 'Failed to update member'),
+    onError: (err) => {
+      const code = err?.response?.data?.code
+      if (code === 4005) {
+        toast.error("Updated allocation would push the user's total above 100%.")
+      } else {
+        toast.error(err?.message || 'Failed to update member')
+      }
+    },
   })
 }
 
-/** §3.10 DELETE /api/projects/{id}/members/{memberId} */
+/** §3.11 DELETE /api/projects/{id}/members/{memberId} */
 export function useRemoveProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({

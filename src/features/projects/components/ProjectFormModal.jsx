@@ -5,7 +5,6 @@ import { useCreateProject, useUpdateProject } from '../hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import {
   PROJECT_STATUS_LABEL,
-  PROJECT_PRIORITY_LABEL,
   toOptions,
 } from '@/constants/enums'
 
@@ -30,7 +29,6 @@ const BLANK = {
 }
 
 const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
-const PRIORITY_OPTIONS = toOptions(PROJECT_PRIORITY_LABEL)
 
 function Field({ label, error, required, children }) {
   return (
@@ -67,7 +65,6 @@ export default function ProjectFormModal({ open, project, onClose }) {
         code:        project.code        || '',
         description: project.description || '',
         status:      project.status      || 'PLANNING',
-        priority:    project.priority    || 'MEDIUM',
 
         startDate:   project.startDate   || '',
         endDate:     project.endDate     || '',
@@ -101,7 +98,6 @@ export default function ProjectFormModal({ open, project, onClose }) {
       code:        form.code.trim() || undefined,
       description: form.description.trim() || undefined,
       status:      form.status,
-      priority:    form.priority,
 
       startDate:   form.startDate || undefined,
       endDate:     form.endDate   || undefined,
@@ -174,23 +170,13 @@ export default function ProjectFormModal({ open, project, onClose }) {
           </Field>
 
           {/* Status */}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Status">
-              <select value={form.status} onChange={set('status')} className="field">
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </Field>
-
-            <Field label="Priority">
-              <select value={form.priority} onChange={set('priority')} className="field">
-                {PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-            </Field>
-          </div>
+          <Field label="Status">
+            <select value={form.status} onChange={set('status')} className="field">
+              {STATUS_OPTIONS.map((o) => (
+                <option key={o.value} value={o.value}>{o.label}</option>
+              ))}
+            </select>
+          </Field>
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-3">
