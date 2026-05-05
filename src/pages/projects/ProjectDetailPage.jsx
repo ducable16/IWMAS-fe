@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, Trash2, Users, Calendar,
   X, Save, Loader2, Plus, Edit2
@@ -441,9 +441,13 @@ export default function ProjectDetailPage() {
                         <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[10px] font-semibold text-accent shrink-0">
                           {m.userFullName?.[0]?.toUpperCase() || '?'}
                         </div>
-                        <span className="text-[13px] font-medium text-text-primary truncate max-w-[160px]">
+                        <Link
+                          to={`/users/${m.userId}`}
+                          className="text-[13px] font-medium text-text-primary truncate max-w-[160px] hover:text-accent hover:underline transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           {m.userFullName}
-                        </span>
+                        </Link>
                       </div>
                     </td>
                     <td className="py-3 px-3">

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import {
   X, Pencil, Save, Loader2, Mail, Phone, Calendar, Clock,
-  Shield, AlertTriangle, UserX, UserCheck,
+  Shield, AlertTriangle, UserX, UserCheck, ExternalLink,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useUpdateMember } from '../hooks/useUpdateMember'
@@ -131,6 +132,16 @@ export default function UserDrawer({ user, onClose }) {
             User details
           </h3>
           <div className="flex items-center gap-1.5">
+            <Link
+              to={`/users/${user.id}`}
+              onClick={onClose}
+              className="btn-ghost text-[12.5px] py-1.5 px-2.5 gap-1"
+              title="View full profile"
+              id="drawer-view-profile-btn"
+            >
+              <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.75} />
+              Profile
+            </Link>
             {canEdit && !isEditing && (
               <button
                 onClick={() => setIsEditing(true)}

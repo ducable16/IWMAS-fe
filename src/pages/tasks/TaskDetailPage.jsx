@@ -557,7 +557,13 @@ export default function TaskDetailPage() {
                   {assignee ? (
                     <>
                       <Avatar name={assignee.fullName} />
-                      <span className="text-[13px] truncate">{assignee.fullName}</span>
+                      <Link
+                        to={`/users/${assignee.id}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-[13px] truncate hover:text-accent hover:underline transition-colors"
+                      >
+                        {assignee.fullName}
+                      </Link>
                     </>
                   ) : (
                     <span className="text-text-muted text-[13px]">Unassigned</span>
@@ -827,7 +833,12 @@ export default function TaskDetailPage() {
               {reporter ? (
                 <div className="flex items-center gap-2">
                   <Avatar name={reporter.fullName} />
-                  <span className="text-[13px]">{reporter.fullName}</span>
+                  <Link
+                    to={`/users/${reporter.id}`}
+                    className="text-[13px] hover:text-accent hover:underline transition-colors"
+                  >
+                    {reporter.fullName}
+                  </Link>
                 </div>
               ) : (
                 <span className="text-text-muted text-[13px]">—</span>

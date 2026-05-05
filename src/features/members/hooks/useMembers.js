@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { keepPreviousData } from '@tanstack/react-query'
 import { userService } from '../services/memberService'
 
 /**
@@ -55,4 +56,107 @@ export function normaliseUser(u) {
     avatarUrl: u.avatarUrl || null,
     workloadScore: u.workloadScore ?? 0,
   }
+}
+
+/**
+ * §2.7 GET /api/users/{id} — fetch a single user by ID.
+ * Response shape depends on caller's role (see §2.6 table).
+ */
+export function useUser(id) {
+  return useQuery({
+    queryKey: ['users', id],
+    queryFn: async () => {
+      const res = await userService.getById(id)
+      return normaliseUser(res.data ?? {})
+    },
+    enabled: !!id,
+    staleTime: 60_000,
+  })
+}
+
+/**
+ * §2.10 GET /api/users/{userId}/projects — projects the target user participates in.
+ * Access is enforced server-side per the caller's role.
+ *
+ * @param {number}  userId
+ * @param {object}  params  — same filters as §3.1 (statuses, search, sortBy, page, size…)
+ * @param {boolean} enabled
+ */
+export function useUserProjects(userId, params = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['users', userId, 'projects', params],
+    queryFn: async () => {
+      const res = await userService.getUserProjects(userId, params)
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw) ? raw : Array.isArray(raw.content) ? raw.content : []
+      return {
+        projects:      items,
+        page:          raw.page          ?? params.page ?? 0,
+        size:          raw.size          ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages:    raw.totalPages    ?? 1,
+      }
+    },
+    enabled: !!userId && enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  })
+}
+
+/**
+ * §2.11 GET /api/users/{userId}/tasks/assigned — tasks assigned to the target user.
+ * Results are scoped to projects the **caller** can access.
+ *
+ * @param {number}  userId
+ * @param {object}  params  — statuses, priorities, types, search, sortBy, page, size…
+ * @param {boolean} enabled
+ */
+export function useUserAssignedTasks(userId, params = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['users', userId, 'tasks', 'assigned', params],
+    queryFn: async () => {
+      const res = await userService.getUserAssignedTasks(userId, params)
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw) ? raw : Array.isArray(raw.content) ? raw.content : []
+      return {
+        tasks:         items,
+        page:          raw.page          ?? params.page ?? 0,
+        size:          raw.size          ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages:    raw.totalPages    ?? 1,
+      }
+    },
+    enabled: !!userId && enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  })
+}
+
+/**
+ * §2.12 GET /api/users/{userId}/tasks/reported — tasks reported/created by the target user.
+ * Results are scoped to projects the **caller** can access.
+ *
+ * @param {number}  userId
+ * @param {object}  params  — same as §2.11
+ * @param {boolean} enabled
+ */
+export function useUserReportedTasks(userId, params = {}, enabled = true) {
+  return useQuery({
+    queryKey: ['users', userId, 'tasks', 'reported', params],
+    queryFn: async () => {
+      const res = await userService.getUserReportedTasks(userId, params)
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw) ? raw : Array.isArray(raw.content) ? raw.content : []
+      return {
+        tasks:         items,
+        page:          raw.page          ?? params.page ?? 0,
+        size:          raw.size          ?? params.size ?? 20,
+        totalElements: raw.totalElements ?? items.length,
+        totalPages:    raw.totalPages    ?? 1,
+      }
+    },
+    enabled: !!userId && enabled,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+  })
 }
