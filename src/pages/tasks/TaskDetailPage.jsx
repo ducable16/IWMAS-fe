@@ -7,6 +7,8 @@ import {
   AlertTriangle, Loader2, ChevronRight,
 } from 'lucide-react'
 import clsx from 'clsx'
+import MentionTextarea from '@/components/ui/MentionTextarea'
+import CommentContent from '@/components/ui/CommentContent'
 import {
   useTask, useTaskHistory, useUpdateTaskStatus,
   useUpdateTask, useAddTaskComment,
@@ -159,7 +161,7 @@ function HistoryTab({ taskId }) {
 
 // ─── Comments tab ─────────────────────────────────────────────────────────────
 
-function CommentsTab({ taskId, comments = [] }) {
+function CommentsTab({ taskId, comments = [], projectId }) {
   const [content, setContent] = useState('')
   const { mutate, isPending } = useAddTaskComment(taskId)
   const user = useAuthStore(s => s.user)
@@ -171,13 +173,14 @@ function CommentsTab({ taskId, comments = [] }) {
 
   return (
     <div className="space-y-6">
+      {/* Comment list */}
       {comments.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {comments.map(c => (
-            <div key={c.id} className="flex items-start gap-3">
+            <div key={c.id} className="flex items-start gap-3 group">
               <Avatar name={c.author?.fullName} size="sm" />
-              <div className="flex-1">
-                <div className="flex items-baseline gap-2 mb-0.5">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2 mb-1">
                   <span className="text-[13px] font-semibold text-text-primary">
                     {c.author?.fullName || 'Unknown'}
                   </span>
@@ -185,7 +188,8 @@ function CommentsTab({ taskId, comments = [] }) {
                     {new Date(c.createdAt).toLocaleString()}
                   </span>
                 </div>
-                <p className="text-[13px] text-text-secondary whitespace-pre-wrap">{c.content}</p>
+                {/* Render comment with @mention highlighting */}
+                <CommentContent content={c.content} />
               </div>
             </div>
           ))}
@@ -194,34 +198,28 @@ function CommentsTab({ taskId, comments = [] }) {
         <p className="text-[13px] text-text-muted italic">No comments yet.</p>
       )}
 
+      {/* Compose area */}
       <div className="flex items-start gap-3">
-        <Avatar name={user?.name || user?.email} size="sm" />
-        <div className="flex-1">
-          <div className="border border-border rounded-lg bg-bg-surface focus-within:border-border-strong transition-colors overflow-hidden">
-            <textarea
-              value={content}
-              onChange={e => setContent(e.target.value)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSubmit() }
-              }}
-              placeholder="Add a comment…"
-              rows={2}
-              className="w-full bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none p-3 resize-none"
-            />
-            <div className="flex items-center justify-end bg-bg-subtle/50 border-t border-border-subtle px-3 py-2">
-              <button
-                onClick={handleSubmit}
-                disabled={!content.trim() || isPending}
-                className="btn-primary text-[12px] px-3 py-1 disabled:opacity-40"
-              >
-                {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
-              </button>
-            </div>
+        <Avatar name={user?.fullName || user?.name || user?.email} size="sm" />
+        <div className="flex-1 min-w-0 space-y-2">
+          <MentionTextarea
+            value={content}
+            onChange={setContent}
+            onSubmit={handleSubmit}
+            projectId={projectId}
+            placeholder="Add a comment… (type @ to mention)"
+            rows={2}
+            disabled={isPending}
+          />
+          <div className="flex items-center justify-end">
+            <button
+              onClick={handleSubmit}
+              disabled={!content.trim() || isPending}
+              className="btn-primary text-[12px] px-4 py-1.5 disabled:opacity-40"
+            >
+              {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : 'Save'}
+            </button>
           </div>
-          <p className="text-[11px] text-text-muted mt-1.5">
-            Press <kbd className="kbd">Enter</kbd> to save,{' '}
-            <kbd className="kbd">Shift+Enter</kbd> for new line.
-          </p>
         </div>
       </div>
     </div>
@@ -488,7 +486,7 @@ export default function TaskDetailPage() {
               ))}
             </div>
             <div className="min-h-[80px]">
-              {activeTab === 'comments' && <CommentsTab taskId={id} comments={task?.comments} />}
+              {activeTab === 'comments' && <CommentsTab taskId={id} comments={task?.comments} projectId={task?.projectId} />}
               {activeTab === 'history'  && <HistoryTab taskId={id} />}
               {activeTab === 'worklog'  && (
                 <p className="text-[13px] text-text-muted py-4 text-center italic">No work logs yet.</p>
