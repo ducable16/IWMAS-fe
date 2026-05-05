@@ -14,6 +14,7 @@ import {
   useUpdateTask, useAddTaskComment,
 } from '@/features/tasks/hooks/useTask'
 import { useMembers } from '@/features/members/hooks/useMembers'
+import { useProjectMembers } from '@/features/projects/hooks/useProjects'
 import { LiveLoading, LiveError } from '@/components/feedback/LiveStateOverlay'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useCan } from '@/utils/permissions'
@@ -166,6 +167,15 @@ function CommentsTab({ taskId, comments = [], projectId }) {
   const { mutate, isPending } = useAddTaskComment(taskId)
   const user = useAuthStore(s => s.user)
 
+  // Build { fullName → userId } map from project members so that
+  // @mention badges in comments can link to /users/:id
+  const { data: projectMembers = [] } = useProjectMembers(projectId)
+  const mentionMap = Object.fromEntries(
+    projectMembers
+      .filter((m) => m.userId && m.userFullName)
+      .map((m) => [m.userFullName, m.userId]),
+  )
+
   const handleSubmit = () => {
     if (!content.trim() || isPending) return
     mutate(content, { onSuccess: () => setContent('') })
@@ -188,8 +198,8 @@ function CommentsTab({ taskId, comments = [], projectId }) {
                     {new Date(c.createdAt).toLocaleString()}
                   </span>
                 </div>
-                {/* Render comment with @mention highlighting */}
-                <CommentContent content={c.content} />
+                {/* @mention badges are clickable when userId is in mentionMap */}
+                <CommentContent content={c.content} mentionMap={mentionMap} />
               </div>
             </div>
           ))}
