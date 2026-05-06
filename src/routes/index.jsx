@@ -16,8 +16,8 @@ const WorkloadPage = lazy(() => import('@/pages/workforce/WorkloadPage'))
 const SprintRiskPage = lazy(() => import('@/pages/workforce/SprintRiskPage'))
 const MembersPage = lazy(() => import('@/pages/members/MembersPage'))
 const UserProfilePage = lazy(() => import('@/pages/members/UserProfilePage'))
-const SearchPage = lazy(() => import('@/pages/search/SearchPage'))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
+const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage'))
 const NotFoundPage = lazy(() => import('@/pages/errors/NotFoundPage'))
 
 export default function AppRouter() {
@@ -42,7 +42,7 @@ export default function AppRouter() {
               <Route path="/workforce/sprint-risk" element={<SprintRiskPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/users/:id" element={<UserProfilePage />} />
-              <Route path="/search" element={<SearchPage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
             </Route>
           </Route>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, Trash2, Users, Calendar,
-  X, Save, Loader2, Plus, Edit2
+  X, Save, Loader2, Plus, Edit2, BarChart3
 } from 'lucide-react'
 import clsx from 'clsx'
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
 
 /* ── Helpers ───────────────────────────────────────────────── */
 
@@ -94,6 +95,7 @@ export default function ProjectDetailPage() {
   const [editingMember,  setEditingMember]  = useState(null)
   const [form,      setForm]      = useState({})
   const [errors,    setErrors]    = useState({})
+  const [activeTab, setActiveTab]  = useState('overview')
 
   useEffect(() => {
     if (!project) return
@@ -278,7 +280,36 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
-      {/* ── Info / Edit Section ── */}
+      {/* ── Tab navigation ── */}
+      <div className="flex items-center gap-1 border-b border-border-subtle mb-6">
+        {[
+          { id: 'overview', label: 'Overview' },
+          { id: 'members',  label: 'Members', count: members.length },
+          ...((canEdit || can.isAdmin) ? [{ id: 'workload', label: 'Workload', icon: BarChart3 }] : []),
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={clsx(
+              'flex items-center gap-1.5 px-3 pb-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors',
+              activeTab === tab.id
+                ? 'border-accent text-accent'
+                : 'border-transparent text-text-muted hover:text-text-secondary',
+            )}
+          >
+            {tab.icon && <tab.icon className="w-3.5 h-3.5" strokeWidth={1.75} />}
+            {tab.label}
+            {tab.count != null && (
+              <span className="text-[10.5px] bg-bg-subtle text-text-muted px-1.5 py-0.5 rounded-full ml-0.5">
+                {tab.count}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Tab: Overview ── */}
+      {activeTab === 'overview' && (
       <div className="grid lg:grid-cols-2 gap-5 mb-6">
 
         {/* Left — Details card */}
@@ -389,8 +420,10 @@ export default function ProjectDetailPage() {
           )}
         </div>
       </div>
+      )}
 
-      {/* ── Members Section ── */}
+      {/* ── Tab: Members ── */}
+      {activeTab === 'members' && (
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
           <h3 className="text-[13px] font-semibold text-text-primary uppercase tracking-wide flex items-center gap-2">
@@ -510,6 +543,14 @@ export default function ProjectDetailPage() {
           </div>
         )}
       </div>
+      )}
+
+      {/* ── Tab: Workload ── */}
+      {activeTab === 'workload' && (canEdit || can.isAdmin) && (
+        <div className="card p-5">
+          <ProjectWorkloadDashboard projectId={Number(id)} />
+        </div>
+      )}
 
       <ProjectAddMemberModal
         open={addMemberOpen}

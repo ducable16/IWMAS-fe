@@ -182,6 +182,15 @@ export const SEARCH_SOURCE_LABEL = {
   database:      'Database (fallback)',
 }
 
+// ── Workload level (§9 / §11) ─────────────────────────────────────────────────
+export const WORKLOAD_LEVELS = ['AVAILABLE', 'HEALTHY_BUSY', 'OVERLOADED']
+
+export const WORKLOAD_LEVEL_META = {
+  AVAILABLE:    { label: 'Available',    bg: 'bg-success/15', text: 'text-success', dot: 'bg-success', border: 'border-success/25' },
+  HEALTHY_BUSY: { label: 'Healthy Busy', bg: 'bg-warning/15', text: 'text-warning', dot: 'bg-warning', border: 'border-warning/25' },
+  OVERLOADED:   { label: 'Overloaded',   bg: 'bg-danger/15',  text: 'text-danger',  dot: 'bg-danger',  border: 'border-danger/25'  },
+}
+
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Convert an enum map into <option> array: [{ value, label }] */

@@ -7,6 +7,7 @@ import RecentActivity from '@/features/dashboard/components/RecentActivity'
 import SprintSummary from '@/features/dashboard/components/SprintSummary'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import BurnoutAlertBanner from '@/features/workforce/components/BurnoutAlertBanner'
+import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
 import { useDashboardStats, useAiInsight } from '@/features/dashboard/hooks/useDashboard'
 
 export default function DashboardPage() {
@@ -89,6 +90,7 @@ export default function DashboardPage() {
         </div>
         <div className="space-y-4">
           <SprintSummary />
+          <MyWorkloadWidget />
 
           <div className="card p-5">
             <h3 className="section-title text-[13px] mb-3">Quick actions</h3>

@@ -16,7 +16,7 @@ import clsx from 'clsx'
 export default function CommentContent({ content, mentionMap, className }) {
   if (!content) return null
 
-  const parts = parseMentions(content)
+  const parts = parseMentions(content, mentionMap || {})
 
   return (
     <p className={clsx('text-[13px] text-text-secondary whitespace-pre-wrap leading-relaxed', className)}>
@@ -70,7 +70,10 @@ function MentionBadge({ name, mentionMap }) {
  *   Name-word chars: letters (including Vietnamese A-ỹ), digits, underscore, hyphen.
  *   Words in a name are separated by a single space followed by another name-word char.
  */
-function parseMentions(text) {
+// mentionMap is passed in so we can resolve greedy multi-word matches back to a
+// known name. Without this, "@Nguyen Van A vui long review" would be parsed as
+// a single unknown mention token instead of name="Nguyen Van A" + text=" vui long review".
+function parseMentions(text, mentionMap = {}) {
   // [\w\u00C0-\u1EF9] covers A-Z, a-z, 0-9, _, and the full Vietnamese unicode block.
   const MENTION_RE = /@([\w\u00C0-\u1EF9]+(?:\s[\w\u00C0-\u1EF9]+)*)/g
 
@@ -82,8 +85,28 @@ function parseMentions(text) {
     if (match.index > lastIndex) {
       parts.push({ type: 'text', value: text.slice(lastIndex, match.index) })
     }
-    parts.push({ type: 'mention', value: match[1] })
-    lastIndex = match.index + match[0].length
+
+    // Regex is greedy \u2014 it captures all following words, not just the name.
+    // Walk backwards from the full match to find the longest prefix that is a
+    // known name in mentionMap. Falls back to the full greedy string (unknown
+    // user badge) when mentionMap is empty or has no match.
+    const greedyName = match[1]
+    let resolvedName = greedyName
+    const words = greedyName.split(' ')
+    for (let len = words.length; len >= 1; len--) {
+      const candidate = words.slice(0, len).join(' ')
+      if (mentionMap[candidate] !== undefined) {
+        resolvedName = candidate
+        break
+      }
+    }
+
+    parts.push({ type: 'mention', value: resolvedName })
+
+    // Advance past only the resolved name (@ + name), not the full greedy match,
+    // so the trailing words remain available as plain text.
+    lastIndex = match.index + 1 + resolvedName.length
+    MENTION_RE.lastIndex = lastIndex
   }
 
   if (lastIndex < text.length) {

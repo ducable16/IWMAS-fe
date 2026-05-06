@@ -1,10 +1,10 @@
-import { Bell, LogOut } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useState } from 'react'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useNavigate, useLocation } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import UserProfileModal from '@/features/auth/components/UserProfileModal'
-import GlobalSearchBar from '@/features/search/components/GlobalSearchBar'
+import NotificationBell from '@/features/notifications/components/NotificationBell'
 import { USER_ROLE_SHORT_LABEL } from '@/constants/enums'
 
 const ROUTE_LABELS = {
@@ -15,6 +15,7 @@ const ROUTE_LABELS = {
   '/workforce': 'Workload Analytics',
   '/workforce/sprint-risk': 'Sprint Risk Forecast',
   '/members': 'Team Members',
+  '/notifications': 'Notifications',
   '/search': 'Search',
   '/settings': 'Settings',
 }
@@ -45,19 +46,8 @@ export default function Topbar() {
         </h1>
       </div>
 
-      {/* Global search (§13.1 autocomplete + §13.2 results page) */}
-      <GlobalSearchBar />
-
-
-
       {/* Notifications */}
-      <button
-        className="relative w-8 h-8 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-bg-hover transition-colors"
-        aria-label="Notifications"
-      >
-        <Bell className="w-4 h-4" strokeWidth={1.75} />
-        <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full" />
-      </button>
+      <NotificationBell />
 
       {/* User menu */}
       <div className="flex items-center gap-2 pl-3 border-l border-border-subtle">
