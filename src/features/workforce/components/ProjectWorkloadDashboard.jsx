@@ -1,20 +1,20 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Users, AlertTriangle, UserCheck } from 'lucide-react'
-import clsx from 'clsx'
 import WeekNavigator from './WeekNavigator'
 import MemberWorkloadRow from './MemberWorkloadRow'
-import MemberWorkloadDetailModal from './MemberWorkloadDetailModal'
 import { useProjectWorkload } from '../hooks/useWorkload'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 
 /**
  * Main PM view — shows team utilization for a single project.
  * Reusable: embedded in both WorkloadPage and ProjectDetailPage.
+ * Clicking a row navigates to /workforce/members/:userId?weekStart=...&weekEnd=...
  */
 export default function ProjectWorkloadDashboard({ projectId }) {
+  const navigate = useNavigate()
   const [weekStart, setWeekStart] = useState('')
   const [weekEnd, setWeekEnd]     = useState('')
-  const [selectedUser, setSelectedUser] = useState(null) // { userId, userFullName }
 
   const { data: members = [], isLoading, isError, error, refetch } = useProjectWorkload(
     projectId, weekStart, weekEnd,
@@ -23,6 +23,13 @@ export default function ProjectWorkloadDashboard({ projectId }) {
   const handleWeekChange = (ws, we) => {
     setWeekStart(ws)
     setWeekEnd(we)
+  }
+
+  const handleRowClick = (member) => {
+    const params = new URLSearchParams()
+    if (weekStart) params.set('weekStart', weekStart)
+    if (weekEnd)   params.set('weekEnd',   weekEnd)
+    navigate(`/workforce/members/${member.userId}?${params.toString()}`)
   }
 
   // Summary counts
@@ -77,21 +84,11 @@ export default function ProjectWorkloadDashboard({ projectId }) {
             <MemberWorkloadRow
               key={m.userId}
               member={m}
-              onClick={() => setSelectedUser({ userId: m.userId, userFullName: m.userFullName })}
+              onClick={() => handleRowClick(m)}
             />
           ))}
         </div>
       )}
-
-      {/* Detail modal */}
-      <MemberWorkloadDetailModal
-        userId={selectedUser?.userId}
-        userFullName={selectedUser?.userFullName}
-        weekStart={weekStart}
-        weekEnd={weekEnd}
-        open={!!selectedUser}
-        onClose={() => setSelectedUser(null)}
-      />
     </div>
   )
 }

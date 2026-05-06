@@ -14,6 +14,7 @@ const TasksPage = lazy(() => import('@/pages/tasks/TasksPage'))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage'))
 const WorkloadPage = lazy(() => import('@/pages/workforce/WorkloadPage'))
 const SprintRiskPage = lazy(() => import('@/pages/workforce/SprintRiskPage'))
+const MemberWorkloadDetailPage = lazy(() => import('@/pages/workforce/MemberWorkloadDetailPage'))
 const MembersPage = lazy(() => import('@/pages/members/MembersPage'))
 const UserProfilePage = lazy(() => import('@/pages/members/UserProfilePage'))
 const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
@@ -40,6 +41,7 @@ export default function AppRouter() {
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/workforce" element={<WorkloadPage />} />
               <Route path="/workforce/sprint-risk" element={<SprintRiskPage />} />
+              <Route path="/workforce/members/:userId" element={<MemberWorkloadDetailPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/users/:id" element={<UserProfilePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />

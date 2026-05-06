@@ -76,9 +76,7 @@ export function useProjectWorkload(projectId, weekStart, weekEnd) {
     queryKey: ['workload', 'project', projectId, weekStart, weekEnd],
     queryFn: async () => {
       const res = await workloadService.getProjectMembers(projectId, { weekStart, weekEnd })
-      const items = Array.isArray(res.data) ? res.data : []
-      // Sort most loaded first
-      return items.sort((a, b) => (b.utilizationPercent ?? 0) - (a.utilizationPercent ?? 0))
+      return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId,
     staleTime: 30_000,
