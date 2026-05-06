@@ -157,7 +157,7 @@ export default function ProjectEditMemberModal({ open, member, projectId, onClos
     if (open && member) {
       setForm({
         roleInProject:          member.roleInProject          || 'MEMBER',
-        allocatedEffortPercent: member.allocatedEffortPercent ?? 80,
+        allocatedEffortPercent: member.allocatedEffortPercent ?? '',
         joinDate:               member.joinDate               || '',
         note:                   member.note                   || '',
       })

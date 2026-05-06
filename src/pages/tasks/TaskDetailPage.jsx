@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, ChevronDown, MoreHorizontal, Check, X,
@@ -261,7 +261,23 @@ export default function TaskDetailPage() {
   const [labelsDraft, setLabelsDraft] = useState(null)
   const [labelInput, setLabelInput]   = useState('')
 
-  const titleRef = useRef(null)
+  const titleRef    = useRef(null)
+  const dropdownRef = useRef(null)
+
+  // Close popup dropdowns when clicking outside
+  useEffect(() => {
+    if (!editingField || !['assignee', 'priority', 'type', 'labels'].includes(editingField)) return
+    const handler = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setEditingField(null)
+        setMemberSearch('')
+        setLabelsDraft(null)
+        setLabelInput('')
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [editingField])
 
   const { data: task, isLoading, isError, error, refetch } = useTask(id)
   const { mutate: updateTask, isPending: isUpdating } = useUpdateTask(id)
@@ -517,48 +533,9 @@ export default function TaskDetailPage() {
 
             {/* ── Assignee ── */}
             <DetailRow icon={User} label="Assignee">
-              {editingField === 'assignee' ? (
-                <div className="space-y-1.5">
-                  <input
-                    autoFocus
-                    value={memberSearch}
-                    onChange={e => setMemberSearch(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Escape') { setEditingField(null); setMemberSearch('') } }}
-                    placeholder="Search members…"
-                    className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
-                  />
-                  <div className="max-h-[160px] overflow-y-auto space-y-0.5">
-                    <button
-                      onClick={() => { save({ assigneeId: null }); setMemberSearch('') }}
-                      className="flex items-center gap-2 w-full px-2 py-1 rounded text-[12px] text-text-muted hover:bg-bg-hover transition-colors"
-                    >
-                      Unassigned
-                    </button>
-                    {filteredMembers.map(m => (
-                      <button
-                        key={m.id}
-                        onClick={() => { save({ assigneeId: m.id }); setMemberSearch('') }}
-                        className={clsx(
-                          'flex items-center gap-2 w-full px-2 py-1 rounded text-[12px] hover:bg-bg-hover transition-colors',
-                          m.id === assignee?.id ? 'bg-accent/10 text-accent font-medium' : 'text-text-secondary',
-                        )}
-                      >
-                        <Avatar name={m.fullName} />
-                        <span className="truncate">{m.fullName}</span>
-                        {m.id === assignee?.id && <Check className="w-3 h-3 ml-auto shrink-0 text-accent" strokeWidth={2.5} />}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    onClick={() => { setEditingField(null); setMemberSearch('') }}
-                    className="text-[11px] text-text-muted hover:text-text-primary transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
+              <div className="relative" ref={editingField === 'assignee' ? dropdownRef : null}>
                 <button
-                  onClick={canEditTask ? () => { setEditingField('assignee'); setMemberSearch('') } : undefined}
+                  onClick={canEditTask ? () => { setEditingField(editingField === 'assignee' ? null : 'assignee'); setMemberSearch('') } : undefined}
                   className={clsx(
                     'flex items-center gap-2 w-full text-left rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
                     canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
@@ -566,7 +543,7 @@ export default function TaskDetailPage() {
                 >
                   {assignee ? (
                     <>
-                      <Avatar name={assignee.fullName} />
+                      <Avatar name={assignee.fullName} size="xs" />
                       <Link
                         to={`/users/${assignee.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -579,86 +556,113 @@ export default function TaskDetailPage() {
                     <span className="text-text-muted text-[13px]">Unassigned</span>
                   )}
                 </button>
-              )}
+
+                {editingField === 'assignee' && (
+                  <div className="absolute top-full right-0 mt-1.5 z-50 w-[240px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-1.5">
+                    <input
+                      autoFocus
+                      value={memberSearch}
+                      onChange={e => setMemberSearch(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Escape') { setEditingField(null); setMemberSearch('') } }}
+                      placeholder="Search members…"
+                      className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1.5 focus:outline-none focus:border-border-strong"
+                    />
+                    <div className="max-h-[180px] overflow-y-auto space-y-0.5">
+                      <button
+                        onClick={() => { save({ assigneeId: null }); setEditingField(null); setMemberSearch('') }}
+                        className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-[12px] text-text-muted hover:bg-bg-hover transition-colors"
+                      >
+                        Unassigned
+                      </button>
+                      {filteredMembers.map(m => (
+                        <button
+                          key={m.id}
+                          onClick={() => { save({ assigneeId: m.id }); setEditingField(null); setMemberSearch('') }}
+                          className={clsx(
+                            'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-[12px] hover:bg-bg-hover transition-colors text-left',
+                            m.id === assignee?.id ? 'bg-accent/10 text-accent font-medium' : 'text-text-secondary',
+                          )}
+                        >
+                          <Avatar name={m.fullName} size="xs" />
+                          <span className="truncate flex-1">{m.fullName}</span>
+                          {m.id === assignee?.id && <Check className="w-3.5 h-3.5 shrink-0 text-accent" strokeWidth={2.5} />}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             </DetailRow>
 
             {/* ── Priority ── */}
             <DetailRow icon={Flag} label="Priority">
-              {editingField === 'priority' ? (
-                <div className="space-y-0.5">
-                  {TASK_PRIORITIES.map(p => {
-                    const m = PRIORITY_META[p] || { icon: '', label: p, cls: '' }
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => save({ priority: p })}
-                        className={clsx(
-                          'flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors',
-                          p === priority && 'bg-bg-subtle',
-                        )}
-                      >
-                        <span>{m.icon}</span>
-                        <span className={m.cls}>{m.label}</span>
-                        {p === priority && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
-                      </button>
-                    )
-                  })}
-                  <button
-                    onClick={() => setEditingField(null)}
-                    className="text-[11px] text-text-muted hover:text-text-primary px-2 pt-1 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
+              <div className="relative" ref={editingField === 'priority' ? dropdownRef : null}>
                 <button
-                  onClick={canEditTask ? () => setEditingField('priority') : undefined}
+                  onClick={canEditTask ? () => setEditingField(editingField === 'priority' ? null : 'priority') : undefined}
                   className={clsx(
-                    'flex items-center gap-1.5 font-medium rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
+                    'flex items-center gap-1.5 font-medium rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors w-full text-left',
                     canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
                   )}
                 >
                   <span>{priorityM.icon}</span>
                   <span className={priorityM.cls}>{priorityM.label}</span>
                 </button>
-              )}
+
+                {editingField === 'priority' && (
+                  <div className="absolute top-full right-0 mt-1.5 z-50 w-[180px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-0.5">
+                    {TASK_PRIORITIES.map(p => {
+                      const m = PRIORITY_META[p] || { icon: '', label: p, cls: '' }
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => { save({ priority: p }); setEditingField(null) }}
+                          className={clsx(
+                            'flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors text-left',
+                            p === priority && 'bg-bg-subtle',
+                          )}
+                        >
+                          <span>{m.icon}</span>
+                          <span className={clsx("flex-1", m.cls)}>{m.label}</span>
+                          {p === priority && <Check className="w-3.5 h-3.5 ml-auto shrink-0 text-accent" strokeWidth={2.5} />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             </DetailRow>
 
             {/* ── Type ── */}
             <DetailRow icon={GitBranch} label="Type">
-              {editingField === 'type' ? (
-                <div className="space-y-0.5">
-                  {TASK_TYPES.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => save({ type: t })}
-                      className={clsx(
-                        'flex items-center gap-1.5 w-full px-2 py-1 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors',
-                        t === task.type ? 'bg-bg-subtle text-text-primary' : 'text-text-secondary',
-                      )}
-                    >
-                      {TASK_TYPE_LABEL[t] || t}
-                      {t === task.type && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() => setEditingField(null)}
-                    className="text-[11px] text-text-muted hover:text-text-primary px-2 pt-1 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              ) : (
+              <div className="relative" ref={editingField === 'type' ? dropdownRef : null}>
                 <button
-                  onClick={canEditTask ? () => setEditingField('type') : undefined}
+                  onClick={canEditTask ? () => setEditingField(editingField === 'type' ? null : 'type') : undefined}
                   className={clsx(
-                    'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary',
+                    'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary text-left w-full',
                     canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
                   )}
                 >
                   {TASK_TYPE_LABEL[task?.type] || task?.type || '—'}
                 </button>
-              )}
+
+                {editingField === 'type' && (
+                  <div className="absolute top-full right-0 mt-1.5 z-50 w-[180px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-0.5">
+                    {TASK_TYPES.map(t => (
+                      <button
+                        key={t}
+                        onClick={() => { save({ type: t }); setEditingField(null) }}
+                        className={clsx(
+                          'flex items-center gap-1.5 w-full px-2 py-1.5 rounded-md text-[12.5px] hover:bg-bg-hover transition-colors text-left',
+                          t === task.type ? 'bg-bg-subtle text-text-primary' : 'text-text-secondary',
+                        )}
+                      >
+                        <span className="flex-1">{TASK_TYPE_LABEL[t] || t}</span>
+                        {t === task.type && <Check className="w-3.5 h-3.5 ml-auto shrink-0 text-accent" strokeWidth={2.5} />}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </DetailRow>
 
             {/* ── Start date ── */}
@@ -761,60 +765,17 @@ export default function TaskDetailPage() {
 
             {/* ── Labels ── */}
             <DetailRow icon={Tag} label="Labels">
-              {editingField === 'labels' && labelsDraft !== null ? (
-                <div className="space-y-1.5">
-                  {/* Current labels with remove buttons */}
-                  {labelsDraft.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {labelsDraft.map(l => (
-                        <span
-                          key={l}
-                          className="inline-flex items-center gap-1 text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
-                        >
-                          #{l}
-                          <button
-                            onClick={() => setLabelsDraft(prev => prev.filter(x => x !== l))}
-                            className="text-accent/60 hover:text-accent"
-                          >
-                            <X className="w-2.5 h-2.5" />
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                  {/* Add label input */}
-                  <input
-                    autoFocus
-                    value={labelInput}
-                    onChange={e => setLabelInput(e.target.value)}
-                    placeholder="Add label, Enter to confirm…"
-                    onKeyDown={e => {
-                      if (e.key === 'Enter') {
-                        const v = labelInput.trim()
-                        if (v && !labelsDraft.includes(v))
-                          setLabelsDraft(prev => [...prev, v])
-                        setLabelInput('')
-                      }
-                      if (e.key === 'Escape') { setEditingField(null); setLabelsDraft(null); setLabelInput('') }
-                    }}
-                    className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1 focus:outline-none focus:border-border-strong"
-                  />
-                  <div className="flex items-center gap-2">
-                    <button onClick={saveLabels} className="text-[11.5px] text-accent font-medium hover:underline transition-colors">
-                      Done
-                    </button>
-                    <button
-                      onClick={() => { setEditingField(null); setLabelsDraft(null); setLabelInput('') }}
-                      className="text-[11px] text-text-muted hover:text-text-primary transition-colors"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
+              <div className="relative" ref={editingField === 'labels' ? dropdownRef : null}>
                 <button
                   onClick={canEditTask
-                    ? () => { setLabelsDraft([...(task?.labels || [])]); setEditingField('labels') }
+                    ? () => {
+                        if (editingField === 'labels') {
+                           setEditingField(null)
+                        } else {
+                           setLabelsDraft([...(task?.labels || [])])
+                           setEditingField('labels')
+                        }
+                      }
                     : undefined
                   }
                   className={clsx(
@@ -835,7 +796,57 @@ export default function TaskDetailPage() {
                     <span className="text-text-muted text-[13px]">None</span>
                   )}
                 </button>
-              )}
+
+                {editingField === 'labels' && labelsDraft !== null && (
+                  <div className="absolute bottom-full right-0 mb-1.5 z-50 w-[240px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-2 space-y-2">
+                    {labelsDraft.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {labelsDraft.map(l => (
+                          <span
+                            key={l}
+                            className="inline-flex items-center gap-1 text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
+                          >
+                            #{l}
+                            <button
+                              onClick={() => setLabelsDraft(prev => prev.filter(x => x !== l))}
+                              className="text-accent/60 hover:text-accent"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <input
+                      autoFocus
+                      value={labelInput}
+                      onChange={e => setLabelInput(e.target.value)}
+                      placeholder="Add label, Enter to confirm…"
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
+                          const v = labelInput.trim()
+                          if (v && !labelsDraft.includes(v))
+                            setLabelsDraft(prev => [...prev, v])
+                          setLabelInput('')
+                        }
+                        if (e.key === 'Escape') { setEditingField(null); setLabelsDraft(null); setLabelInput('') }
+                      }}
+                      className="w-full text-[12px] bg-bg-subtle border border-border rounded-md px-2 py-1.5 focus:outline-none focus:border-border-strong"
+                    />
+                    <div className="flex items-center justify-end gap-2 pt-1 border-t border-border-subtle">
+                      <button
+                        onClick={() => { setEditingField(null); setLabelsDraft(null); setLabelInput('') }}
+                        className="text-[11.5px] text-text-muted hover:text-text-primary px-2 py-1 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button onClick={saveLabels} className="btn-primary text-[11.5px] px-3 py-1">
+                        Save
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </DetailRow>
 
             {/* ── Reporter (read-only) ── */}

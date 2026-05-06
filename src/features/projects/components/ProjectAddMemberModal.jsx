@@ -9,7 +9,7 @@ import { PROJECT_ROLES, PROJECT_ROLE_LABEL } from '@/constants/enums'
 const BLANK = {
   userId:                 '',
   roleInProject:          'MEMBER',
-  allocatedEffortPercent: 80,
+  allocatedEffortPercent: '',
   joinDate:               new Date().toISOString().split('T')[0],
   note:                   '',
 }
