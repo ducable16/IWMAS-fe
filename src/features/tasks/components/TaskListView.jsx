@@ -145,9 +145,6 @@ export default function TaskListView({
               <th className="text-left px-4 py-3 text-[11px] font-medium text-text-muted uppercase tracking-wide whitespace-nowrap">
                 Assignee
               </th>
-              <th className="text-left px-4 py-3 text-[11px] font-medium text-text-muted uppercase tracking-wide whitespace-nowrap">
-                Sprint
-              </th>
               <th className="text-left px-4 py-3">
                 <SortHeader field="dueDate" label="Due" filters={filters} onChange={onChange} />
               </th>
@@ -216,7 +213,6 @@ export default function TaskListView({
 
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
-                      <span className={clsx('dot flex-shrink-0', prio.dot)} />
                       <span className={clsx('text-[12px]', prio.color ?? 'text-text-secondary')}>
                         {prio.label}
                       </span>
@@ -224,39 +220,16 @@ export default function TaskListView({
                   </td>
 
                   <td className="px-4 py-3">
-                    <button
-                      title={task.assigneeFull}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        if (task.assigneeId)
-                          onChange('assigneeId', filters.assigneeId === task.assigneeId ? null : task.assigneeId)
-                      }}
-                      className={clsx(
-                        'w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold border-2 transition-all',
-                        filters.assigneeId && filters.assigneeId === task.assigneeId
-                          ? 'border-accent text-accent bg-accent/10'
-                          : 'border-border-subtle text-text-primary bg-bg-subtle hover:border-accent/50',
-                      )}
-                    >
-                      {task.assignee}
-                    </button>
-                  </td>
-
-                  <td className="px-4 py-3">
-                    {task.sprint !== '—' ? (
+                    {task.assigneeId ? (
                       <span
+                        title={task.assigneeFull}
                         onClick={(e) => {
                           e.stopPropagation()
-                          onChange('sprint', filters.sprint === task.sprint ? null : task.sprint)
+                          navigate(`/users/${task.assigneeId}`)
                         }}
-                        className={clsx(
-                          'text-[11px] px-2 py-0.5 rounded-full border cursor-pointer transition-colors whitespace-nowrap',
-                          filters.sprint === task.sprint
-                            ? 'bg-accent/10 text-accent border-accent/30'
-                            : 'bg-bg-subtle text-text-muted border-border-subtle hover:border-accent/30',
-                        )}
+                        className="text-[12px] text-text-primary hover:text-accent hover:underline cursor-pointer transition-colors whitespace-nowrap"
                       >
-                        {task.sprint}
+                        {task.assigneeEmail}
                       </span>
                     ) : (
                       <span className="text-[12px] text-text-muted">—</span>

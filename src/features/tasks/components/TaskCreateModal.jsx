@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { X, Plus, Loader2 } from 'lucide-react'
 import { useCreateTask } from '@/features/tasks/hooks/useTask'
 import { useAutocomplete, useProjectAutocomplete } from '@/features/search/hooks/useSearch'
+import { useQuery } from '@tanstack/react-query'
+import { projectService } from '@/features/projects/services/projectService'
+import { userService } from '@/features/members/services/memberService'
 import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
 import {
   TASK_STATUSES,
@@ -21,6 +24,54 @@ const EMPTY = {
   projectId:   '',
   assigneeId:  '',
   dueDate:     '',
+}
+
+function useProjectSuggestions(q) {
+  const query = (q || '').trim()
+  const isAuto = query.length >= 2
+  const auto = useProjectAutocomplete(query)
+
+  const all = useQuery({
+    queryKey: ['projects', 'suggestions', 'all'],
+    queryFn: async () => {
+      const res = await projectService.getAll({ size: 10 })
+      const data = res.data?.content || res.data || []
+      return { suggestions: data.map(p => ({ entityId: p.id, term: p.name })) }
+    },
+    enabled: !isAuto,
+    staleTime: 60000,
+  })
+
+  return isAuto ? auto : all
+}
+
+function useAssigneeSuggestions(q, projectId) {
+  const query = (q || '').trim()
+  const isAuto = query.length >= 2
+  const auto = useAutocomplete(query, projectId)
+
+  const all = useQuery({
+    queryKey: ['users', 'suggestions', projectId || 'global'],
+    queryFn: async () => {
+      if (projectId) {
+        const res = await projectService.searchMembers(projectId, '', 10)
+        const data = res.data || []
+        return {
+          suggestions: data.map(m => ({ entityId: m.id, term: m.fullName || m.email || 'Unknown' }))
+        }
+      } else {
+        const res = await userService.getAll({ size: 10 })
+        const data = res.data?.content || res.data || []
+        return {
+          suggestions: data.map(u => ({ entityId: u.id, term: u.fullName || u.email || 'Unknown' }))
+        }
+      }
+    },
+    enabled: !isAuto,
+    staleTime: 60000,
+  })
+
+  return isAuto ? auto : all
 }
 
 export default function TaskCreateModal({ open, onClose, defaultStatus, defaultProjectId, defaultProjectName }) {
@@ -146,7 +197,7 @@ export default function TaskCreateModal({ open, onClose, defaultStatus, defaultP
               placeholder="Search projects..."
               value={form.projectId}
               onChange={val => set('projectId', val)}
-              useSearchHook={useProjectAutocomplete}
+              useSearchHook={useProjectSuggestions}
               initialDisplay={defaultProjectName || ''}
             />
             <AutocompleteSelect
@@ -155,7 +206,7 @@ export default function TaskCreateModal({ open, onClose, defaultStatus, defaultP
               placeholder="Search user..."
               value={form.assigneeId}
               onChange={val => set('assigneeId', val)}
-              useSearchHook={(q) => useAutocomplete(q, form.projectId)}
+              useSearchHook={(q) => useAssigneeSuggestions(q, form.projectId)}
             />
           </div>
 

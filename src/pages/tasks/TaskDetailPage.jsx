@@ -483,9 +483,7 @@ export default function TaskDetailPage() {
             </CollapsibleSection>
           )}
 
-          <CollapsibleSection title="Subtasks">
-            <p className="text-[13px] text-text-muted italic">No subtasks yet.</p>
-          </CollapsibleSection>
+
 
           <CollapsibleSection title="Linked items">
             <p className="text-[13px] text-text-muted italic">No linked items.</p>
@@ -604,7 +602,6 @@ export default function TaskDetailPage() {
                     canEditTask ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
                   )}
                 >
-                  <span>{priorityM.icon}</span>
                   <span className={priorityM.cls}>{priorityM.label}</span>
                 </button>
 
@@ -621,7 +618,6 @@ export default function TaskDetailPage() {
                             p === priority && 'bg-bg-subtle',
                           )}
                         >
-                          <span>{m.icon}</span>
                           <span className={clsx("flex-1", m.cls)}>{m.label}</span>
                           {p === priority && <Check className="w-3.5 h-3.5 ml-auto shrink-0 text-accent" strokeWidth={2.5} />}
                         </button>

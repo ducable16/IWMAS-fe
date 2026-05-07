@@ -323,13 +323,7 @@ export default function SettingsPage() {
             <div className="card p-6 space-y-5">
               <h3 className="section-title text-[15px]">Workspace settings</h3>
 
-              <Field label="Workspace name" id="ws-name">
-                <input
-                  id="ws-name"
-                  defaultValue="ACME Engineering"
-                  className="input-field"
-                />
-              </Field>
+
 
               <Field
                 label="Burnout threshold"
@@ -346,15 +340,7 @@ export default function SettingsPage() {
                 />
               </Field>
 
-              <div className="flex items-center justify-between py-3 border-t border-border-subtle">
-                <div>
-                  <p className="text-[13px] font-medium text-text-primary">AI smart assign</p>
-                  <p className="text-[11.5px] text-text-muted mt-0.5">
-                    Enable LLM-powered task assignment suggestions
-                  </p>
-                </div>
-                <Toggle enabled={true} />
-              </div>
+
             </div>
           )}
 

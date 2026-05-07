@@ -33,7 +33,7 @@ export default function NotificationPanel({ onClose }) {
       {/* header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle">
         <div className="flex items-center gap-2">
-          <span className="text-[13px] font-semibold text-text-primary">Thông báo</span>
+          <span className="text-[13px] font-semibold text-text-primary">Notifications</span>
           {unreadCount > 0 && (
             <span className="text-[11px] font-medium bg-accent text-white rounded-full px-1.5 py-0.5 leading-none">
               {unreadCount}
@@ -48,7 +48,7 @@ export default function NotificationPanel({ onClose }) {
           title="Mark all as read"
         >
           <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
-          Đánh dấu tất cả đã đọc
+          Mark all as read
         </button>
       </div>
 
@@ -62,7 +62,7 @@ export default function NotificationPanel({ onClose }) {
           </>
         ) : preview.length === 0 ? (
           <div className="py-12 text-center">
-            <p className="text-[12.5px] text-text-muted">Không có thông báo nào</p>
+            <p className="text-[12.5px] text-text-muted">No notifications yet</p>
           </div>
         ) : (
           <div className="divide-y divide-border-subtle">
@@ -81,7 +81,7 @@ export default function NotificationPanel({ onClose }) {
             onClick={onClose}
             className="text-[12px] text-accent hover:text-accent-hover transition-colors font-medium"
           >
-            Xem tất cả thông báo →
+            View all notifications →
           </Link>
         </div>
       )}

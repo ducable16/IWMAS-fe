@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, Loader2, Plus } from 'lucide-react'
 import clsx from 'clsx'
 import { useCreateProject, useUpdateProject } from '../hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
@@ -30,17 +30,7 @@ const BLANK = {
 
 const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
 
-function Field({ label, error, required, children }) {
-  return (
-    <div>
-      <label className="block text-[12px] font-medium text-text-secondary mb-1">
-        {label}{required && <span className="text-danger ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && <p className="text-[11px] text-danger mt-0.5">{error}</p>}
-    </div>
-  )
-}
+
 
 export default function ProjectFormModal({ open, project, onClose }) {
   const isEdit = !!project
@@ -114,100 +104,119 @@ export default function ProjectFormModal({ open, project, onClose }) {
   if (!open) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative bg-bg-surface border border-border rounded-2xl w-full max-w-[520px] max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-border-subtle">
-          <h2 className="text-[15px] font-semibold text-text-primary">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="absolute inset-0" onClick={onClose} />
+      
+      <div className="relative w-full max-w-[500px] bg-bg-surface border border-border rounded-xl shadow-card overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle bg-bg-subtle/30">
+          <h2 className="text-[14px] font-semibold text-text-primary tracking-tight">
             {isEdit ? 'Edit Project' : 'New Project'}
           </h2>
           <button
+            type="button"
             onClick={onClose}
-            className="text-text-muted hover:text-text-primary transition-colors"
+            className="p-1 rounded-md text-text-muted hover:text-text-primary hover:bg-bg-hover transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-5 space-y-3">
           {/* Name */}
-          <Field label="Project Name" required error={errors.name}>
-            <input
-              value={form.name}
-              onChange={set('name')}
-              placeholder="e.g. RoamTrip Platform"
-              className={clsx('field', errors.name && 'field-error')}
-            />
-          </Field>
+          <input
+            autoFocus
+            value={form.name}
+            onChange={set('name')}
+            placeholder="Project name *"
+            className={clsx('input-field w-full text-[14px]', errors.name && 'input-field-error')}
+          />
 
-          {/* Code */}
-          <Field label="Project Code" error={errors.code}>
-            <input
-              value={form.code}
-              onChange={set('code')}
-              placeholder="e.g. RTP (optional, unique)"
-              className="field"
-            />
-          </Field>
+          {/* Code and Status */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Project Code</label>
+              <input
+                value={form.code}
+                onChange={set('code')}
+                placeholder="e.g. RTP (optional)"
+                className={clsx('input-field w-full text-[12.5px]', errors.code && 'input-field-error')}
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Status</label>
+              <select
+                value={form.status}
+                onChange={set('status')}
+                className="input-select w-full text-[12.5px]"
+              >
+                {STATUS_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Manager */}
+          <div>
+            <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Project Manager *</label>
+            <select
+              value={form.managerId}
+              onChange={set('managerId')}
+              className={clsx('input-select w-full text-[12.5px]', errors.managerId && 'input-field-error')}
+            >
+              <option value="">Select a manager…</option>
+              {managers.map(u => (
+                <option key={u.id} value={u.id}>{u.fullName}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-2">
+            <div>
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Start Date</label>
+              <input
+                type="date"
+                value={form.startDate}
+                onChange={set('startDate')}
+                className="input-field w-full text-[12.5px]"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">End Date</label>
+              <input
+                type="date"
+                value={form.endDate}
+                onChange={set('endDate')}
+                className="input-field w-full text-[12.5px]"
+              />
+            </div>
+          </div>
 
           {/* Description */}
-          <Field label="Description">
+          <div>
+            <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Description</label>
             <textarea
               value={form.description}
               onChange={set('description')}
               placeholder="Brief description of the project…"
-              rows={2}
-              className="field resize-none"
+              rows={3}
+              className="input-field w-full resize-none text-[12.5px] leading-relaxed"
             />
-          </Field>
-
-          {/* Status */}
-          <Field label="Status">
-            <select value={form.status} onChange={set('status')} className="field">
-              {STATUS_OPTIONS.map((o) => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
-          </Field>
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Start Date">
-              <input type="date" value={form.startDate} onChange={set('startDate')} className="field" />
-            </Field>
-            <Field label="End Date">
-              <input type="date" value={form.endDate} onChange={set('endDate')} className="field" />
-            </Field>
           </div>
 
-          {/* Manager */}
-          <Field label="Project Manager" required error={errors.managerId}>
-            <select
-              value={form.managerId}
-              onChange={set('managerId')}
-              className={clsx('field', errors.managerId && 'field-error')}
-            >
-              <option value="">Select a manager…</option>
-              {managers.map((u) => (
-                <option key={u.id} value={u.id}>{u.fullName}</option>
-              ))}
-            </select>
-          </Field>
-
           {/* Actions */}
-          <div className="flex items-center justify-end gap-3 pt-2">
-            <button type="button" onClick={onClose} className="btn-ghost">
+          <div className="flex items-center justify-end gap-2 pt-1">
+            <button type="button" onClick={onClose} className="btn-ghost text-[13px]">
               Cancel
             </button>
-            <button type="submit" disabled={isPending} className="btn-primary">
+            <button
+              type="submit"
+              disabled={!form.name.trim() || !form.managerId || isPending}
+              className="btn-primary text-[13px] gap-1.5 disabled:opacity-50"
+            >
+              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+              {!isPending && !isEdit && <Plus className="w-3.5 h-3.5" strokeWidth={2} />}
               {isPending ? 'Saving…' : isEdit ? 'Save changes' : 'Create project'}
             </button>
           </div>

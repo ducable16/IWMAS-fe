@@ -48,10 +48,6 @@ function TaskCard({ task, onDragStart, onClick }) {
     >
       {/* Title + grip */}
       <div className="flex items-start gap-2 mb-2">
-        <div
-          className={clsx('w-1.5 h-1.5 rounded-full mt-1.5 shrink-0', prio.dot)}
-          title={prio.label}
-        />
         <p
           className={clsx(
             'text-[13px] text-text-primary flex-1 leading-snug',

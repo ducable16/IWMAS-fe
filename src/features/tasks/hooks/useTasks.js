@@ -15,6 +15,7 @@ function normaliseTask(t) {
     // Display initials for the avatar cell
     assignee: assigneeName.substring(0, 2).toUpperCase(),
     assigneeFull: assigneeName,
+    assigneeEmail: t.assignee?.email || '—',
     assigneeId: t.assignee?.id ?? null,   // for filter matching
     reporterFull: reporterName,
     reporterId: t.reporter?.id ?? null,   // for filter matching

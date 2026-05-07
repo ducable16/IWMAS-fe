@@ -30,6 +30,7 @@ export const SORT_FIELDS = [
   { value: 'createdAt', label: 'Created At' },
   { value: 'updatedAt', label: 'Updated At' },
   { value: 'dueDate',   label: 'Due Date'   },
+  { value: 'startDate', label: 'Start Date' },
   { value: 'priority',  label: 'Priority'   },
   { value: 'title',     label: 'Title'      },
 ]
@@ -351,7 +352,6 @@ export default function TaskFilterDrawer({
                     onClick={() => toggle('priorities', p)}
                     colorCls={active ? `bg-bg-hover ${meta.color}` : ''}
                   >
-                    <span className={clsx('w-1.5 h-1.5 rounded-full', meta.dot)} />
                     {meta.label}
                   </ToggleChip>
                 )

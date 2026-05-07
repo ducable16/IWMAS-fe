@@ -4,8 +4,8 @@ import { useNotifications, useMarkAllAsRead } from '@/features/notifications/hoo
 import NotificationItem from '@/features/notifications/components/NotificationItem'
 
 const TABS = [
-  { key: 'all',    label: 'Tất cả' },
-  { key: 'unread', label: 'Chưa đọc' },
+  { key: 'all',    label: 'All' },
+  { key: 'unread', label: 'Unread' },
 ]
 
 function SkeletonRow() {
@@ -38,10 +38,10 @@ export default function NotificationsPage() {
       {/* page header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-[18px] font-semibold text-text-primary tracking-tight">Thông báo</h1>
+          <h1 className="text-[18px] font-semibold text-text-primary tracking-tight">Notifications</h1>
           {unreadCount > 0 && (
             <p className="text-[12.5px] text-text-muted mt-0.5">
-              {unreadCount} chưa đọc
+              {unreadCount} unread
             </p>
           )}
         </div>
@@ -52,7 +52,7 @@ export default function NotificationsPage() {
           className="btn-secondary flex items-center gap-1.5 text-[12.5px] disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
-          Đánh dấu tất cả đã đọc
+          Mark all as read
         </button>
       </div>
 
@@ -92,7 +92,7 @@ export default function NotificationsPage() {
         ) : list.length === 0 ? (
           <div className="py-16 text-center">
             <p className="text-[13px] text-text-muted">
-              {tab === 'unread' ? 'Không có thông báo chưa đọc' : 'Chưa có thông báo nào'}
+              {tab === 'unread' ? 'No unread notifications' : 'No notifications yet'}
             </p>
           </div>
         ) : (

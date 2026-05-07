@@ -35,12 +35,11 @@ export const USER_ROLE_BADGE = {
 }
 
 // ── Project status ────────────────────────────────────────────────────────────
-export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED']
+export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
 
 export const PROJECT_STATUS_LABEL = {
   PLANNING:    'Planning',
   IN_PROGRESS: 'In Progress',
-  ON_HOLD:     'On Hold',
   COMPLETED:   'Completed',
   CANCELLED:   'Cancelled',
 }
@@ -48,7 +47,6 @@ export const PROJECT_STATUS_LABEL = {
 export const PROJECT_STATUS_META = {
   PLANNING:    { label: 'Planning',    dot: 'bg-info',    badge: 'badge-info'    },
   IN_PROGRESS: { label: 'In Progress', dot: 'bg-accent',  badge: 'badge-accent'  },
-  ON_HOLD:     { label: 'On Hold',     dot: 'bg-warning', badge: 'badge-warning' },
   COMPLETED:   { label: 'Completed',   dot: 'bg-success', badge: 'badge-success' },
   CANCELLED:   { label: 'Cancelled',   dot: 'bg-danger',  badge: 'badge-danger'  },
 }
@@ -56,14 +54,10 @@ export const PROJECT_STATUS_META = {
 
 
 // ── Project role-in-project ───────────────────────────────────────────────────
-export const PROJECT_ROLES = ['MANAGER', 'TECH_LEAD', 'DEVELOPER', 'DESIGNER', 'QA', 'MEMBER']
+export const PROJECT_ROLES = ['MANAGER', 'MEMBER']
 
 export const PROJECT_ROLE_LABEL = {
   MANAGER:   'Project Manager',
-  TECH_LEAD: 'Tech Lead',
-  DEVELOPER: 'Developer',
-  DESIGNER:  'Designer',
-  QA:        'QA',
   MEMBER:    'Member',
 }
 
@@ -97,22 +91,18 @@ export const TASK_STATUS_DETAIL_META = {
 }
 
 // ── Task type ─────────────────────────────────────────────────────────────────
-export const TASK_TYPES = ['FEATURE', 'BUG', 'IMPROVEMENT', 'RESEARCH', 'TASK']
+export const TASK_TYPES = ['FEATURE', 'BUG', 'RESEARCH']
 
 export const TASK_TYPE_LABEL = {
   FEATURE:     'Feature',
   BUG:         'Bug',
-  IMPROVEMENT: 'Improvement',
-  RESEARCH:    'Research',
-  TASK:        'Task',
+  RESEARCH:    'Research'
 }
 
 export const TASK_TYPE_META = {
   FEATURE:     { label: 'Feature',     cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25' },
   BUG:         { label: 'Bug',         cls: 'bg-rose-500/15 text-rose-400 border-rose-500/25'      },
-  IMPROVEMENT: { label: 'Improvement', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/25'   },
-  RESEARCH:    { label: 'Research',    cls: 'bg-violet-500/15 text-violet-400 border-violet-500/25' },
-  TASK:        { label: 'Task',        cls: 'bg-sky-500/15 text-sky-400 border-sky-500/25'         },
+  RESEARCH:    { label: 'Research',    cls: 'bg-violet-500/15 text-violet-400 border-violet-500/25' }
 }
 
 // ── Task priority ─────────────────────────────────────────────────────────────

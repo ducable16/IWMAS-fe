@@ -175,6 +175,8 @@ export default function TaskTimelineView({ filters }) {
   const { data, isLoading, isError, error, refetch } = useSearchTasks(params)
   const rawTasks = data?.tasks ?? []
 
+  const dragOverrideRef = useRef(null)
+
   // ── Compute date range, day array, today offset ───────────────────────────
   const { rangeStart, days, todayOffset, timelineW } = useMemo(() => {
     const today = dayjs()
@@ -219,7 +221,7 @@ export default function TaskTimelineView({ filters }) {
   // ── Mutation: update task start/due dates ──────────────────────────────────
   const updateDatesMutation = useMutation({
     mutationFn: ({ id, startDate, dueDate }) =>
-      taskService.update(id, { startDate, dueDate }),
+      taskService.updateDates(id, { startDate, dueDate }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       toast.success('Task dates updated')
@@ -227,6 +229,7 @@ export default function TaskTimelineView({ filters }) {
     onError: () => {
       toast.error('Failed to update task dates')
       setDragOverride(null)
+      dragOverrideRef.current = null
     },
   })
 
@@ -241,14 +244,22 @@ export default function TaskTimelineView({ filters }) {
 
       let newStart = drag.origStart
       let newDue   = drag.origDue
-      if (drag.handle === 'start' && drag.origStart) {
-        const proposed = dayjs(drag.origStart).add(deltaDays, 'day').format('YYYY-MM-DD')
-        newStart = drag.origDue && proposed > drag.origDue ? drag.origDue : proposed
-      } else if (drag.handle === 'end' && drag.origDue) {
-        const proposed = dayjs(drag.origDue).add(deltaDays, 'day').format('YYYY-MM-DD')
-        newDue = drag.origStart && proposed < drag.origStart ? drag.origStart : proposed
+      if (drag.handle === 'start') {
+        const base = drag.origStart || drag.origDue
+        if (base) {
+          const proposed = dayjs(base).add(deltaDays, 'day').format('YYYY-MM-DD')
+          newStart = drag.origDue && proposed > drag.origDue ? drag.origDue : proposed
+        }
+      } else if (drag.handle === 'end') {
+        const base = drag.origDue || drag.origStart
+        if (base) {
+          const proposed = dayjs(base).add(deltaDays, 'day').format('YYYY-MM-DD')
+          newDue = drag.origStart && proposed < drag.origStart ? drag.origStart : proposed
+        }
       }
-      setDragOverride({ taskId: drag.taskId, startDate: newStart, dueDate: newDue })
+      const overrideObj = { taskId: drag.taskId, startDate: newStart, dueDate: newDue }
+      setDragOverride(overrideObj)
+      dragOverrideRef.current = overrideObj
     }
 
     const onUp = () => {
@@ -257,16 +268,21 @@ export default function TaskTimelineView({ filters }) {
       document.body.style.cursor = ''
       document.body.style.userSelect = ''
       if (drag.hasDragged) {
-        setDragOverride(prev => {
-          if (prev && prev.taskId === drag.taskId) {
-            updateDatesMutation.mutate({ id: drag.taskId, startDate: prev.startDate, dueDate: prev.dueDate })
-          }
-          return null
-        })
+        const prev = dragOverrideRef.current
+        if (prev && prev.taskId === drag.taskId) {
+          updateDatesMutation.mutate({ id: drag.taskId, startDate: prev.startDate, dueDate: prev.dueDate })
+        }
+        setDragOverride(null)
+        dragOverrideRef.current = null
       } else {
         setDragOverride(null)
+        dragOverrideRef.current = null
       }
-      dragRef.current = null
+      
+      // Delay clearing the ref so the click event can read hasDragged
+      setTimeout(() => {
+        if (dragRef.current === drag) dragRef.current = null
+      }, 0)
     }
 
     window.addEventListener('mousemove', onMove)
@@ -461,10 +477,7 @@ export default function TaskTimelineView({ filters }) {
                       className="flex items-center gap-2 px-3 overflow-hidden flex-1 border-r border-border-subtle"
                       style={{ maxWidth: LEFT_TITLE_W }}
                     >
-                      <span
-                        className={clsx('w-2 h-2 rounded-full flex-shrink-0', prio.dot)}
-                        title={task.priority}
-                      />
+
                       <span className="font-mono text-[9.5px] text-text-muted bg-bg-subtle px-1 py-0.5 rounded flex-shrink-0">
                         #{task.id}
                       </span>

@@ -7,6 +7,7 @@ export const taskService = {
   create:        (data)      => api.post('/tasks', data),
   update:        (id, data)  => api.put(`/tasks/${id}`, data),
   updateStatus:  (id, data)  => api.patch(`/tasks/${id}/status`, data),
+  updateDates:   (id, data)  => api.patch(`/tasks/${id}/dates`, data),
   remove:        (id)        => api.delete(`/tasks/${id}`),
   getHistory:    (id)        => api.get(`/tasks/${id}/history`),
 

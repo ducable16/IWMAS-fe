@@ -9,7 +9,6 @@ import {
   Settings,
   ChevronsLeft,
   ChevronsRight,
-  Plus,
 } from 'lucide-react'
 import { useUIStore } from '@/store/uiStore'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -72,15 +71,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {/* New action */}
-      {!collapsed && (
-        <div className="px-3 pb-2">
-          <button className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-[13px] text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors">
-            <Plus className="w-3.5 h-3.5" />
-            <span>New task</span>
-          </button>
-        </div>
-      )}
+
 
       {/* Nav */}
       <nav className="flex-1 px-2 overflow-y-auto">
