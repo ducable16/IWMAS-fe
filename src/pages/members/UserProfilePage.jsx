@@ -23,6 +23,7 @@ import {
   USER_STATUS_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { TaskStatusBadge, TaskPriorityBadge, ProjectStatusBadge, UserStatusBadge } from '@/components/ui/Badge'
 
 /* ─────────────────────────────────────────────────────────────────────
  * Small helpers / atoms
@@ -99,12 +100,6 @@ function TaskRow({ task }) {
       to={`/tasks/${task.id}`}
       className="group flex items-start gap-3 p-3 rounded-xl hover:bg-bg-subtle/80 transition-colors border border-transparent hover:border-border-subtle"
     >
-      {/* Status dot */}
-      <div className={clsx(
-        'w-2 h-2 rounded-full mt-1.5 shrink-0 ring-2 ring-offset-1',
-        statusMeta.dotCls || 'bg-text-muted ring-text-muted/20',
-      )} />
-
       <div className="flex-1 min-w-0">
         {/* Title */}
         <p className="text-[13px] font-medium text-text-primary leading-snug group-hover:text-accent transition-colors truncate">
@@ -113,17 +108,10 @@ function TaskRow({ task }) {
 
         {/* Meta row */}
         <div className="flex items-center gap-2 mt-1 flex-wrap">
-          <span className={clsx(
-            'text-[11px] px-1.5 py-0.5 rounded font-medium',
-            statusMeta.cls || 'text-text-muted bg-bg-subtle',
-          )}>
-            {statusMeta.label || task.status}
-          </span>
+          <TaskStatusBadge status={task.status} variant="detail" />
 
-          {priorityMeta && (
-            <span className={clsx('text-[11px] font-medium', priorityMeta.cls)}>
-              {priorityMeta.icon} {priorityMeta.label}
-            </span>
+          {task.priority && (
+            <TaskPriorityBadge priority={task.priority} />
           )}
 
           {task.dueDate && (
@@ -175,11 +163,7 @@ function ProjectRow({ project }) {
           {project.code && (
             <span className="text-[11px] font-mono text-text-muted">{project.code}</span>
           )}
-          {meta && (
-            <span className={clsx('text-[11px] font-medium', meta.cls || 'text-text-muted')}>
-              {meta.label || project.status}
-            </span>
-          )}
+          <ProjectStatusBadge status={project.status} />
           {project.startDate && (
             <span className="text-[11px] text-text-muted">
               {project.startDate}{project.endDate ? ` → ${project.endDate}` : ''}
@@ -450,10 +434,7 @@ export default function UserProfilePage() {
                   <span className="badge badge-neutral text-[11.5px]">{roleMeta}</span>
 
                   {canSeeRestrict && statusMeta && (
-                    <span className={clsx('badge text-[11.5px]', statusMeta.badge)}>
-                      <span className={clsx('dot', statusMeta.dot)} />
-                      {statusMeta.label}
-                    </span>
+                    <UserStatusBadge status={user.status} />
                   )}
                 </div>
 

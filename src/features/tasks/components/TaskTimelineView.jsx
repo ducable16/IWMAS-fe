@@ -6,7 +6,11 @@ import toast from 'react-hot-toast'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
 import { taskService } from '@/features/tasks/services/taskService'
-import { TASK_STATUS_META, TASK_PRIORITY_META as PRIORITY_META } from '@/constants/enums'
+import {
+  TASK_STATUS_META,
+  TASK_PRIORITY_META as PRIORITY_META,
+} from '@/constants/enums'
+import { TaskStatusBadge } from '@/components/ui/Badge'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 
 // ─── Layout constants ─────────────────────────────────────────────────────────
@@ -504,9 +508,7 @@ export default function TaskTimelineView({ filters }) {
                       className="flex items-center px-2 flex-shrink-0"
                       style={{ width: LEFT_STATUS_W }}
                     >
-                      <span className={clsx('text-[10.5px] px-2 py-0.5 rounded-md font-medium whitespace-nowrap', status.color)}>
-                        {status.label}
-                      </span>
+                      <TaskStatusBadge status={task.status} />
                     </div>
                   </div>
 

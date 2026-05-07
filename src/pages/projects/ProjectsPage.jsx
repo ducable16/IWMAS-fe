@@ -15,6 +15,7 @@ import {
   PROJECT_STATUS_META as STATUS_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { ProjectStatusBadge } from '@/components/ui/Badge'
 
 /* ── Constants ─────────────────────────────────────────────── */
 
@@ -335,10 +336,7 @@ export default function ProjectsPage() {
 
                       {/* Status */}
                       <td className="py-3 px-3">
-                        <span className={clsx('badge', statusMeta.badge)}>
-                          <span className={clsx('dot', statusMeta.dot)} />
-                          {statusMeta.label}
-                        </span>
+                        <ProjectStatusBadge status={project.status} />
                       </td>
 
 

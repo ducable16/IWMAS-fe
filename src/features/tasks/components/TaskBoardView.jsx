@@ -11,6 +11,7 @@ import {
   TASK_PRIORITY_META as PRIORITY_META,
   TASK_TYPE_META as TYPE_META,
 } from '@/constants/enums'
+import { TaskTypeBadge } from '@/components/ui/Badge'
 import { LiveLoading, LiveError } from '@/components/feedback/LiveStateOverlay'
 
 // ─── Column config ─────────────────────────────────────────────────────────────
@@ -66,9 +67,7 @@ function TaskCard({ task, onDragStart, onClick }) {
       {(type || task.labels.length > 0) && (
         <div className="flex flex-wrap gap-1 mb-2.5 ml-3.5">
           {type && (
-            <span className={clsx('text-[10px] px-1.5 py-0.5 rounded-full font-medium border', type.cls)}>
-              {type.label}
-            </span>
+            <TaskTypeBadge type={task.type} className="text-[9px] py-0 px-1" />
           )}
           {task.labels.slice(0, 2).map((l) => (
             <span key={l} className="badge-neutral">#{l}</span>
@@ -223,6 +222,7 @@ export default function TaskBoardView({ filters }) {
   const [dragging, setDragging] = useState(null)   // { taskId, fromCol }
   const [dragOver, setDragOver]   = useState(null)  // column key
   const [addingIn, setAddingIn]   = useState(null)  // column key | null
+  const boardRef = useRef(null)
 
   // When server data refreshes, clear any optimistic override
   useEffect(() => { setLocalGrouped(null) }, [tasks])
@@ -251,6 +251,52 @@ export default function TaskBoardView({ filters }) {
     },
     onError: (err) => toast.error(err?.message || 'Failed to create task'),
   })
+
+  // ── Auto-scroll when dragging near viewport edges ──
+  useEffect(() => {
+    if (!dragging) return
+
+    let scrollRAF = null
+    let currentDy = 0
+    let currentDx = 0
+
+    const scrollLoop = () => {
+      if (currentDy !== 0 || currentDx !== 0) {
+        // Scroll vertical on main layout
+        const main = document.querySelector('main')
+        if (main && currentDy !== 0) {
+          main.scrollBy({ top: currentDy, behavior: 'auto' })
+        }
+        
+        // Scroll horizontal on board container
+        if (boardRef.current && currentDx !== 0) {
+          boardRef.current.scrollBy({ left: currentDx, behavior: 'auto' })
+        }
+      }
+      scrollRAF = requestAnimationFrame(scrollLoop)
+    }
+    scrollRAF = requestAnimationFrame(scrollLoop)
+
+    const handleDragOver = (e) => {
+      const THRESHOLD = 80
+      const SPEED = 12
+      const { clientX, clientY } = e
+      
+      currentDy = 0
+      if (clientY < THRESHOLD) currentDy = -SPEED
+      else if (window.innerHeight - clientY < THRESHOLD) currentDy = SPEED
+
+      currentDx = 0
+      if (clientX < THRESHOLD) currentDx = -SPEED
+      else if (window.innerWidth - clientX < THRESHOLD) currentDx = SPEED
+    }
+
+    window.addEventListener('dragover', handleDragOver)
+    return () => {
+      window.removeEventListener('dragover', handleDragOver)
+      cancelAnimationFrame(scrollRAF)
+    }
+  }, [dragging])
 
   // ── Drag handlers ──
   const handleDragStart = (taskId, colKey) => {
@@ -317,7 +363,7 @@ export default function TaskBoardView({ filters }) {
       )}
 
       {/* Kanban columns */}
-      <div className="flex gap-4 overflow-x-auto pb-4 items-start">
+      <div ref={boardRef} className="flex gap-4 overflow-x-auto pb-4 items-start">
         {COLUMN_CONFIG.map((col) => (
           <BoardColumn
             key={col.key}

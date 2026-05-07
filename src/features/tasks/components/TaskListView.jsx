@@ -7,12 +7,9 @@ import {
   MoreHorizontal,
 } from 'lucide-react'
 import clsx from 'clsx'
-import {
-  TASK_STATUS_META as STATUS_META,
-  TASK_PRIORITY_META as PRIORITY_META,
-  TASK_TYPE_META as TYPE_META,
-} from '@/constants/enums'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
+import { TaskStatusBadge, TaskTypeBadge } from '@/components/ui/Badge'
+import { TASK_STATUS_META as STATUS_META, TASK_PRIORITY_META as PRIORITY_META, TASK_TYPE_META as TYPE_META } from '@/constants/enums'
 
 function formatDate(d) {
   if (!d) return '—'
@@ -200,15 +197,11 @@ export default function TaskListView({
                   </td>
 
                   <td className="px-4 py-3">
-                    <span className={clsx('text-[11px] px-2 py-0.5 rounded-full font-medium border', type.cls)}>
-                      {type.label}
-                    </span>
+                    <TaskTypeBadge type={task.type} />
                   </td>
 
                   <td className="px-4 py-3">
-                    <span className={clsx('inline-flex items-center text-[11px] px-2 py-0.5 rounded-md font-medium whitespace-nowrap', status.color)}>
-                      {status.label}
-                    </span>
+                    <TaskStatusBadge status={task.status} />
                   </td>
 
                   <td className="px-4 py-3">

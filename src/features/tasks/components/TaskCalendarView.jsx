@@ -7,13 +7,7 @@ import { TASK_STATUS_META } from '@/constants/enums'
 
 const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-const STATUS_PILL = {
-  TODO:        'bg-bg-hover text-text-secondary',
-  IN_PROGRESS: 'bg-accent/15 text-accent',
-  IN_REVIEW:   'bg-info/15 text-info',
-  DONE:        'bg-success/15 text-success',
-  CANCELLED:   'bg-danger/10 text-danger',
-}
+
 
 function toDateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
@@ -55,7 +49,7 @@ function CalendarDay({ date, tasks, currentMonth, navigate }) {
       <div className="space-y-0.5">
         {visible.map((task) => {
           const statusKey = (task.status || 'TODO').toUpperCase()
-          const pillCls = STATUS_PILL[statusKey] || 'bg-bg-hover text-text-secondary'
+          const pillCls = TASK_STATUS_META[statusKey]?.color || 'bg-bg-hover text-text-secondary'
           return (
             <div
               key={task.id}
@@ -191,8 +185,8 @@ export default function TaskCalendarView({ filters }) {
       {/* Legend */}
       <div className="flex items-center gap-4 px-4 py-2 border-t border-border-subtle bg-bg-subtle/20">
         {Object.entries(TASK_STATUS_META).map(([key, meta]) => (
-          <div key={key} className="flex items-center gap-1">
-            <span className={clsx('w-2 h-2 rounded-full', STATUS_PILL[key]?.split(' ')[0] || 'bg-bg-hover')} />
+          <div key={key} className="flex items-center gap-1.5">
+            <span className={clsx('w-2.5 h-2.5 rounded-sm', meta.color?.split(' ')[0] || 'bg-bg-hover')} />
             <span className="text-[10.5px] text-text-muted">{meta.label}</span>
           </div>
         ))}

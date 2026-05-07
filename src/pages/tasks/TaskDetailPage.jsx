@@ -26,6 +26,7 @@ import {
   TASK_TYPES,
   TASK_PRIORITIES,
 } from '@/constants/enums'
+import { TaskStatusBadge } from '@/components/ui/Badge'
 
 const PRIORITY_META = {
   LOW:      { label: 'Low',      icon: '▼', cls: 'text-text-muted'                 },
@@ -78,16 +79,15 @@ function StatusDropdown({ current, taskId }) {
       <button
         onClick={() => setOpen(v => !v)}
         disabled={isPending}
-        className={clsx(
-          'flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-[12.5px] font-medium transition-colors',
-          meta.cls,
-        )}
+        className="flex items-center gap-1.5 transition-opacity hover:opacity-80 disabled:opacity-50"
       >
-        {isPending ? <Loader2 className="w-3 h-3 animate-spin" /> : meta.label}
-        <ChevronDown className="w-3.5 h-3.5" strokeWidth={1.75} />
+        {isPending
+          ? <span className={clsx('inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wide', meta.cls)}><Loader2 className="w-3 h-3 animate-spin" /></span>
+          : <TaskStatusBadge status={current} variant="detail" />}
+        <ChevronDown className="w-3.5 h-3.5 text-text-muted" strokeWidth={1.75} />
       </button>
       {open && (
-        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[150px] shadow-card animate-fade-in">
+        <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[160px] shadow-card animate-fade-in">
           {TASK_STATUSES.map(s => (
             <button
               key={s}
@@ -97,7 +97,7 @@ function StatusDropdown({ current, taskId }) {
                 s === current ? 'font-semibold text-text-primary' : 'text-text-secondary',
               )}
             >
-              {STATUS_META[s]?.label || s}
+              <TaskStatusBadge status={s} variant="detail" className="text-[10px] py-0" />
               {s === current && <Check className="w-3 h-3 ml-auto text-accent" strokeWidth={2.5} />}
             </button>
           ))}

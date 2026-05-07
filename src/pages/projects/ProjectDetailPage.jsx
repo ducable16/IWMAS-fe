@@ -23,6 +23,7 @@ import {
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
+import { ProjectStatusBadge } from '@/components/ui/Badge'
 
 /* ── Helpers ───────────────────────────────────────────────── */
 
@@ -366,10 +367,7 @@ export default function ProjectDetailPage() {
             /* ── View mode ── */
             <div className="divide-y divide-border-subtle">
               <InfoRow label="Status">
-                <span className={clsx('badge', statusMeta.badge)}>
-                  <span className={clsx('dot', statusMeta.dot)} />
-                  {statusMeta.label}
-                </span>
+                <ProjectStatusBadge status={project.status} />
               </InfoRow>
 
               <InfoRow label="Manager">

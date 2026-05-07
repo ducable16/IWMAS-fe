@@ -38,3 +38,30 @@ export function useLogout() {
     toast.success('Logged out')
   }
 }
+
+export function useForgotPassword() {
+  return useMutation({
+    mutationFn: authService.forgotPassword,
+    onSuccess: () => {
+      toast.success('Password reset email sent')
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to send reset email')
+    },
+  })
+}
+
+export function useResetPassword() {
+  const navigate = useNavigate()
+
+  return useMutation({
+    mutationFn: authService.resetPassword,
+    onSuccess: () => {
+      toast.success('Password reset successful')
+      navigate('/login')
+    },
+    onError: (err) => {
+      toast.error(err?.message || 'Failed to reset password')
+    },
+  })
+}

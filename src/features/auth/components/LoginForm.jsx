@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useLogin } from '../hooks/useAuth'
 import Field from '@/components/ui/Field'
 
@@ -81,9 +82,9 @@ export default function LoginForm() {
             />
             Remember me
           </label>
-          <a href="#" className="text-accent hover:text-accent-hover transition-colors font-medium">
+          <Link to="/forgot-password" className="text-accent hover:text-accent-hover transition-colors font-medium">
             Forgot password?
-          </a>
+          </Link>
         </div>
 
         <button

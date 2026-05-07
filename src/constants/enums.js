@@ -34,6 +34,18 @@ export const USER_ROLE_BADGE = {
   TEAM_MEMBER:     'badge-neutral',
 }
 
+// ── User positions (invite) ─────────────────────────────────────────────────
+export const USER_POSITIONS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'DEVELOPER', 'BA', 'TESTER']
+
+export const USER_POSITION_LABEL = {
+  ADMIN:           'Admin',
+  PROJECT_MANAGER: 'Project Manager',
+  HR:              'HR',
+  DEVELOPER:       'Developer',
+  BA:              'BA',
+  TESTER:          'Tester',
+}
+
 // ── Project status ────────────────────────────────────────────────────────────
 export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED']
 
@@ -45,10 +57,10 @@ export const PROJECT_STATUS_LABEL = {
 }
 
 export const PROJECT_STATUS_META = {
-  PLANNING:    { label: 'Planning',    dot: 'bg-info',    badge: 'badge-info'    },
-  IN_PROGRESS: { label: 'In Progress', dot: 'bg-accent',  badge: 'badge-accent'  },
-  COMPLETED:   { label: 'Completed',   dot: 'bg-success', badge: 'badge-success' },
-  CANCELLED:   { label: 'Cancelled',   dot: 'bg-danger',  badge: 'badge-danger'  },
+  PLANNING:    { label: 'PLANNING',    color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide', dot: 'bg-info'    },
+  IN_PROGRESS: { label: 'IN PROGRESS', color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide', dot: 'bg-accent'  },
+  COMPLETED:   { label: 'COMPLETED',   color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide', dot: 'bg-success' },
+  CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
 }
 
 
@@ -74,20 +86,20 @@ export const TASK_STATUS_LABEL = {
 
 /** Background+text classes for status pills (TaskFilterDrawer / TasksPage) */
 export const TASK_STATUS_META = {
-  TODO:        { label: 'To Do',       color: 'bg-bg-hover text-text-secondary'   },
-  IN_PROGRESS: { label: 'In Progress', color: 'bg-accent/15 text-accent'          },
-  IN_REVIEW:   { label: 'In Review',   color: 'bg-info-subtle text-info'          },
-  DONE:        { label: 'Done',        color: 'bg-success-subtle text-success'    },
-  CANCELLED:   { label: 'Cancelled',   color: 'bg-danger-subtle text-danger'      },
+  TODO:        { label: 'TO DO',       color: 'bg-[#e2e4e6] text-slate-800 font-bold tracking-wide' },
+  IN_PROGRESS: { label: 'IN PROGRESS', color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide' },
+  IN_REVIEW:   { label: 'IN REVIEW',   color: 'bg-amber-300 text-slate-800 font-bold tracking-wide' },
+  DONE:        { label: 'DONE',        color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide' },
+  CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300 text-slate-800 font-bold tracking-wide'  },
 }
 
 /** Border-style pills for the task detail page */
 export const TASK_STATUS_DETAIL_META = {
-  TODO:        { label: 'To Do',       cls: 'bg-bg-subtle text-text-secondary border-border'              },
-  IN_PROGRESS: { label: 'In Progress', cls: 'bg-accent/10 text-accent border-accent/20'                   },
-  IN_REVIEW:   { label: 'In Review',   cls: 'bg-[#1d6fa4]/10 text-[#1d6fa4] border-[#1d6fa4]/20'         },
-  DONE:        { label: 'Done',        cls: 'bg-success/10 text-success border-success/20'               },
-  CANCELLED:   { label: 'Cancelled',   cls: 'bg-danger/10 text-danger border-danger/20'                  },
+  TODO:        { label: 'TO DO',       cls: 'bg-[#e2e4e6] text-slate-800 font-bold border-transparent tracking-wide' },
+  IN_PROGRESS: { label: 'IN PROGRESS', cls: 'bg-[#8db5f8] text-slate-800 font-bold border-transparent tracking-wide' },
+  IN_REVIEW:   { label: 'IN REVIEW',   cls: 'bg-amber-300 text-slate-800 font-bold border-transparent tracking-wide' },
+  DONE:        { label: 'DONE',        cls: 'bg-[#a6d86e] text-slate-800 font-bold border-transparent tracking-wide' },
+  CANCELLED:   { label: 'CANCELLED',   cls: 'bg-rose-300 text-slate-800 font-bold border-transparent tracking-wide'  },
 }
 
 // ── Task type ─────────────────────────────────────────────────────────────────
@@ -100,9 +112,9 @@ export const TASK_TYPE_LABEL = {
 }
 
 export const TASK_TYPE_META = {
-  FEATURE:     { label: 'Feature',     cls: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25' },
-  BUG:         { label: 'Bug',         cls: 'bg-rose-500/15 text-rose-400 border-rose-500/25'      },
-  RESEARCH:    { label: 'Research',    cls: 'bg-violet-500/15 text-violet-400 border-violet-500/25' }
+  FEATURE:     { label: 'FEATURE',  color: 'bg-indigo-100 text-indigo-700 border border-indigo-300' },
+  BUG:         { label: 'BUG',      color: 'bg-rose-100   text-rose-700   border border-rose-300'   },
+  RESEARCH:    { label: 'RESEARCH', color: 'bg-violet-100 text-violet-700 border border-violet-300' },
 }
 
 // ── Task priority ─────────────────────────────────────────────────────────────
@@ -150,17 +162,17 @@ export const RISK_LEVEL_LABEL = {
 }
 
 export const RISK_LEVEL_META = {
-  LOW:      { label: 'Low',      badge: 'badge-success', dot: 'bg-success' },
-  MEDIUM:   { label: 'Medium',   badge: 'badge-warning', dot: 'bg-warning' },
-  HIGH:     { label: 'High',     badge: 'badge-danger',  dot: 'bg-danger'  },
-  CRITICAL: { label: 'Critical', badge: 'badge-danger',  dot: 'bg-danger'  },
+  LOW:      { label: 'Low Risk',  color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide', dot: 'bg-success' },
+  MEDIUM:   { label: 'Medium',    color: 'bg-amber-300 text-slate-800 font-bold tracking-wide', dot: 'bg-warning' },
+  HIGH:     { label: 'High',      color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
+  CRITICAL: { label: 'Critical',  color: 'bg-rose-400  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
 }
 
 // ── User active/status (derived from `active: boolean`) ───────────────────────
 export const USER_STATUS_META = {
-  ACTIVE:   { label: 'Active',   badge: 'badge-success', dot: 'bg-success' },
-  DISABLED: { label: 'Disabled', badge: 'badge-danger',  dot: 'bg-danger'  },
-  INVITED:  { label: 'Invited',  badge: 'badge-info',    dot: 'bg-info'    },
+  ACTIVE:   { label: 'Active',   color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide', dot: 'bg-success' },
+  DISABLED: { label: 'Disabled', color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
+  INVITED:  { label: 'Invited',  color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide', dot: 'bg-info'    },
 }
 
 // ── Search source (§13) ───────────────────────────────────────────────────────

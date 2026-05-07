@@ -39,9 +39,9 @@ export const SORT_FIELDS = [
 
 function SectionLabel({ children }) {
   return (
-    <p className="text-[11px] font-semibold text-text-muted uppercase tracking-widest mb-2">
+    <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
       {children}
-    </p>
+    </label>
   )
 }
 
@@ -125,15 +125,15 @@ function UserSearchSelect({ filterKey, selectedId, users, onChange }) {
       ) : (
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
-          <input
-            type="text"
-            value={query}
-            autoFocus={open}
-            onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
-            onFocus={() => setOpen(true)}
-            placeholder="Search by name…"
-            className="input-sm w-full pl-7"
-          />
+            <input
+              type="text"
+              value={query}
+              autoFocus={open}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+              onFocus={() => setOpen(true)}
+              placeholder="Search by name…"
+              className="input-field w-full pl-7 text-[12.5px]"
+            />
         </div>
       )}
 
@@ -150,7 +150,7 @@ function UserSearchSelect({ filterKey, selectedId, users, onChange }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Search by name…"
-                className="input-sm w-full pl-7"
+                className="input-field w-full pl-7 text-[12.5px]"
               />
             </div>
           )}
@@ -165,6 +165,136 @@ function UserSearchSelect({ filterKey, selectedId, users, onChange }) {
                   <li
                     key={u.id}
                     onClick={() => select(u)}
+                    className={clsx(
+                      'flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors text-[12px]',
+                      active
+                        ? 'bg-accent/10 text-accent'
+                        : 'hover:bg-bg-hover text-text-primary',
+                    )}
+                  >
+                    <div
+                      className={clsx(
+                        'w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold flex-shrink-0',
+                        active ? 'bg-accent/20 text-accent border border-accent' : 'bg-bg-subtle text-text-muted border border-border',
+                      )}
+                    >
+                      {initials(name)}
+                    </div>
+                    <span className="truncate flex-1">{name}</span>
+                    {active && <span className="text-[10px] text-accent font-medium">Selected</span>}
+                  </li>
+                )
+              })
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Searchable single-select for a project.
+ */
+function ProjectSearchSelect({ filterKey, selectedId, projects, onChange }) {
+  const [query, setQuery] = useState('')
+  const [open, setOpen] = useState(false)
+  const wrapRef = useRef(null)
+
+  const selected = projects.find((p) => p.id === selectedId) || null
+  const selectedName = selected ? selected.name : null
+
+  const filtered = projects.filter((p) => {
+    const name = (p.name || '').toLowerCase()
+    return name.includes(query.toLowerCase())
+  })
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  const select = (project) => {
+    // Toggle off if same project clicked
+    onChange(filterKey, selectedId === project.id ? null : project.id)
+    setQuery('')
+    setOpen(false)
+  }
+
+  const clear = (e) => {
+    e.stopPropagation()
+    onChange(filterKey, null)
+    setQuery('')
+  }
+
+  const initials = (name) => name.substring(0, 2).toUpperCase()
+
+  return (
+    <div ref={wrapRef} className="relative">
+      {/* Selected chip or search input */}
+      {selectedName && !open ? (
+        <div
+          onClick={() => setOpen(true)}
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-accent bg-accent/10 cursor-pointer"
+        >
+          <div className="w-5 h-5 rounded-full bg-accent/20 border border-accent text-accent text-[10px] font-semibold flex items-center justify-center flex-shrink-0">
+            {initials(selectedName)}
+          </div>
+          <span className="text-[12px] text-accent font-medium flex-1 truncate">{selectedName}</span>
+          <button
+            onClick={clear}
+            className="text-accent/60 hover:text-danger transition-colors flex-shrink-0"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={query}
+              autoFocus={open}
+              onChange={(e) => { setQuery(e.target.value); setOpen(true) }}
+              onFocus={() => setOpen(true)}
+              placeholder="Search project by name…"
+              className="input-field w-full pl-7 text-[12.5px]"
+            />
+        </div>
+      )}
+
+      {/* Dropdown list */}
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-bg-surface border border-border rounded-xl overflow-hidden shadow-card">
+          {/* Search input inside dropdown when a chip is shown (i.e. user clicked chip to reopen) */}
+          {selectedName && (
+            <div className="p-2 border-b border-border-subtle relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted pointer-events-none" />
+              <input
+                autoFocus
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search project by name…"
+                className="input-field w-full pl-7 text-[12.5px]"
+              />
+            </div>
+          )}
+          <ul className="max-h-44 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <li className="px-3 py-2 text-[12px] text-text-muted italic">No projects found</li>
+            ) : (
+              filtered.map((p) => {
+                const name = p.name || '?'
+                const active = selectedId === p.id
+                return (
+                  <li
+                    key={p.id}
+                    onClick={() => select(p)}
                     className={clsx(
                       'flex items-center gap-2.5 px-3 py-2 cursor-pointer transition-colors text-[12px]',
                       active
@@ -299,18 +429,16 @@ export default function TaskFilterDrawer({
           {/* Project */}
           <div>
             <SectionLabel>Project</SectionLabel>
-            <select
-              value={filters.projectId ?? ''}
-              onChange={(e) => onChange('projectId', e.target.value ? Number(e.target.value) : null)}
-              className="input-sm w-full"
-            >
-              <option value="">All projects</option>
-              {projects.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+            {projects.length === 0 ? (
+              <p className="text-[12px] text-text-muted italic">No projects available</p>
+            ) : (
+              <ProjectSearchSelect
+                filterKey="projectId"
+                selectedId={filters.projectId ?? null}
+                projects={projects}
+                onChange={onChange}
+              />
+            )}
           </div>
 
           <Divider />
@@ -426,7 +554,7 @@ export default function TaskFilterDrawer({
               value={filters.sprint || ''}
               onChange={(e) => onChange('sprint', e.target.value || null)}
               placeholder="e.g. Sprint 3  (exact match)"
-              className="input-sm w-full"
+              className="input-field w-full text-[12.5px]"
             />
           </div>
 
@@ -442,7 +570,7 @@ export default function TaskFilterDrawer({
                   type="date"
                   value={filters.dueDateFrom || ''}
                   onChange={(e) => onChange('dueDateFrom', e.target.value || null)}
-                  className="input-sm w-full"
+                  className="input-field w-full text-[12.5px]"
                 />
               </div>
               <div>
@@ -451,7 +579,7 @@ export default function TaskFilterDrawer({
                   type="date"
                   value={filters.dueDateTo || ''}
                   onChange={(e) => onChange('dueDateTo', e.target.value || null)}
-                  className="input-sm w-full"
+                  className="input-field w-full text-[12.5px]"
                 />
               </div>
             </div>
@@ -488,7 +616,7 @@ export default function TaskFilterDrawer({
               <select
                 value={filters.sortBy || 'createdAt'}
                 onChange={(e) => onChange('sortBy', e.target.value)}
-                className="input-sm flex-1"
+                className="input-select flex-1 text-[12.5px]"
               >
                 {SORT_FIELDS.map((f) => (
                   <option key={f.value} value={f.value}>
@@ -571,7 +699,7 @@ function LabelInput({ value, onChange }) {
   return (
     <div className="space-y-2">
       <div
-        className="flex flex-wrap gap-1.5 min-h-[36px] bg-bg-surface border border-border rounded-lg px-2 py-1.5 cursor-text"
+        className="flex flex-wrap gap-1.5 min-h-[36px] bg-bg-surface border border-border rounded-lg px-2 py-1.5 cursor-text focus-within:ring-2 focus-within:ring-accent/20 focus-within:border-accent"
         onClick={() => inputRef.current?.focus()}
       >
         {value.map((l) => (
@@ -645,14 +773,14 @@ function CustomFieldsEditor({ value, onChange }) {
             value={k}
             onChange={(e) => updateKey(k, e.target.value)}
             placeholder="key"
-            className="input-sm flex-1 min-w-0"
+            className="input-field flex-1 min-w-0 text-[12.5px]"
           />
           <span className="text-text-muted text-[12px]">=</span>
           <input
             value={v}
             onChange={(e) => updateVal(k, e.target.value)}
             placeholder="value"
-            className="input-sm flex-1 min-w-0"
+            className="input-field flex-1 min-w-0 text-[12.5px]"
           />
           <button
             onClick={() => remove(k)}

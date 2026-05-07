@@ -3,7 +3,7 @@ import { X, UserPlus, Loader2 } from 'lucide-react'
 import { useInviteUser } from '../hooks/useInviteUser'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
-import { USER_ROLES, USER_ROLE_LABEL } from '@/constants/enums'
+import { USER_ROLES, USER_ROLE_LABEL, USER_POSITIONS, USER_POSITION_LABEL } from '@/constants/enums'
 
 // Keep TM at the top of the dropdown — it's the most common invite.
 const ROLES = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN'].filter((r) => USER_ROLES.includes(r))
@@ -16,7 +16,7 @@ export default function InviteUserModal({ open, onClose }) {
     fullName: '',
     password: '',
     phone: '',
-    position: '',
+    position: 'DEVELOPER',
     role: 'TEAM_MEMBER',
   })
   const [errors, setErrors] = useState({})
@@ -45,7 +45,7 @@ export default function InviteUserModal({ open, onClose }) {
 
     mutate(form, {
       onSuccess: () => {
-        setForm({ email: '', fullName: '', password: '', phone: '', position: '', role: 'TEAM_MEMBER' })
+        setForm({ email: '', fullName: '', password: '', phone: '', position: 'DEVELOPER', role: 'TEAM_MEMBER' })
         setErrors({})
         onClose()
       },
@@ -54,7 +54,7 @@ export default function InviteUserModal({ open, onClose }) {
 
   const handleClose = () => {
     if (isPending) return
-    setForm({ email: '', fullName: '', password: '', phone: '', position: '', role: 'TEAM_MEMBER' })
+    setForm({ email: '', fullName: '', password: '', phone: '', position: 'DEVELOPER', role: 'TEAM_MEMBER' })
     setErrors({})
     onClose()
   }
@@ -140,16 +140,18 @@ export default function InviteUserModal({ open, onClose }) {
               />
             </Field>
 
-            <Field label="Position" id="inv-position">
-              <input
-                id="inv-position"
-                value={form.position}
-                onChange={set('position')}
-                placeholder="Developer"
-                maxLength={100}
-                className="input-field"
-              />
-            </Field>
+            <SelectField
+              label="Position"
+              id="inv-position"
+              value={form.position}
+              onChange={set('position')}
+            >
+              {USER_POSITIONS.map((pos) => (
+                <option key={pos} value={pos}>
+                  {USER_POSITION_LABEL[pos]}
+                </option>
+              ))}
+            </SelectField>
           </div>
 
           <SelectField

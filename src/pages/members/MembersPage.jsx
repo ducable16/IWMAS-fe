@@ -16,6 +16,7 @@ import {
   USER_STATUS_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { UserStatusBadge } from '@/components/ui/Badge'
 
 /* ── Constants ─────────────────────────────────────────────── */
 
@@ -379,15 +380,7 @@ export default function MembersPage() {
 
                     {/* Status badge */}
                     <td className="py-3 px-3">
-                      {(() => {
-                        const meta = USER_STATUS_META[user.status] || USER_STATUS_META.ACTIVE
-                        return (
-                          <span className={clsx('badge', meta.badge)}>
-                            <span className={clsx('dot', meta.dot)} />
-                            {meta.label}
-                          </span>
-                        )
-                      })()}
+                      <UserStatusBadge status={user.status} />
                     </td>
 
                     {/* Last active */}

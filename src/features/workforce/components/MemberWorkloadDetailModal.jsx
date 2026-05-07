@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import WorkloadLevelBadge from './WorkloadLevelBadge'
 import UtilizationBar from './UtilizationBar'
 import { useUserWorkloadDetail } from '../hooks/useWorkload'
+import { TaskStatusBadge, TaskPriorityBadge } from '@/components/ui/Badge'
 import {
   TASK_STATUS_META,
   TASK_PRIORITY_META,
@@ -24,11 +25,6 @@ function TaskRow({ task }) {
 
   return (
     <div className="flex items-center gap-3 py-2.5 px-3 rounded-lg hover:bg-bg-subtle/60 transition-colors group">
-      {/* Priority dot */}
-      {priorityMeta && (
-        <span className={clsx('w-2 h-2 rounded-full shrink-0', priorityMeta.dot)} title={priorityMeta.label} />
-      )}
-
       {/* Title */}
       <Link
         to={`/tasks/${task.taskId}`}
@@ -37,13 +33,11 @@ function TaskRow({ task }) {
         {task.title}
       </Link>
 
+      {/* Priority */}
+      <TaskPriorityBadge priority={task.priority} className="shrink-0" />
+
       {/* Status chip */}
-      <span className={clsx(
-        'text-[10.5px] font-semibold px-1.5 py-0.5 rounded shrink-0',
-        statusMeta.color,
-      )}>
-        {statusMeta.label}
-      </span>
+      <TaskStatusBadge status={task.status} className="shrink-0" />
 
       {/* Due date */}
       <span className={clsx(
