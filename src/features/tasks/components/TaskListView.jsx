@@ -222,7 +222,7 @@ export default function TaskListView({
                         }}
                         className="text-[12px] text-text-primary hover:text-accent hover:underline cursor-pointer transition-colors whitespace-nowrap"
                       >
-                        {task.assigneeEmail}
+                        {task.assigneeFull || task.assigneeEmail}
                       </span>
                     ) : (
                       <span className="text-[12px] text-text-muted">—</span>

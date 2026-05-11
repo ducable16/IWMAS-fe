@@ -52,8 +52,17 @@ function formatRange(monday, sunday) {
  * Week range picker: "Mon 4 May – Sun 10 May 2026"
  * with prev/next arrows and "This week" button.
  */
-export default function WeekNavigator({ onChange }) {
-  const [monday, setMonday] = useState(() => getMonday(new Date()))
+export default function WeekNavigator({ onChange, weekStart, weekEnd }) {
+  const parseDate = (value) => {
+    if (!value) return null
+    const d = new Date(value)
+    if (Number.isNaN(d.getTime())) return null
+    d.setHours(0, 0, 0, 0)
+    return d
+  }
+
+  const initialMonday = parseDate(weekStart) ? getMonday(parseDate(weekStart)) : getMonday(new Date())
+  const [monday, setMonday] = useState(() => initialMonday)
 
   const sunday = getSunday(monday)
   const currentMonday = getMonday(new Date())
@@ -68,6 +77,15 @@ export default function WeekNavigator({ onChange }) {
   useEffect(() => {
     emit(monday)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    const parsed = parseDate(weekStart)
+    if (!parsed) return
+    const nextMonday = getMonday(parsed)
+    if (toISO(nextMonday) !== toISO(monday)) {
+      setMonday(nextMonday)
+    }
+  }, [weekStart])
 
   const shiftWeek = (delta) => {
     setMonday((prev) => {

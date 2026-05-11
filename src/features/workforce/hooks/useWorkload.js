@@ -3,7 +3,7 @@ import { workloadService } from '../services/workforceService'
 
 // ── Snapshot-based hooks (existing) ───────────────────────────
 
-export function useWorkloadTeam() {
+export function useWorkloadTeam(enabled = true) {
   return useQuery({
     queryKey: ['workload', 'team'],
     queryFn: async () => {
@@ -19,6 +19,7 @@ export function useWorkloadTeam() {
         skills: m.skills || [],
       }))
     },
+    enabled,
   })
 }
 

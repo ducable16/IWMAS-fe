@@ -8,12 +8,16 @@ const ICON_VARIANT = {
   danger: 'text-danger bg-danger-subtle',
 }
 
-export default function StatCard({ icon: Icon, label, value, sub, trend, variant = 'default', delay = 0 }) {
+export default function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sub,
+  trend,
+  variant = 'default',
+}) {
   return (
-    <div
-      className="card p-5 animate-slide-up"
-      style={{ animationDelay: `${delay}ms`, opacity: 0 }}
-    >
+    <div className="card p-5">
       <div className="flex items-start justify-between mb-3">
         <div
           className={clsx(
@@ -23,7 +27,7 @@ export default function StatCard({ icon: Icon, label, value, sub, trend, variant
         >
           {Icon && <Icon className="w-4 h-4" strokeWidth={1.75} />}
         </div>
-        {trend !== undefined && (
+        {trend !== undefined && trend !== null && (
           <span
             className={clsx(
               'text-[11px] font-medium tabular-nums',

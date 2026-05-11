@@ -368,9 +368,7 @@ export default function TaskFilterDrawer({
     (filters.types || []).length,
     filters.assigneeId ? 1 : 0,
     filters.reporterId ? 1 : 0,
-    filters.sprint ? 1 : 0,
     filters.dueDateFrom || filters.dueDateTo ? 1 : 0,
-    Object.keys(filters.customFields || {}).length,
   ].reduce((a, b) => a + b, 0)
 
   return (
@@ -546,20 +544,6 @@ export default function TaskFilterDrawer({
 
           <Divider />
 
-          {/* Sprint */}
-          <div>
-            <SectionLabel>Sprint</SectionLabel>
-            <input
-              type="text"
-              value={filters.sprint || ''}
-              onChange={(e) => onChange('sprint', e.target.value || null)}
-              placeholder="e.g. Sprint 3  (exact match)"
-              className="input-field w-full text-[12.5px]"
-            />
-          </div>
-
-          <Divider />
-
           {/* Due date range */}
           <div>
             <SectionLabel>Due Date Range</SectionLabel>
@@ -584,30 +568,6 @@ export default function TaskFilterDrawer({
               </div>
             </div>
           </div>
-
-          <Divider />
-
-          {/* Labels */}
-          <div>
-            <SectionLabel>Labels</SectionLabel>
-            <LabelInput
-              value={filters.labels || []}
-              onChange={(v) => onChange('labels', v)}
-            />
-          </div>
-
-          <Divider />
-
-          {/* Custom fields */}
-          <div>
-            <SectionLabel>Custom Fields</SectionLabel>
-            <CustomFieldsEditor
-              value={filters.customFields || {}}
-              onChange={(v) => onChange('customFields', v)}
-            />
-          </div>
-
-          <Divider />
 
           {/* Sort */}
           <div>
@@ -682,120 +642,3 @@ export default function TaskFilterDrawer({
   )
 }
 
-// ─── Label input (comma / enter to add) ──────────────────────────────────────
-
-function LabelInput({ value, onChange }) {
-  const inputRef = useRef(null)
-
-  const addLabel = (raw) => {
-    const label = raw.trim().toLowerCase()
-    if (!label || value.includes(label)) return
-    onChange([...value, label])
-    if (inputRef.current) inputRef.current.value = ''
-  }
-
-  const removeLabel = (l) => onChange(value.filter((v) => v !== l))
-
-  return (
-    <div className="space-y-2">
-      <div
-        className="flex flex-wrap gap-1.5 min-h-[36px] bg-bg-surface border border-border rounded-lg px-2 py-1.5 cursor-text focus-within:ring-2 focus-within:ring-accent/20 focus-within:border-accent"
-        onClick={() => inputRef.current?.focus()}
-      >
-        {value.map((l) => (
-          <span
-            key={l}
-            className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-bg-subtle border border-border-subtle text-text-secondary"
-          >
-            {l}
-            <button
-              onClick={(e) => { e.stopPropagation(); removeLabel(l) }}
-              className="text-text-muted hover:text-danger transition-colors"
-            >
-              <X className="w-2.5 h-2.5" />
-            </button>
-          </span>
-        ))}
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder={value.length === 0 ? 'Type label + Enter…' : ''}
-          className="bg-transparent text-[12px] text-text-primary placeholder-text-muted focus:outline-none min-w-[120px] flex-1"
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ',') {
-              e.preventDefault()
-              addLabel(e.currentTarget.value)
-            } else if (e.key === 'Backspace' && !e.currentTarget.value && value.length > 0) {
-              removeLabel(value[value.length - 1])
-            }
-          }}
-          onBlur={(e) => addLabel(e.currentTarget.value)}
-        />
-      </div>
-      <p className="text-[10px] text-text-muted">Press Enter or comma to add a label</p>
-    </div>
-  )
-}
-
-// ─── Custom fields key=value editor ──────────────────────────────────────────
-
-function CustomFieldsEditor({ value, onChange }) {
-  const entries = Object.entries(value)
-
-  const updateKey = (oldKey, newKey) => {
-    const next = {}
-    for (const [k, v] of Object.entries(value)) {
-      next[k === oldKey ? newKey : k] = v
-    }
-    onChange(next)
-  }
-
-  const updateVal = (key, newVal) => onChange({ ...value, [key]: newVal })
-
-  const remove = (key) => {
-    const next = { ...value }
-    delete next[key]
-    onChange(next)
-  }
-
-  const add = () => {
-    let i = 1
-    let key = `field${i}`
-    while (value[key] !== undefined) key = `field${++i}`
-    onChange({ ...value, [key]: '' })
-  }
-
-  return (
-    <div className="space-y-2">
-      {entries.map(([k, v]) => (
-        <div key={k} className="flex gap-2 items-center">
-          <input
-            value={k}
-            onChange={(e) => updateKey(k, e.target.value)}
-            placeholder="key"
-            className="input-field flex-1 min-w-0 text-[12.5px]"
-          />
-          <span className="text-text-muted text-[12px]">=</span>
-          <input
-            value={v}
-            onChange={(e) => updateVal(k, e.target.value)}
-            placeholder="value"
-            className="input-field flex-1 min-w-0 text-[12.5px]"
-          />
-          <button
-            onClick={() => remove(k)}
-            className="flex-shrink-0 text-text-muted hover:text-danger transition-colors p-1"
-          >
-            <X className="w-3.5 h-3.5" />
-          </button>
-        </div>
-      ))}
-      <button
-        onClick={add}
-        className="text-[12px] text-accent hover:text-accent-hover transition-colors font-medium"
-      >
-        + Add custom field
-      </button>
-    </div>
-  )
-}

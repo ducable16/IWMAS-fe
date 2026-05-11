@@ -1,20 +1,139 @@
-import {
-  FolderKanban, Layers, CheckSquare, Users, Sparkles, TrendingUp, AlertTriangle, Brain,
-} from 'lucide-react'
+import { TrendingUp, AlertTriangle, Brain, FolderKanban, CheckSquare, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useQueries } from '@tanstack/react-query'
 import StatCard from '@/features/dashboard/components/StatCard'
 import RecentActivity from '@/features/dashboard/components/RecentActivity'
-import SprintSummary from '@/features/dashboard/components/SprintSummary'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import BurnoutAlertBanner from '@/features/workforce/components/BurnoutAlertBanner'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
-import { useDashboardStats, useAiInsight } from '@/features/dashboard/hooks/useDashboard'
+import MyTasksWidget from '@/features/dashboard/components/MyTasksWidget'
+import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel'
+import { useWorkloadTeam } from '@/features/workforce/hooks/useWorkload'
+import { useMyProjects, useProjects } from '@/features/projects/hooks/useProjects'
+import { projectService } from '@/features/projects/services/projectService'
+import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
+import { TASK_STATUSES } from '@/constants/enums'
 
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
   const firstName = user?.name?.split(' ')[0] || 'there'
-  const { data: stats } = useDashboardStats()
-  const { data: insight } = useAiInsight()
+  const role = user?.role
+  const isAdmin = role === 'ADMIN'
+  const isPm = role === 'PROJECT_MANAGER'
+  const isMember = role === 'TEAM_MEMBER'
+
+  const today = new Date()
+  const day = today.getDay() || 7
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - day + 1)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+
+  const toDateInput = (d) => d.toISOString().slice(0, 10)
+  const weekStart = toDateInput(monday)
+  const weekEnd = toDateInput(sunday)
+  const todayStr = toDateInput(today)
+
+  const activeTaskStatuses = TASK_STATUSES.filter(
+    (s) => s !== 'DONE' && s !== 'CANCELLED',
+  )
+  const activeProjectStatuses = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD']
+
+  const { data: teamSnapshot, isLoading: isTeamLoading } = useWorkloadTeam(isAdmin || isPm)
+
+  const { data: allProjects } = useProjects(
+    { statuses: activeProjectStatuses, page: 0, size: 1 },
+    isAdmin || isPm,
+  )
+  const { data: myProjects } = useMyProjects(
+    { statuses: activeProjectStatuses, page: 0, size: 1 },
+    !isAdmin && !isPm,
+  )
+  const activeProjectsCount = isAdmin || isPm
+    ? allProjects?.totalElements ?? 0
+    : myProjects?.totalElements ?? 0
+
+  const { data: tasksThisWeek } = useSearchTasks({
+    dueDateFrom: weekStart,
+    dueDateTo: weekEnd,
+    page: 0,
+    size: 1,
+  })
+
+  const { data: overdueTasks } = useSearchTasks({
+    dueDateTo: todayStr,
+    statuses: activeTaskStatuses,
+    page: 0,
+    size: 1,
+  })
+
+  const tasksThisWeekCount = tasksThisWeek?.totalElements ?? 0
+  const overdueCount = overdueTasks?.totalElements ?? 0
+
+  const { data: myProjectsData } = useMyProjects({ size: 100 }, isPm)
+  const managedProjects = isPm
+    ? (myProjectsData?.projects ?? []).filter((p) => p.managerId === user?.id)
+    : []
+
+  const memberQueries = useQueries({
+    queries: managedProjects.map((project) => ({
+      queryKey: ['projects', project.id, 'members'],
+      queryFn: async () => {
+        const res = await projectService.getMembers(project.id)
+        return Array.isArray(res.data) ? res.data : []
+      },
+      enabled: isPm,
+      staleTime: 30_000,
+    })),
+  })
+
+  const projectMembers = memberQueries.flatMap((q) => q.data || [])
+  const isMembersLoading = isPm && memberQueries.some((q) => q.isLoading)
+
+  const pmMemberMap = new Map()
+  projectMembers.forEach((m) => {
+    pmMemberMap.set(m.userId, {
+      id: m.userId,
+      fullName: m.userFullName || `User ${m.userId}`,
+    })
+  })
+
+  if (user?.id && isPm) {
+    pmMemberMap.set(user.id, {
+      id: user.id,
+      fullName: user.fullName || user.name || user.email,
+      position: user.position || '',
+    })
+  }
+
+  const teamMembers = isAdmin
+    ? (teamSnapshot || []).map((m) => ({
+      id: m.id,
+      fullName: m.name || 'Unknown',
+      position: m.role || '',
+    }))
+    : Array.from(pmMemberMap.values())
+
+  const teamMembersCount = isAdmin || isPm
+    ? (teamSnapshot?.length ?? 0)
+    : 1
+
+  if (isMember) {
+    return (
+      <div className="space-y-6 max-w-[900px] mx-auto">
+        <div>
+          <h2 className="text-subhead text-text-primary">Good morning, {firstName}.</h2>
+          <p className="text-text-secondary text-[14px] mt-1">
+            Here is your workload and task overview for this week.
+          </p>
+        </div>
+
+        <div className="grid gap-5">
+          <MyWorkloadWidget />
+          <MyTasksWidget />
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
@@ -26,72 +145,48 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <BurnoutAlertBanner compact />
-
-      {/* Stats row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={FolderKanban}
           label="Active projects"
-          value={String(stats?.activeProjects ?? '—')}
-          trend={stats?.activeProjectsTrend}
+          value={String(activeProjectsCount || '—')}
           variant="accent"
-          delay={0}
-        />
-        <StatCard
-          icon={Layers}
-          label="Current sprint"
-          value={stats?.currentSprint || '—'}
-          sub={stats?.currentSprintProgress}
-          variant="default"
-          delay={40}
         />
         <StatCard
           icon={CheckSquare}
           label="Tasks this week"
-          value={String(stats?.tasksThisWeek ?? '—')}
-          trend={stats?.tasksThisWeekTrend}
+          value={String(tasksThisWeekCount || '—')}
           variant="default"
-          delay={80}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Overdue tasks"
+          value={String(overdueCount || '—')}
+          variant="danger"
         />
         <StatCard
           icon={Users}
           label="Team members"
-          value={String(stats?.teamMembers ?? '—')}
-          sub={stats?.teamAtRisk ? `${stats.teamAtRisk} at risk` : undefined}
+          value={String(teamMembersCount || '—')}
           variant="warning"
-          delay={120}
         />
       </div>
 
-      {/* AI insight strip */}
-      {insight && (
-        <div className="flex items-start gap-3 bg-accent-subtle/50 border border-accent/15 rounded-xl px-4 py-3">
-          <Sparkles className="w-4 h-4 text-accent mt-0.5 shrink-0" strokeWidth={1.75} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] text-text-primary leading-snug">
-              <span className="font-semibold">AI insight: </span>
-              <span className="text-text-secondary">{insight}</span>
-            </p>
-          </div>
-          <Link
-            to="/workforce"
-            className="text-[12.5px] text-accent hover:text-accent-hover font-medium whitespace-nowrap shrink-0"
-          >
-            View analysis →
-          </Link>
-        </div>
+      {(isAdmin || isPm) && (
+        <TeamWorkloadPanel
+          title="Team workload & tasks"
+          members={teamMembers}
+          isLoading={isAdmin ? isTeamLoading : isMembersLoading}
+          emptyLabel={isPm ? 'No members in your managed projects.' : 'No team workload data.'}
+        />
       )}
 
-      {/* Main grid */}
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <RecentActivity />
         </div>
         <div className="space-y-4">
-          <SprintSummary />
           <MyWorkloadWidget />
-
           <div className="card p-5">
             <h3 className="section-title text-[13px] mb-3">Quick actions</h3>
             <div className="space-y-0.5 -mx-2">

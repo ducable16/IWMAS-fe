@@ -147,9 +147,27 @@ export function useUserEffortRemaining(userId, params = {}, enabled = true) {
 export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data) => projectService.create(data),
-    onSuccess: () => {
+    mutationFn: ({ data }) => projectService.create(data),
+    onSuccess: async (res, variables) => {
       toast.success('Project created')
+      const data = variables?.data
+      const managerEffortPercent = Number(variables?.managerEffortPercent) || 0
+      const projectId = res?.data?.id
+      if (projectId && data?.managerId) {
+        try {
+          await projectService.addMember(projectId, {
+            userId: data.managerId,
+            roleInProject: 'LEAD',
+            allocatedEffortPercent: managerEffortPercent,
+            joinDate: data.startDate || undefined,
+          })
+        } catch (err) {
+          const code = err?.response?.data?.code
+          if (code !== 4004) {
+            toast.error(err?.message || 'Failed to add manager as project member')
+          }
+        }
+      }
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (err) => toast.error(err?.message || 'Failed to create project'),

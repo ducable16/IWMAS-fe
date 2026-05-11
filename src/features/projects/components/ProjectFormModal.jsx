@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { X, Loader2, Plus } from 'lucide-react'
 import clsx from 'clsx'
-import { useCreateProject, useUpdateProject } from '../hooks/useProjects'
-import { useMembers } from '@/features/members/hooks/useMembers'
+import { useCreateProject, useUpdateProject, useUserEffortRemaining } from '../hooks/useProjects'
+import { useUser, normaliseUser } from '@/features/members/hooks/useMembers'
+import { userService } from '@/features/members/services/memberService'
+import { useAuthStore } from '@/features/auth/store/authStore'
+import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
 import {
   PROJECT_STATUS_LABEL,
   toOptions,
@@ -26,9 +30,144 @@ const BLANK = {
   startDate:   '',
   endDate:     '',
   managerId:   '',
+  managerEffortPercent: '0',
 }
 
-const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
+const STATUS_OPTIONS = toOptions(PROJECT_STATUS_LABEL)
+
+function useManagerAutocomplete(query, params = {}) {
+  const trimmed = (query ?? '').trim()
+  const enabled = trimmed.length >= 2
+  const allowedIds = params.allowedIds
+
+  return useQuery({
+    queryKey: ['members', 'manager-autocomplete', trimmed, allowedIds],
+    enabled,
+    queryFn: async () => {
+      const res = await userService.getAll({ search: trimmed, size: 10 })
+      const raw = res.data ?? {}
+      const items = Array.isArray(raw)
+        ? raw
+        : Array.isArray(raw.content)
+        ? raw.content
+        : []
+      const users = items.map(normaliseUser)
+      const filtered = users.filter(
+        (u) => (u.role === 'PROJECT_MANAGER' || u.role === 'ADMIN') &&
+          (!allowedIds || allowedIds.includes(u.id)),
+      )
+      return {
+        suggestions: filtered.map((u) => ({
+          term: u.fullName,
+          entityId: u.id,
+          user: u,
+        })),
+      }
+    },
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  })
+}
+
+function ManagerSuggestion({ item, startDate, endDate }) {
+  const user = item.user
+  const { data, isLoading } = useUserEffortRemaining(
+    user?.id,
+    { startDate: startDate || undefined, endDate: endDate || undefined },
+    !!user?.id,
+  )
+
+  const remaining = data?.remainingPercent
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="truncate">{user?.fullName || item.term}</span>
+      <span className="shrink-0 text-[11px] text-text-muted tabular-nums">
+        {isLoading ? '…' : remaining !== undefined ? `${remaining}% free` : ''}
+      </span>
+    </div>
+  )
+}
+
+function ManagerEffortPanel({ userId, startDate, endDate, requestedEffort }) {
+  const { data, isLoading } = useUserEffortRemaining(
+    userId,
+    { startDate: startDate || undefined, endDate: endDate || undefined },
+    !!userId,
+  )
+
+  if (!userId) return null
+  if (isLoading) {
+    return (
+      <div className="flex items-center gap-2 text-[12px] text-text-muted py-1">
+        <Loader2 className="w-3 h-3 animate-spin" />
+        Checking effort availability…
+      </div>
+    )
+  }
+  if (!data) return null
+
+  const {
+    remainingPercent,
+    peakAllocatedPercent,
+    futureAvailabilityNotes = [],
+  } = data
+
+  const requested = Number(requestedEffort) || 0
+  const willExceed = requested > remainingPercent
+  const formatAvailableFrom = (value) =>
+    value === '9999-12-31' ? 'No end date' : value
+
+  return (
+    <div className={clsx(
+      'rounded-lg border p-3 space-y-2 text-[12px] transition-colors',
+      willExceed ? 'border-danger/40 bg-danger/5' : 'border-border-subtle bg-bg-subtle/50',
+    )}>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-text-secondary font-medium">
+          {data.userName}&apos;s availability
+        </span>
+        <div className="text-right shrink-0">
+          <span className="text-text-muted">Peak used: </span>
+          <span className="font-semibold text-text-primary">{peakAllocatedPercent}%</span>
+        </div>
+      </div>
+
+      <div className="flex justify-between">
+        <span className="text-text-muted">Remaining capacity</span>
+        <span className={clsx(
+          'font-semibold',
+          remainingPercent < 20 ? 'text-danger' :
+          remainingPercent < 50 ? 'text-warning' : 'text-success',
+        )}>
+          {remainingPercent}% free
+        </span>
+      </div>
+
+      {futureAvailabilityNotes.length > 0 && (
+        <div className="text-[11.5px] text-text-muted">
+          <p className="font-medium text-text-secondary">Upcoming free capacity</p>
+          <ul className="mt-1 space-y-0.5">
+            {futureAvailabilityNotes.map((note) => (
+              <li key={`${note.availableFrom}-${note.cumulativeRemainingPercent}`} className="flex items-center justify-between gap-2">
+                <span className="truncate">Free from {formatAvailableFrom(note.availableFrom)}</span>
+                <span className="shrink-0 tabular-nums">
+                  +{note.additionalFreePercent}% (total {note.cumulativeRemainingPercent}%)
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {willExceed && (
+        <p className="text-danger text-[11.5px] font-medium">
+          Requested {requested}% exceeds remaining capacity of {remainingPercent}%. The server will reject this.
+        </p>
+      )}
+    </div>
+  )
+}
 
 
 
@@ -37,10 +176,12 @@ export default function ProjectFormModal({ open, project, onClose }) {
   const [form, setForm] = useState(BLANK)
   const [errors, setErrors] = useState({})
 
-  const { data: membersData } = useMembers()
-  const managers = (membersData?.members ?? []).filter(
-    (u) => u.role === 'PROJECT_MANAGER' || u.role === 'ADMIN',
-  )
+  const currentUser = useAuthStore((s) => s.user)
+  const isPmSelfOnly = currentUser?.role === 'PROJECT_MANAGER'
+  const allowedManagerIds = isPmSelfOnly && currentUser?.id ? [currentUser.id] : null
+
+  const selectedManagerId = form.managerId ? Number(form.managerId) : null
+  const { data: selectedManager } = useUser(selectedManagerId)
 
   const createProject = useCreateProject()
   const updateProject = useUpdateProject()
@@ -59,15 +200,24 @@ export default function ProjectFormModal({ open, project, onClose }) {
         startDate:   project.startDate   || '',
         endDate:     project.endDate     || '',
         managerId:   project.managerId   ? String(project.managerId) : '',
+        managerEffortPercent: '0',
       })
     } else {
-      setForm(BLANK)
+      setForm({
+        ...BLANK,
+        managerId: isPmSelfOnly && currentUser?.id ? String(currentUser.id) : '',
+      })
     }
     setErrors({})
-  }, [open, project])
+  }, [open, project, isPmSelfOnly, currentUser?.id])
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
+    if (errors[key]) setErrors((prev) => ({ ...prev, [key]: null }))
+  }
+
+  const setValue = (key, value) => {
+    setForm((f) => ({ ...f, [key]: value ? String(value) : '' }))
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: null }))
   }
 
@@ -75,6 +225,16 @@ export default function ProjectFormModal({ open, project, onClose }) {
     const next = {}
     if (!form.name.trim())    next.name      = 'Project name is required.'
     if (!form.managerId)      next.managerId = 'Manager is required.'
+    if (!isEdit) {
+      if (
+        form.managerEffortPercent === '' ||
+        isNaN(form.managerEffortPercent) ||
+        Number(form.managerEffortPercent) < 0 ||
+        Number(form.managerEffortPercent) > 100
+      ) {
+        next.managerEffortPercent = 'Must be between 0 and 100.'
+      }
+    }
     return next
   }
 
@@ -97,7 +257,10 @@ export default function ProjectFormModal({ open, project, onClose }) {
     if (isEdit) {
       updateProject.mutate({ id: project.id, data: payload }, { onSuccess: onClose })
     } else {
-      createProject.mutate(payload, { onSuccess: onClose })
+      createProject.mutate(
+        { data: payload, managerEffortPercent: form.managerEffortPercent },
+        { onSuccess: onClose },
+      )
     }
   }
 
@@ -157,19 +320,52 @@ export default function ProjectFormModal({ open, project, onClose }) {
           </div>
 
           {/* Manager */}
-          <div>
-            <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Project Manager *</label>
-            <select
-              value={form.managerId}
-              onChange={set('managerId')}
-              className={clsx('input-select w-full text-[12.5px]', errors.managerId && 'input-field-error')}
-            >
-              <option value="">Select a manager…</option>
-              {managers.map(u => (
-                <option key={u.id} value={u.id}>{u.fullName}</option>
-              ))}
-            </select>
-          </div>
+          <AutocompleteSelect
+            id="project-manager"
+            label="Project Manager"
+            required
+            placeholder="Search by name or email..."
+            value={form.managerId}
+            onChange={(val) => setValue('managerId', val)}
+            useSearchHook={useManagerAutocomplete}
+            searchParams={{ allowedIds: allowedManagerIds }}
+            initialDisplay={selectedManager?.fullName || (isPmSelfOnly ? currentUser?.fullName : '')}
+            error={errors.managerId}
+            noResultsText="No managers found"
+            disabled={isPmSelfOnly}
+            renderOption={(item) => (
+              <ManagerSuggestion item={item} startDate={form.startDate} endDate={form.endDate} />
+            )}
+          />
+
+          {!isEdit && form.managerId && (
+            <ManagerEffortPanel
+              userId={Number(form.managerId)}
+              startDate={form.startDate}
+              endDate={form.endDate}
+              requestedEffort={form.managerEffortPercent}
+            />
+          )}
+
+          {!isEdit && (
+            <div>
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Manager Effort (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                value={form.managerEffortPercent}
+                onChange={set('managerEffortPercent')}
+                className={clsx(
+                  'input-field w-full text-[12.5px]',
+                  errors.managerEffortPercent && 'input-field-error',
+                )}
+              />
+              {errors.managerEffortPercent && (
+                <p className="text-[11px] text-danger mt-0.5">{errors.managerEffortPercent}</p>
+              )}
+            </div>
+          )}
 
           {/* Dates */}
           <div className="grid grid-cols-2 gap-2">

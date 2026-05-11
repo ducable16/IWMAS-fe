@@ -68,8 +68,10 @@ function TaskRow({ task }) {
 /* ── Page content (shared layout) ─────────────────────────── */
 
 function WorkloadDetailContent({ data, weekStart, weekEnd, onWeekChange, isSelf }) {
+  const [showAllTasks, setShowAllTasks] = useState(false)
   const overdueTasks = (data?.tasks ?? []).filter((t) =>  t.overdue)
   const dueThisWeek  = (data?.tasks ?? []).filter((t) => !t.overdue)
+  const allTasks     = data?.tasks ?? []
 
   return (
     <>
@@ -100,7 +102,7 @@ function WorkloadDetailContent({ data, weekStart, weekEnd, onWeekChange, isSelf 
           </div>
 
           {/* Week navigator */}
-          <WeekNavigator onChange={onWeekChange} />
+          <WeekNavigator onChange={onWeekChange} weekStart={weekStart} weekEnd={weekEnd} />
         </div>
 
         {/* Utilization bar */}
@@ -115,10 +117,14 @@ function WorkloadDetailContent({ data, weekStart, weekEnd, onWeekChange, isSelf 
 
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="text-center p-3 bg-bg-subtle rounded-xl">
+          <button
+            type="button"
+            onClick={() => setShowAllTasks((v) => !v)}
+            className="text-center p-3 bg-bg-subtle rounded-xl hover:bg-bg-hover transition-colors"
+          >
             <p className="text-[20px] font-bold text-text-primary tabular-nums">{data.activeTaskCount ?? 0}</p>
             <p className="text-[11.5px] text-text-muted mt-0.5">Active tasks</p>
-          </div>
+          </button>
           <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p className={clsx(
               'text-[20px] font-bold tabular-nums',
@@ -172,6 +178,26 @@ function WorkloadDetailContent({ data, weekStart, weekEnd, onWeekChange, isSelf 
           </div>
         )}
       </div>
+
+      {/* ── All tasks section ── */}
+      {showAllTasks && (
+        <div>
+          <h3 className="text-[13px] font-semibold text-text-muted uppercase tracking-wider mb-3">
+            All tasks ({allTasks.length})
+          </h3>
+          {allTasks.length > 0 ? (
+            <div className="card divide-y divide-border-subtle overflow-hidden">
+              {allTasks.map((t) => (
+                <TaskRow key={`all-${t.taskId}`} task={t} />
+              ))}
+            </div>
+          ) : (
+            <div className="card p-8 text-center">
+              <p className="text-[13px] text-text-muted italic">No tasks found</p>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* ── Footer note ── */}
       <p className="text-[12px] text-text-muted text-center pb-4">

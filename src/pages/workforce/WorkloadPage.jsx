@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Search, X, BarChart3, FolderKanban } from 'lucide-react'
 import clsx from 'clsx'
 import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
+import ProjectTaskList from '@/features/workforce/components/ProjectTaskList'
 import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -121,6 +122,11 @@ export default function WorkloadPage() {
   const can         = useCan()
   const currentUser = useAuthStore((s) => s.user)
   const [selectedProject, setSelectedProject] = useState(null)
+  const [view, setView] = useState('workload')
+
+  useEffect(() => {
+    setView('workload')
+  }, [selectedProject?.id])
 
   // TEAM_MEMBER cannot view team workload (§9.7 requires ADMIN/PM).
   // Redirect them directly to their own workload detail (§9.9).
@@ -151,10 +157,36 @@ export default function WorkloadPage() {
         )}
       </div>
 
+      {selectedProject && (
+        <div className="flex items-center gap-2">
+          {[
+            { key: 'workload', label: 'Workload' },
+            { key: 'tasks', label: 'Tasks' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setView(tab.key)}
+              className={clsx(
+                'px-3 py-1.5 text-[12.5px] font-medium rounded-lg border transition-colors',
+                view === tab.key
+                  ? 'bg-accent text-white border-accent'
+                  : 'bg-bg-surface text-text-secondary border-border hover:border-border-strong',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* Dashboard or empty state */}
       {selectedProject ? (
         <div className="card p-5">
-          <ProjectWorkloadDashboard projectId={selectedProject.id} />
+          {view === 'workload' ? (
+            <ProjectWorkloadDashboard projectId={selectedProject.id} />
+          ) : (
+            <ProjectTaskList projectId={selectedProject.id} />
+          )}
         </div>
       ) : (
         <div className="card p-12 text-center">

@@ -41,7 +41,7 @@ export default function ProjectWorkloadDashboard({ projectId }) {
     <div className="space-y-4">
       {/* Week navigator */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
-        <WeekNavigator onChange={handleWeekChange} />
+        <WeekNavigator onChange={handleWeekChange} weekStart={weekStart} weekEnd={weekEnd} />
       </div>
 
       {/* Summary bar */}

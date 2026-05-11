@@ -27,8 +27,11 @@ export default function AutocompleteSelect({
   value,
   onChange,
   useSearchHook,
+  searchParams,
   noResultsText = 'No results found',
   initialDisplay = '',
+  renderOption,
+  disabled = false,
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const [inputValue, setInputValue] = useState(initialDisplay)
@@ -40,7 +43,7 @@ export default function AutocompleteSelect({
   // Only search if the dropdown is open and the input doesn't match the current selection perfectly
   // (We don't want to spam search API when the user just selected an item and it filled the input)
   const query = isOpen ? debouncedInput : ''
-  const { data, isFetching } = useSearchHook(query)
+  const { data, isFetching } = useSearchHook(query, searchParams)
   
   const suggestions = data?.suggestions ?? []
 
@@ -75,6 +78,7 @@ export default function AutocompleteSelect({
   }
 
   const handleClear = (e) => {
+    if (disabled) return
     e.stopPropagation()
     setInputValue('')
     onChange('')
@@ -82,12 +86,13 @@ export default function AutocompleteSelect({
   }
 
   const handleChange = (e) => {
+    if (disabled) return
     setInputValue(e.target.value)
     if (!isOpen) setIsOpen(true)
     if (value) onChange('') // Clear selection when user starts typing
   }
 
-  const showSuggestions = isOpen && (debouncedInput.length >= 2 || suggestions.length > 0)
+  const showSuggestions = !disabled && isOpen && (debouncedInput.length >= 2 || suggestions.length > 0)
 
   return (
     <Field label={label} id={id} required={required} error={error}>
@@ -106,10 +111,11 @@ export default function AutocompleteSelect({
             placeholder={placeholder}
             value={inputValue}
             onChange={handleChange}
-            onFocus={() => setIsOpen(true)}
+            onFocus={() => !disabled && setIsOpen(true)}
             autoComplete="off"
+            disabled={disabled}
           />
-          {value || inputValue ? (
+          {(!disabled && (value || inputValue)) ? (
             <button
               type="button"
               onClick={handleClear}
@@ -151,7 +157,7 @@ export default function AutocompleteSelect({
                       value === item.entityId ? 'bg-accent/5 text-accent font-medium' : 'text-text-primary'
                     )}
                   >
-                    {item.term}
+                    {renderOption ? renderOption(item) : item.term}
                   </li>
                 ))}
               </ul>

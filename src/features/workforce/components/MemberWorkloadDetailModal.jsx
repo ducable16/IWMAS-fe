@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { X, AlertTriangle, Clock, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
@@ -67,6 +67,7 @@ export default function MemberWorkloadDetailModal({
   onClose,
 }) {
   const overlayRef = useRef(null)
+  const [showAllTasks, setShowAllTasks] = useState(false)
 
   const { data, isLoading, isError, error } = useUserWorkloadDetail(
     userId, weekStart, weekEnd, open,
@@ -80,10 +81,15 @@ export default function MemberWorkloadDetailModal({
     return () => document.removeEventListener('keydown', handler)
   }, [open, onClose])
 
+  useEffect(() => {
+    if (!open) setShowAllTasks(false)
+  }, [open, userId])
+
   if (!open) return null
 
   const overdueTasks = (data?.tasks ?? []).filter((t) => t.overdue)
   const dueThisWeek = (data?.tasks ?? []).filter((t) => !t.overdue)
+  const allTasks = data?.tasks ?? []
 
   return (
     <>
@@ -157,6 +163,17 @@ export default function MemberWorkloadDetailModal({
 
               <div className="divider" />
 
+              <button
+                type="button"
+                onClick={() => setShowAllTasks((v) => !v)}
+                className="flex items-center justify-between w-full p-3 rounded-lg border border-border-subtle hover:bg-bg-subtle/60 transition-colors"
+              >
+                <span className="text-[12.5px] text-text-secondary font-medium">Active tasks</span>
+                <span className="text-[12.5px] font-semibold text-text-primary tabular-nums">
+                  {data.activeTaskCount ?? 0}
+                </span>
+              </button>
+
               {/* Overdue section */}
               {overdueTasks.length > 0 && (
                 <section>
@@ -191,6 +208,26 @@ export default function MemberWorkloadDetailModal({
                   </p>
                 )}
               </section>
+
+              {/* All tasks section */}
+              {showAllTasks && (
+                <section>
+                  <h4 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider mb-2">
+                    All tasks ({allTasks.length})
+                  </h4>
+                  {allTasks.length > 0 ? (
+                    <div className="rounded-xl border border-border-subtle bg-bg-subtle/30 divide-y divide-border-subtle overflow-hidden">
+                      {allTasks.map((t) => (
+                        <TaskRow key={`all-${t.taskId}`} task={t} />
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[12.5px] text-text-muted italic py-3 px-1">
+                      No tasks found
+                    </p>
+                  )}
+                </section>
+              )}
 
               {/* Footer */}
               <div className="divider" />

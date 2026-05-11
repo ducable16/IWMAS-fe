@@ -73,9 +73,17 @@ function RemainingEffortPanel({ userId, startDate, endDate, requestedEffort }) {
 
   if (!data) return null
 
-  const { remainingPercent, peakAllocatedPercent, overlappingAllocations = [] } = data
+  const {
+    remainingPercent,
+    peakAllocatedPercent,
+    overlappingAllocations = [],
+    futureAvailabilityNotes = [],
+  } = data
   const requested = Number(requestedEffort) || 0
   const willExceed = requested > remainingPercent
+
+  const formatAvailableFrom = (value) =>
+    value === '9999-12-31' ? 'No end date' : value
 
   return (
     <div className={clsx(
@@ -113,6 +121,22 @@ function RemainingEffortPanel({ userId, startDate, endDate, requestedEffort }) {
         <EffortBar percent={remainingPercent} />
       </div>
 
+      {futureAvailabilityNotes.length > 0 && (
+        <div className="text-[11.5px] text-text-muted">
+          <p className="font-medium text-text-secondary">Upcoming free capacity</p>
+          <ul className="mt-1 space-y-0.5">
+            {futureAvailabilityNotes.map((note) => (
+              <li key={`${note.availableFrom}-${note.cumulativeRemainingPercent}`} className="flex items-center justify-between gap-2">
+                <span className="truncate">Free from {formatAvailableFrom(note.availableFrom)}</span>
+                <span className="shrink-0 tabular-nums">
+                  +{note.additionalFreePercent}% (total {note.cumulativeRemainingPercent}%)
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {/* Warning when requested > remaining */}
       {willExceed && (
         <p className="text-danger text-[11.5px] font-medium">
@@ -142,8 +166,11 @@ function RemainingEffortPanel({ userId, startDate, endDate, requestedEffort }) {
                     <span className="font-mono text-text-muted mr-1">{a.projectCode}</span>
                     {a.projectName}
                   </span>
-                  <span className="shrink-0 text-text-muted tabular-nums">
+                  <span className="shrink-0 text-text-muted tabular-nums text-right">
                     {a.allocatedPercent}%
+                    {a.projectEndDate && (
+                      <span className="ml-2 text-text-muted">free {a.projectEndDate}</span>
+                    )}
                   </span>
                 </li>
               ))}
