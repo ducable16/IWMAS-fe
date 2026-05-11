@@ -14,7 +14,8 @@ export function useTaskBoard(projectId) {
       return res.data ?? {}
     },
     enabled: !!projectId,
-    staleTime: 30_000,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
   })
 }
 
@@ -32,6 +33,7 @@ export function useTaskCalendar({ from, to, projectId } = {}) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!from && !!to,
-    staleTime: 60_000,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
   })
 }

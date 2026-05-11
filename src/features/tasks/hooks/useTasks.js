@@ -58,6 +58,7 @@ export function useSearchTasks(params = {}, enabled = true) {
     enabled,
     placeholderData: (prev) => prev,
     staleTime: 30_000,
+    refetchInterval: 60_000,
   })
 }
 
@@ -87,6 +88,8 @@ export function useTasks() {
 export function useSprintBoard() {
   return useQuery({
     queryKey: ['sprint-board'],
+    staleTime: 15_000,
+    refetchInterval: 60_000,
     queryFn: async () => {
       const res = await taskService.getMine()
       const items = Array.isArray(res.data) ? res.data : res.data?.items || []

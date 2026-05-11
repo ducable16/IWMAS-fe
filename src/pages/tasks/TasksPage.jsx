@@ -324,7 +324,7 @@ export default function TasksPage() {
                       : 'text-text-muted hover:text-text-secondary',
                   )}
                 >
-                  All
+                  ALL
                 </button>
                 {TASK_STATUSES.map((s) => {
                   const meta = STATUS_META[s]

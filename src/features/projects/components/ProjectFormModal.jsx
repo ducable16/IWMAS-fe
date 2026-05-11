@@ -1,8 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { X, Loader2, Plus } from 'lucide-react'
+import { X, Loader2, Plus, Wand2, Lock } from 'lucide-react'
 import clsx from 'clsx'
-import { useCreateProject, useUpdateProject, useUserEffortRemaining } from '../hooks/useProjects'
+import {
+  useCreateProject,
+  useUpdateProject,
+  useUserEffortRemaining,
+  useSuggestProjectCode,
+} from '../hooks/useProjects'
 import { useUser, normaliseUser } from '@/features/members/hooks/useMembers'
 import { userService } from '@/features/members/services/memberService'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -13,7 +18,7 @@ import {
 } from '@/constants/enums'
 
 /**
- * Modal for §3.4 Create Project and §3.5 Update Project.
+ * Modal for §3.4 Suggest Project Code, §3.5 Create Project, §3.6 Update Project.
  *
  * Props:
  *   open     — boolean
@@ -26,7 +31,6 @@ const BLANK = {
   code:        '',
   description: '',
   status:      'PLANNING',
-
   startDate:   '',
   endDate:     '',
   managerId:   '',
@@ -34,6 +38,19 @@ const BLANK = {
 }
 
 const STATUS_OPTIONS = toOptions(PROJECT_STATUS_LABEL)
+
+// ── Debounce hook ──────────────────────────────────────────────────────────────
+
+function useDebounce(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value)
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay)
+    return () => clearTimeout(id)
+  }, [value, delay])
+  return debounced
+}
+
+// ── Manager autocomplete ───────────────────────────────────────────────────────
 
 function useManagerAutocomplete(query, params = {}) {
   const trimmed = (query ?? '').trim()
@@ -69,6 +86,8 @@ function useManagerAutocomplete(query, params = {}) {
   })
 }
 
+// ── Manager suggestion item ────────────────────────────────────────────────────
+
 function ManagerSuggestion({ item, startDate, endDate }) {
   const user = item.user
   const { data, isLoading } = useUserEffortRemaining(
@@ -88,6 +107,8 @@ function ManagerSuggestion({ item, startDate, endDate }) {
     </div>
   )
 }
+
+// ── Manager effort panel ───────────────────────────────────────────────────────
 
 function ManagerEffortPanel({ userId, startDate, endDate, requestedEffort }) {
   const { data, isLoading } = useUserEffortRemaining(
@@ -169,12 +190,18 @@ function ManagerEffortPanel({ userId, startDate, endDate, requestedEffort }) {
   )
 }
 
-
+// ── Main modal ─────────────────────────────────────────────────────────────────
 
 export default function ProjectFormModal({ open, project, onClose }) {
   const isEdit = !!project
   const [form, setForm] = useState(BLANK)
   const [errors, setErrors] = useState({})
+
+  /**
+   * Track whether the user has manually edited the code field.
+   * If true, auto-suggest will NOT overwrite the user's value.
+   */
+  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false)
 
   const currentUser = useAuthStore((s) => s.user)
   const isPmSelfOnly = currentUser?.role === 'PROJECT_MANAGER'
@@ -187,7 +214,29 @@ export default function ProjectFormModal({ open, project, onClose }) {
   const updateProject = useUpdateProject()
   const isPending = createProject.isPending || updateProject.isPending
 
-  // Populate form when editing
+  // ── Suggest-code (Create mode only) ───────────────────────────────────────
+  // Debounce the project name before calling the suggest-code API
+  const debouncedName = useDebounce(form.name, 400)
+
+  const { data: suggestedCode, isFetching: isSuggestingCode } = useSuggestProjectCode(
+    debouncedName,
+    !isEdit && open, // only active in Create mode
+  )
+
+  // Auto-fill code field when suggestion arrives, unless user manually edited it
+  const prevSuggestedCode = useRef(null)
+  useEffect(() => {
+    if (isEdit) return
+    if (suggestedCode && suggestedCode !== prevSuggestedCode.current) {
+      prevSuggestedCode.current = suggestedCode
+      if (!codeManuallyEdited) {
+        setForm((f) => ({ ...f, code: suggestedCode }))
+        setErrors((prev) => ({ ...prev, code: null }))
+      }
+    }
+  }, [suggestedCode, codeManuallyEdited, isEdit])
+
+  // ── Populate form when opening ─────────────────────────────────────────────
   useEffect(() => {
     if (!open) return
     if (project) {
@@ -196,7 +245,6 @@ export default function ProjectFormModal({ open, project, onClose }) {
         code:        project.code        || '',
         description: project.description || '',
         status:      project.status      || 'PLANNING',
-
         startDate:   project.startDate   || '',
         endDate:     project.endDate     || '',
         managerId:   project.managerId   ? String(project.managerId) : '',
@@ -209,11 +257,19 @@ export default function ProjectFormModal({ open, project, onClose }) {
       })
     }
     setErrors({})
+    setCodeManuallyEdited(false)
+    prevSuggestedCode.current = null
   }, [open, project, isPmSelfOnly, currentUser?.id])
 
+  // ── Generic field setters ──────────────────────────────────────────────────
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: null }))
+  }
+
+  const setCodeField = (e) => {
+    setCodeManuallyEdited(true)
+    set('code')(e)
   }
 
   const setValue = (key, value) => {
@@ -221,6 +277,7 @@ export default function ProjectFormModal({ open, project, onClose }) {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: null }))
   }
 
+  // ── Validation ─────────────────────────────────────────────────────────────
   const validate = () => {
     const next = {}
     if (!form.name.trim())    next.name      = 'Project name is required.'
@@ -238,6 +295,13 @@ export default function ProjectFormModal({ open, project, onClose }) {
     return next
   }
 
+  // ── Re-trigger suggest-code after a 4002 race condition ───────────────────
+  const retriggerSuggestCode = () => {
+    setCodeManuallyEdited(false)
+    prevSuggestedCode.current = null
+  }
+
+  // ── Submit ─────────────────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault()
     const errs = validate()
@@ -248,18 +312,42 @@ export default function ProjectFormModal({ open, project, onClose }) {
       code:        form.code.trim() || undefined,
       description: form.description.trim() || undefined,
       status:      form.status,
-
       startDate:   form.startDate || undefined,
       endDate:     form.endDate   || undefined,
       managerId:   Number(form.managerId),
     }
 
+    const handleApiError = (err) => {
+      // Axios interceptor rejects with { code, message } (already unwrapped)
+      const code = err?.code
+      if (code === 4002) {
+        // Code is taken — re-trigger suggest-code so the field refreshes
+        setErrors((prev) => ({ ...prev, code: 'This code is already taken. A new suggestion is loading…' }))
+        retriggerSuggestCode()
+      } else if (code === 4006) {
+        setErrors((prev) => ({ ...prev, code: 'Code must be 2–10 uppercase letters, digits, or hyphens (e.g. HRM, PRJ-2).' }))
+      } else if (code === 4007) {
+        // Should not happen in normal usage (we send the original code on edit)
+        setErrors((prev) => ({ ...prev, code: 'Project code cannot be changed after creation.' }))
+      }
+      // For other errors the mutation's own onError toast fires
+    }
+
     if (isEdit) {
-      updateProject.mutate({ id: project.id, data: payload }, { onSuccess: onClose })
+      updateProject.mutate(
+        { id: project.id, data: payload },
+        {
+          onSuccess: onClose,
+          onError: handleApiError,
+        },
+      )
     } else {
       createProject.mutate(
         { data: payload, managerEffortPercent: form.managerEffortPercent },
-        { onSuccess: onClose },
+        {
+          onSuccess: onClose,
+          onError: handleApiError,
+        },
       )
     }
   }
@@ -293,18 +381,57 @@ export default function ProjectFormModal({ open, project, onClose }) {
             placeholder="Project name *"
             className={clsx('input-field w-full text-[14px]', errors.name && 'input-field-error')}
           />
+          {errors.name && (
+            <p className="text-[11px] text-danger -mt-2">{errors.name}</p>
+          )}
 
           {/* Code and Status */}
           <div className="grid grid-cols-2 gap-2">
             <div>
-              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Project Code</label>
-              <input
-                value={form.code}
-                onChange={set('code')}
-                placeholder="e.g. RTP (optional)"
-                className={clsx('input-field w-full text-[12.5px]', errors.code && 'input-field-error')}
-              />
+              <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+                Project Code
+              </label>
+
+              {isEdit ? (
+                /* ── Edit mode: code is immutable ── */
+                <div className="relative">
+                  <input
+                    value={form.code}
+                    readOnly
+                    tabIndex={-1}
+                    className="input-field w-full text-[12.5px] bg-bg-subtle/60 text-text-muted cursor-not-allowed pr-7"
+                  />
+                  <Lock className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-text-muted pointer-events-none" />
+                </div>
+              ) : (
+                /* ── Create mode: auto-filled by suggest-code ── */
+                <div className="relative">
+                  <input
+                    value={form.code}
+                    onChange={setCodeField}
+                    placeholder="e.g. RTP (optional)"
+                    className={clsx(
+                      'input-field w-full text-[12.5px]',
+                      errors.code && 'input-field-error',
+                      isSuggestingCode && 'pr-7',
+                    )}
+                  />
+                  {isSuggestingCode && (
+                    <Wand2 className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-accent animate-pulse pointer-events-none" />
+                  )}
+                </div>
+              )}
+
+              {isEdit && (
+                <p className="text-[10.5px] text-text-muted mt-0.5">
+                  Code cannot be changed after creation
+                </p>
+              )}
+              {errors.code && (
+                <p className="text-[11px] text-danger mt-0.5">{errors.code}</p>
+              )}
             </div>
+
             <div>
               <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">Status</label>
               <select

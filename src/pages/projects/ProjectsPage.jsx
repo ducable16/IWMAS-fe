@@ -243,7 +243,7 @@ export default function ProjectsPage() {
                 : 'text-text-muted hover:text-text-secondary',
             )}
           >
-            All
+            ALL
           </button>
           {ALL_STATUSES.map((s) => {
             const active = params.statuses.includes(s)

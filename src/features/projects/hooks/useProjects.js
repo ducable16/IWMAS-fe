@@ -118,7 +118,28 @@ export function useProjectMemberSearch(projectId, q = '', size = 10, enabled = t
 }
 
 /**
- * §3.12 GET /api/projects/users/{userId}/effort-remaining
+ * §3.4 GET /api/projects/suggest-code — ADMIN or PROJECT_MANAGER
+ * Derives a unique project code from a given name.
+ * Caller should debounce `name` before passing it in.
+ *
+ * @param {string}  name
+ * @param {boolean} [enabled=true]
+ */
+export function useSuggestProjectCode(name, enabled = true) {
+  const trimmed = (name ?? '').trim()
+  return useQuery({
+    queryKey: ['projects', 'suggest-code', trimmed],
+    queryFn: async () => {
+      const res = await projectService.suggestCode(trimmed)
+      return res.data?.code ?? null
+    },
+    enabled: trimmed.length >= 2 && enabled,
+    staleTime: 10_000,
+  })
+}
+
+/**
+ * §3.13 GET /api/projects/users/{userId}/effort-remaining
  * Returns remaining effort capacity for a user within a period.
  *
  * Response: { userId, userName, queryStart, queryEnd,
@@ -143,7 +164,7 @@ export function useUserEffortRemaining(userId, params = {}, enabled = true) {
 
 // ── Mutations ────────────────────────────────────────────────
 
-/** §3.4 POST /api/projects */
+/** §3.5 POST /api/projects */
 export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
@@ -152,7 +173,8 @@ export function useCreateProject() {
       toast.success('Project created')
       const data = variables?.data
       const managerEffortPercent = Number(variables?.managerEffortPercent) || 0
-      const projectId = res?.data?.id
+      // Axios interceptor unwraps the envelope → res is already the `data` payload
+      const projectId = res?.id ?? res?.data?.id
       if (projectId && data?.managerId) {
         try {
           await projectService.addMember(projectId, {
@@ -162,7 +184,8 @@ export function useCreateProject() {
             joinDate: data.startDate || undefined,
           })
         } catch (err) {
-          const code = err?.response?.data?.code
+          // Interceptor rejects with { code, message } — not the raw axios error
+          const code = err?.code
           if (code !== 4004) {
             toast.error(err?.message || 'Failed to add manager as project member')
           }
@@ -202,7 +225,7 @@ export function useDeleteProject() {
 }
 
 /**
- * §3.9 POST /api/projects/{id}/members
+ * §3.10 POST /api/projects/{id}/members
  * Error codes: 4004 = already a member, 4005 = over 100% allocation
  */
 export function useAddProjectMember(projectId) {
@@ -214,7 +237,8 @@ export function useAddProjectMember(projectId) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err) => {
-      const code = err?.response?.data?.code
+      // Interceptor rejects with { code, message }
+      const code = err?.code
       if (code === 4004) {
         toast.error('This user is already a member of this project.')
       } else if (code === 4005) {
@@ -227,7 +251,7 @@ export function useAddProjectMember(projectId) {
 }
 
 /**
- * §3.10 PUT /api/projects/{id}/members/{memberId}
+ * §3.11 PUT /api/projects/{id}/members/{memberId}
  * Error codes: 4005 = over 100% allocation
  */
 export function useUpdateProjectMember(projectId) {
@@ -240,7 +264,8 @@ export function useUpdateProjectMember(projectId) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err) => {
-      const code = err?.response?.data?.code
+      // Interceptor rejects with { code, message }
+      const code = err?.code
       if (code === 4005) {
         toast.error("Updated allocation would push the user's total above 100%.")
       } else {
@@ -250,7 +275,7 @@ export function useUpdateProjectMember(projectId) {
   })
 }
 
-/** §3.11 DELETE /api/projects/{id}/members/{memberId} */
+/** §3.12 DELETE /api/projects/{id}/members/{memberId} */
 export function useRemoveProjectMember(projectId) {
   const queryClient = useQueryClient()
   return useMutation({

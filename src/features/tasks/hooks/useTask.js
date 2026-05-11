@@ -31,6 +31,9 @@ export function useUpdateTaskStatus(id) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', id] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+      queryClient.invalidateQueries({ queryKey: ['sprint-board'] })
     },
   })
 }
@@ -52,6 +55,8 @@ export function useUpdateTask(id) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', id] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
     },
     onError: (err) => toast.error(err?.message || 'Failed to update task'),
   })

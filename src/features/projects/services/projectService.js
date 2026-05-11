@@ -73,25 +73,32 @@ export const projectService = {
   /** §3.3 GET /api/projects/{id} */
   getById: (id) => api.get(`/projects/${id}`),
 
+  /** §3.4 GET /api/projects/suggest-code — ADMIN or PROJECT_MANAGER
+   * Derives a unique project code from a given name.
+   * @param {string} name — the project name to derive a code from
+   * @returns {{ code: string }}
+   */
+  suggestCode: (name) => api.get('/projects/suggest-code', { params: { name } }),
+
   /**
-   * §3.4 POST /api/projects — ADMIN or PROJECT_MANAGER
+   * §3.5 POST /api/projects — ADMIN or PROJECT_MANAGER
    * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId }} data
    */
   create: (data) => api.post('/projects', data),
 
-  /** §3.5 PUT /api/projects/{id} — ADMIN or PROJECT_MANAGER */
+  /** §3.6 PUT /api/projects/{id} — ADMIN or PROJECT_MANAGER */
   update: (id, data) => api.put(`/projects/${id}`, data),
 
-  /** §3.6 DELETE /api/projects/{id} — ADMIN or PROJECT_MANAGER */
+  /** §3.7 DELETE /api/projects/{id} — ADMIN or PROJECT_MANAGER */
   remove: (id) => api.delete(`/projects/${id}`),
 
   // ── Members ────────────────────────────────────────────────
 
-  /** §3.7 GET /api/projects/{id}/members → ProjectMemberResponse[] */
+  /** §3.8 GET /api/projects/{id}/members → ProjectMemberResponse[] */
   getMembers: (id) => api.get(`/projects/${id}/members`),
 
   /**
-   * §3.8 GET /api/projects/{id}/members/search — Assignee autocomplete
+   * §3.9 GET /api/projects/{id}/members/search — Assignee autocomplete
    * Returns users who can be assigned tasks in this project
    * (project manager + active members).
    *
@@ -103,25 +110,25 @@ export const projectService = {
     api.get(`/projects/${id}/members/search`, { params: { q, size } }),
 
   /**
-   * §3.9 POST /api/projects/{id}/members
+   * §3.10 POST /api/projects/{id}/members
    * Errors: 4004 (already member), 4005 (over 100% allocation)
    * @param {{ userId, roleInProject?, allocatedEffortPercent?, joinDate?, note? }} data
    */
   addMember: (id, data) => api.post(`/projects/${id}/members`, data),
 
   /**
-   * §3.10 PUT /api/projects/{id}/members/{memberId}
+   * §3.11 PUT /api/projects/{id}/members/{memberId}
    * Errors: 4005 (over 100% allocation)
    */
   updateMember: (id, memberId, data) =>
     api.put(`/projects/${id}/members/${memberId}`, data),
 
-  /** §3.11 DELETE /api/projects/{id}/members/{memberId} — soft-delete */
+  /** §3.12 DELETE /api/projects/{id}/members/{memberId} — soft-delete */
   removeMember: (id, memberId) =>
     api.delete(`/projects/${id}/members/${memberId}`),
 
   /**
-   * §3.12 GET /api/projects/users/{userId}/effort-remaining
+   * §3.13 GET /api/projects/users/{userId}/effort-remaining
    * Returns remaining effort capacity for a user.
    *
    * @param {number} userId
