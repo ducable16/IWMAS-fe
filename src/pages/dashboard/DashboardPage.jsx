@@ -1,4 +1,4 @@
-import { TrendingUp, AlertTriangle, Brain, FolderKanban, CheckSquare, Users } from 'lucide-react'
+import { TrendingUp, AlertTriangle, Brain, FolderKanban, CheckSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import StatCard from '@/features/dashboard/components/StatCard'
@@ -36,7 +36,7 @@ export default function DashboardPage() {
   const activeTaskStatuses = TASK_STATUSES.filter(
     (s) => s !== 'DONE' && s !== 'CANCELLED',
   )
-  const activeProjectStatuses = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD']
+  const activeProjectStatuses = ['PLANNING', 'IN_PROGRESS']
 
   const { data: teamSnapshot, isLoading: isTeamLoading } = useWorkloadTeam(isAdmin || isPm)
 
@@ -46,9 +46,9 @@ export default function DashboardPage() {
   )
   const { data: myProjects } = useMyProjects(
     { statuses: activeProjectStatuses, page: 0, size: 1 },
-    !isAdmin && !isPm,
+    !isAdmin,
   )
-  const activeProjectsCount = isAdmin || isPm
+  const activeProjectsCount = isAdmin
     ? allProjects?.totalElements ?? 0
     : myProjects?.totalElements ?? 0
 
@@ -113,9 +113,6 @@ export default function DashboardPage() {
     }))
     : Array.from(pmMemberMap.values())
 
-  const teamMembersCount = isAdmin || isPm
-    ? (teamSnapshot?.length ?? 0)
-    : 1
 
   if (isMember) {
     return (
@@ -145,7 +142,7 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         <StatCard
           icon={FolderKanban}
           label="Active projects"
@@ -163,12 +160,6 @@ export default function DashboardPage() {
           label="Overdue tasks"
           value={String(overdueCount || '—')}
           variant="danger"
-        />
-        <StatCard
-          icon={Users}
-          label="Team members"
-          value={String(teamMembersCount || '—')}
-          variant="warning"
         />
       </div>
 

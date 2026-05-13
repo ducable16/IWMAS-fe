@@ -10,7 +10,7 @@ export const projectService = {
    *
    * @param {{
    *   search?: string,
-   *   statuses?: string[],      // repeatable: PLANNING|IN_PROGRESS|ON_HOLD|COMPLETED|CANCELLED
+   *   statuses?: string[],      // repeatable: PLANNING|IN_PROGRESS|COMPLETED|CANCELLED
    *   managerId?: number,
    *   startDateFrom?: string,   // YYYY-MM-DD
    *   startDateTo?: string,

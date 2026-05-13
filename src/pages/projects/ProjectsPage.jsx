@@ -43,6 +43,7 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
+
 /* ── Sortable Column Header ────────────────────────────────── */
 
 function SortHeader({ label, field, params, onSort, className }) {
@@ -296,7 +297,8 @@ export default function ProjectsPage() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-border-subtle bg-bg-subtle/50">
-                  <SortHeader label="Project"    field="name"      params={params} onSort={handleSort} className="pl-5" />
+                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 pl-5 w-[100px]">Code</th>
+                  <SortHeader label="Project"    field="name"      params={params} onSort={handleSort} />
                   <SortHeader label="Status"     field="status"    params={params} onSort={handleSort} />
                   <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Manager</th>
                   <SortHeader label="Start"      field="startDate" params={params} onSort={handleSort} />
@@ -317,21 +319,18 @@ export default function ProjectsPage() {
                       className="cursor-pointer transition-colors hover:bg-bg-subtle/70 group"
                       id={`project-row-${project.id}`}
                     >
-                      {/* Project name + code */}
+                      {/* Code — unique identifier column */}
                       <td className="py-3 px-3 pl-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[11px] font-bold text-accent shrink-0">
-                            {project.code?.[0] || project.name?.[0] || '?'}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-[13px] font-medium text-text-primary truncate max-w-[220px] group-hover:text-accent transition-colors">
-                              {project.name}
-                            </p>
-                            {project.code && (
-                              <p className="text-[11px] text-text-muted font-mono">{project.code}</p>
-                            )}
-                          </div>
-                        </div>
+                        <span className="text-[12.5px] font-mono text-black tabular-nums">
+                          {project.code || '—'}
+                        </span>
+                      </td>
+
+                      {/* Project name */}
+                      <td className="py-3 px-3">
+                        <p className="text-[13px] font-medium text-text-primary truncate max-w-[240px] group-hover:text-accent transition-colors">
+                          {project.name}
+                        </p>
                       </td>
 
                       {/* Status */}
