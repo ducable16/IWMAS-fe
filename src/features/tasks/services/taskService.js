@@ -73,4 +73,15 @@ export const taskService = {
     api.put(`/tasks/${taskId}/comments/${commentId}`, data),
   deleteComment: (taskId, commentId) =>
     api.delete(`/tasks/${taskId}/comments/${commentId}`),
+
+  // Attachments
+  getAttachments: (taskId) =>
+    api.get(`/tasks/${taskId}/attachments`),
+  uploadAttachment: (taskId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/tasks/${taskId}/attachments`, formData)
+  },
+  deleteAttachment: (taskId, attachmentId) =>
+    api.delete(`/tasks/${taskId}/attachments/${attachmentId}`),
 }

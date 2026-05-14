@@ -29,7 +29,7 @@ import { TaskStatusBadge, TaskPriorityBadge, ProjectStatusBadge, UserStatusBadge
  * Small helpers / atoms
  * ─────────────────────────────────────────────────────────────────── */
 
-function UserAvatar({ name, size = 'lg' }) {
+function UserAvatar({ name, avatarUrl, size = 'lg' }) {
   const initials = name
     ? name.split(' ').map((p) => p[0]).slice(0, 2).join('').toUpperCase()
     : '?'
@@ -37,6 +37,15 @@ function UserAvatar({ name, size = 'lg' }) {
     size === 'lg' ? 'w-16 h-16 text-[22px]' :
     size === 'md' ? 'w-10 h-10 text-[14px]' :
                     'w-7  h-7  text-[11px]'
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name || 'User'}
+        className={clsx(sz, 'rounded-full object-cover border border-border-subtle shrink-0')}
+      />
+    )
+  }
   return (
     <div className={clsx(
       sz,
@@ -405,7 +414,7 @@ export default function UserProfilePage() {
           {/* Profile header card */}
           <div className="card p-5">
             <div className="flex items-start gap-4">
-              <UserAvatar name={user.fullName} size="lg" />
+              <UserAvatar name={user.fullName} avatarUrl={user.avatarUrl} size="lg" />
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-3">

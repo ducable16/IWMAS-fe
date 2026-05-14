@@ -1,9 +1,10 @@
-import { Building2, Shield, Bell, User as UserIcon, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { Building2, Shield, Bell, User as UserIcon, Loader2, Upload } from 'lucide-react'
+import { useRef, useState } from 'react'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { userService } from '@/features/members/services/memberService'
+import { useUploadAvatar } from '@/features/members/hooks/useMembers'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
 
@@ -46,6 +47,8 @@ function Toggle({ enabled, onChange }) {
 function ProfileSection() {
   const user       = useAuthStore((s) => s.user)
   const updateUser = useAuthStore((s) => s.updateUser)
+  const { mutate: uploadAvatar, isPending: isUploadingAvatar } = useUploadAvatar()
+  const fileInputRef = useRef(null)
 
   const [form, setForm] = useState({
     name:     user?.fullName || user?.name || '',
@@ -55,6 +58,7 @@ function ProfileSection() {
   })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
+  const [avatarFile, setAvatarFile] = useState(null)
 
   const set = (key) => (e) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -92,17 +96,78 @@ function ProfileSection() {
   const displayName = user?.fullName || user?.name || 'User'
   const initials    = displayName[0]?.toUpperCase() || 'U'
 
+  const handleChooseAvatar = () => fileInputRef.current?.click()
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.type?.startsWith('image/')) {
+      toast.error('File type not allowed')
+      e.target.value = ''
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('File is too large')
+      e.target.value = ''
+      return
+    }
+
+    setAvatarFile(file)
+  }
+
+  const handleUploadAvatar = () => {
+    if (!avatarFile || isUploadingAvatar) return
+    uploadAvatar(avatarFile, {
+      onSuccess: () => {
+        setAvatarFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      },
+    })
+  }
+
   return (
     <form onSubmit={handleSubmit} className="card p-6 space-y-5">
       <h3 className="section-title text-[15px]">Profile</h3>
 
       {/* Avatar */}
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center text-xl font-semibold text-white shrink-0">
-          {initials}
-        </div>
+        {user?.avatarUrl ? (
+          <img
+            src={user.avatarUrl}
+            alt={displayName}
+            className="w-16 h-16 rounded-2xl object-cover border border-border-subtle shrink-0"
+          />
+        ) : (
+          <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center text-xl font-semibold text-white shrink-0">
+            {initials}
+          </div>
+        )}
         <div>
-          <button type="button" className="btn-secondary">Change avatar</button>
+          <div className="flex items-center gap-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+            <button type="button" className="btn-secondary" onClick={handleChooseAvatar}>
+              Change avatar
+            </button>
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={handleUploadAvatar}
+              disabled={!avatarFile || isUploadingAvatar}
+            >
+              {isUploadingAvatar ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+              {isUploadingAvatar ? 'Uploading…' : 'Upload'}
+            </button>
+          </div>
+          {avatarFile && (
+            <p className="text-[11.5px] text-text-secondary mt-1.5">{avatarFile.name}</p>
+          )}
           <p className="text-[11.5px] text-text-muted mt-1.5">JPG, PNG, max 2 MB</p>
         </div>
       </div>

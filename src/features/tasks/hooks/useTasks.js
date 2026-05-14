@@ -3,7 +3,9 @@ import { taskService } from '../services/taskService'
 
 /** Normalise a raw TaskResponse from the API into the shape used by the UI */
 function normaliseTask(t) {
-  // §4.6: assignee and reporter are full objects { id, fullName, email, role, ... }
+  // §4.6: assignee, reporter, and comment authors use UserPublicView:
+  //   { id, email, fullName, avatarUrl, position, role }
+  //   — phone, verified, active are NOT present in UserPublicView
   const assigneeName = t.assignee?.fullName || t.assignee?.email || '?'
   const reporterName = t.reporter?.fullName || t.reporter?.email || '?'
   return {

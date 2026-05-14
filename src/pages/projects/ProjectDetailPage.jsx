@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import {
   ArrowLeft, Pencil, Trash2, Users, Calendar,
-  X, Save, Loader2, Plus, Edit2, BarChart3
+  X, Save, Loader2, Plus, Edit2, BarChart3, Paperclip, Upload, Download
 } from 'lucide-react'
 import clsx from 'clsx'
 import {
   useProject, useProjectMembers, useDeleteProject,
   useRemoveProjectMember, useUpdateProject,
-  useUpdateProjectMember,
+  useUpdateProjectMember, useProjectDocuments,
+  useUploadProjectDocument, useDeleteProjectDocument,
 } from '@/features/projects/hooks/useProjects'
 import ProjectAddMemberModal from '@/features/projects/components/ProjectAddMemberModal'
 import ProjectEditMemberModal from '@/features/projects/components/ProjectEditMemberModal'
@@ -32,6 +33,14 @@ function formatDate(d) {
   return new Date(d).toLocaleDateString('en-US', {
     month: 'short', day: 'numeric', year: 'numeric',
   })
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[exponent]}`
 }
 
 const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
@@ -63,14 +72,18 @@ function Field({ label, required, error, children }) {
 
 export default function ProjectDetailPage() {
   const { id } = useParams()
+  const projectId = Number(id)
   const navigate = useNavigate()
   const can  = useCan()
   const user = useAuthStore((s) => s.user)
 
-  const { data: project, isLoading, isError, error, refetch } = useProject(Number(id))
-  const { data: members = [], isLoading: membersLoading } = useProjectMembers(Number(id))
+  const { data: project, isLoading, isError, error, refetch } = useProject(projectId)
+  const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
+  const { data: documents = [], isLoading: documentsLoading } = useProjectDocuments(projectId)
   const { mutate: deleteProject }  = useDeleteProject()
-  const { mutate: removeMember }   = useRemoveProjectMember(Number(id))
+  const { mutate: removeMember }   = useRemoveProjectMember(projectId)
+  const { mutate: uploadDocument, isPending: isUploadingDocument } = useUploadProjectDocument(projectId)
+  const { mutate: deleteDocument, isPending: isDeletingDocument } = useDeleteProjectDocument(projectId)
   const updateProject              = useUpdateProject()
   const isPending                  = updateProject.isPending
 
@@ -79,6 +92,7 @@ export default function ProjectDetailPage() {
   const isOwnProject     = !!project && project.managerId === user?.id
   const canEdit          = can.isAdmin || (can.isPm && isOwnProject)
   const canManageMembers = can.isAdmin || (can.isPm && isOwnProject)
+  const canUploadDocuments = can.isAdmin || can.isPm || can.isTm
 
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })
@@ -166,6 +180,16 @@ export default function ProjectDetailPage() {
   const handleRemoveMember = (member) => {
     if (!window.confirm(`Remove ${member.userFullName} from this project?`)) return
     removeMember(member.id)
+  }
+
+  const handleUploadDocument = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    uploadDocument(file, {
+      onSettled: () => {
+        e.target.value = ''
+      },
+    })
   }
 
   if (isLoading) return <LiveLoading label="Loading project…" />
@@ -286,6 +310,7 @@ export default function ProjectDetailPage() {
         {[
           { id: 'overview', label: 'Overview' },
           { id: 'members',  label: 'Members', count: members.length },
+          { id: 'documents', label: 'Documents', count: documents.length, icon: Paperclip },
           ...((canEdit || can.isAdmin) ? [{ id: 'workload', label: 'Workload', icon: BarChart3 }] : []),
         ].map((tab) => (
           <button
@@ -543,23 +568,96 @@ export default function ProjectDetailPage() {
       </div>
       )}
 
+      {/* ── Tab: Documents ── */}
+      {activeTab === 'documents' && (
+        <div className="card overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+            <h3 className="text-[13px] font-semibold text-text-primary uppercase tracking-wide flex items-center gap-2">
+              <Paperclip className="w-4 h-4 text-text-muted" />
+              Project Documents
+              <span className="text-[11px] text-text-muted font-normal ml-1">
+                ({documents.length})
+              </span>
+            </h3>
+            {canUploadDocuments && (
+              <label className="btn-ghost text-[12px] h-8 px-3 cursor-pointer">
+                <Upload className="w-3.5 h-3.5 mr-1" />
+                {isUploadingDocument ? 'Uploading…' : 'Upload Document'}
+                <input
+                  type="file"
+                  className="hidden"
+                  disabled={isUploadingDocument}
+                  onChange={handleUploadDocument}
+                />
+              </label>
+            )}
+          </div>
+
+          {documentsLoading ? (
+            <div className="p-8"><LiveLoading label="Loading documents…" /></div>
+          ) : documents.length === 0 ? (
+            <div className="p-8">
+              <LiveEmpty label="No documents uploaded yet." />
+            </div>
+          ) : (
+            <div className="divide-y divide-border-subtle">
+              {documents.map((doc) => {
+                const canDeleteDoc = can.isAdmin || isOwnProject || doc.uploadedBy === user?.id
+                return (
+                  <div key={doc.id} className="px-5 py-3 flex items-center gap-3">
+                    <Paperclip className="w-4 h-4 text-text-muted shrink-0" strokeWidth={1.75} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[13px] text-text-primary truncate">{doc.fileName}</p>
+                      <p className="text-[11px] text-text-muted mt-0.5">
+                        {formatFileSize(doc.fileSize)} · Uploaded {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : '—'}
+                        {doc.uploadedBy ? ` · by #${doc.uploadedBy}` : ''}
+                      </p>
+                    </div>
+                    <a
+                      href={doc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-ghost text-[12px] h-8 px-2.5"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Open
+                    </a>
+                    {canDeleteDoc && (
+                      <button
+                        type="button"
+                        onClick={() => deleteDocument(doc.id)}
+                        disabled={isDeletingDocument}
+                        className="btn-ghost text-[12px] h-8 px-2.5 text-danger hover:bg-danger/10"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Delete
+                      </button>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Tab: Workload ── */}
       {activeTab === 'workload' && (canEdit || can.isAdmin) && (
         <div className="card p-5">
-          <ProjectWorkloadDashboard projectId={Number(id)} />
+          <ProjectWorkloadDashboard projectId={projectId} />
         </div>
       )}
 
       <ProjectAddMemberModal
         open={addMemberOpen}
         onClose={() => setAddMemberOpen(false)}
-        projectId={Number(id)}
+        projectId={projectId}
       />
 
       <ProjectEditMemberModal
         open={!!editingMember}
         member={editingMember}
-        projectId={Number(id)}
+        projectId={projectId}
         onClose={() => setEditingMember(null)}
       />
     </div>

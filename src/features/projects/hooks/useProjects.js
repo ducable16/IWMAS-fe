@@ -95,6 +95,18 @@ export function useProjectMembers(projectId) {
   })
 }
 
+export function useProjectDocuments(projectId) {
+  return useQuery({
+    queryKey: ['projects', projectId, 'documents'],
+    queryFn: async () => {
+      const res = await projectService.getDocuments(projectId)
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: !!projectId,
+    staleTime: 30_000,
+  })
+}
+
 /**
  * §3.8 GET /api/projects/{id}/members/search — Assignee autocomplete
  * Returns users who can be assigned tasks in this project (manager + active members).
@@ -286,5 +298,31 @@ export function useRemoveProjectMember(projectId) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err) => toast.error(err?.message || 'Failed to remove member'),
+  })
+}
+
+export function useUploadProjectDocument(projectId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file) => projectService.uploadDocument(projectId, file),
+    onSuccess: () => {
+      toast.success('Document uploaded')
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to upload document'),
+  })
+}
+
+export function useDeleteProjectDocument(projectId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (documentId) => projectService.deleteDocument(projectId, documentId),
+    onSuccess: () => {
+      toast.success('Document deleted')
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to delete document'),
   })
 }

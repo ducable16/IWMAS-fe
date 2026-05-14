@@ -26,6 +26,15 @@ const ROUTE_LABELS = {
 function UserAvatar({ user, size = 'sm' }) {
   const initials = (user?.fullName || user?.name || 'U')[0]?.toUpperCase() || 'U'
   const sizeClass = size === 'lg' ? 'w-9 h-9 text-[13px]' : 'w-7 h-7 text-[11px]'
+  if (user?.avatarUrl) {
+    return (
+      <img
+        src={user.avatarUrl}
+        alt={user?.fullName || user?.name || 'User'}
+        className={clsx('rounded-full object-cover border border-border-subtle shrink-0', sizeClass)}
+      />
+    )
+  }
   return (
     <div className={clsx(
       'rounded-full bg-accent flex items-center justify-center font-semibold text-white shrink-0',

@@ -102,20 +102,6 @@ function MentionPopup({
       style={style}
       className="bg-bg-surface border border-border rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)] overflow-hidden animate-fade-in"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2 border-b border-border-subtle bg-bg-subtle/80">
-        <div className="flex items-center gap-1.5">
-          <AtSign className="w-3 h-3 text-accent" strokeWidth={2} />
-          <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wide">
-            Mention
-          </span>
-          {mentionQuery && (
-            <span className="text-[11px] text-accent font-mono">{mentionQuery}</span>
-          )}
-        </div>
-        {isFetching && <Loader2 className="w-3 h-3 text-text-muted animate-spin" />}
-      </div>
-
       {/* Body */}
       {suggestions.length === 0 && isFetching ? (
         <div className="px-3 py-4 text-[12px] text-text-muted text-center">
@@ -176,19 +162,6 @@ function MentionPopup({
               )
             })}
           </ul>
-
-          {/* Footer hint */}
-          <div className="px-3 py-1.5 border-t border-border-subtle bg-bg-subtle/60 flex items-center gap-3">
-            <span className="text-[10px] text-text-muted">
-              <kbd className="kbd text-[9px]">↑↓</kbd> navigate
-            </span>
-            <span className="text-[10px] text-text-muted">
-              <kbd className="kbd text-[9px]">Enter</kbd> select
-            </span>
-            <span className="text-[10px] text-text-muted">
-              <kbd className="kbd text-[9px]">Esc</kbd> close
-            </span>
-          </div>
         </>
       )}
     </div>,
@@ -376,16 +349,7 @@ export default function MentionTextarea({
           className="w-full bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none p-3 resize-none leading-relaxed"
         />
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between bg-bg-subtle/50 border-t border-border-subtle px-3 py-1.5">
-          <span className="flex items-center gap-0.5 text-[11px] text-text-muted select-none">
-            <AtSign className="w-3 h-3" strokeWidth={1.75} />
-            to mention
-          </span>
-          <p className="text-[11px] text-text-muted">
-            <kbd className="kbd">Enter</kbd> save · <kbd className="kbd">Shift+Enter</kbd> newline
-          </p>
-        </div>
+
       </div>
 
       {/* Popup rendered via Portal at caret position */}

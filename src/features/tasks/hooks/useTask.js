@@ -24,6 +24,18 @@ export function useTaskHistory(id) {
   })
 }
 
+export function useTaskAttachments(taskId) {
+  return useQuery({
+    queryKey: ['tasks', taskId, 'attachments'],
+    queryFn: async () => {
+      const res = await taskService.getAttachments(taskId)
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: !!taskId,
+    staleTime: 30_000,
+  })
+}
+
 export function useUpdateTaskStatus(id) {
   const queryClient = useQueryClient()
   return useMutation({
@@ -45,6 +57,31 @@ export function useAddTaskComment(taskId) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
     },
+  })
+}
+
+/** §4.15 PUT /api/tasks/{taskId}/comments/{commentId} — author only */
+export function useUpdateTaskComment(taskId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ commentId, content }) =>
+      taskService.updateComment(taskId, commentId, { content }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to update comment'),
+  })
+}
+
+/** §4.16 DELETE /api/tasks/{taskId}/comments/{commentId} — author only */
+export function useDeleteTaskComment(taskId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (commentId) => taskService.deleteComment(taskId, commentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to delete comment'),
   })
 }
 
@@ -72,5 +109,31 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
     },
     onError: (err) => toast.error(err?.message || 'Failed to create task'),
+  })
+}
+
+export function useUploadTaskAttachment(taskId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (file) => taskService.uploadAttachment(taskId, file),
+    onSuccess: () => {
+      toast.success('Attachment uploaded')
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to upload attachment'),
+  })
+}
+
+export function useDeleteTaskAttachment(taskId) {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (attachmentId) => taskService.deleteAttachment(taskId, attachmentId),
+    onSuccess: () => {
+      toast.success('Attachment deleted')
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to delete attachment'),
   })
 }

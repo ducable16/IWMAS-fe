@@ -1,6 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
+import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
+import { useAuthStore } from '@/features/auth/store/authStore'
 
 /**
  * Server-side paginated user list — §2.6 GET /api/users
@@ -158,5 +160,27 @@ export function useUserReportedTasks(userId, params = {}, enabled = true) {
     enabled: !!userId && enabled,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
+  })
+}
+
+export function useUploadAvatar() {
+  const queryClient = useQueryClient()
+  const updateUser = useAuthStore((s) => s.updateUser)
+  const currentUser = useAuthStore((s) => s.user)
+
+  return useMutation({
+    mutationFn: (file) => userService.uploadAvatar(file),
+    onSuccess: (res) => {
+      const updated = res?.data
+      if (updated) updateUser(updated)
+      else if (currentUser) updateUser(currentUser)
+
+      toast.success('Avatar updated')
+      if (updated?.id) {
+        queryClient.invalidateQueries({ queryKey: ['users', updated.id] })
+      }
+      queryClient.invalidateQueries({ queryKey: ['members'] })
+    },
+    onError: (err) => toast.error(err?.message || 'Failed to upload avatar'),
   })
 }

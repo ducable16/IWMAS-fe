@@ -69,9 +69,17 @@ export default function UserProfileModal({ open, onClose }) {
 
         {/* Avatar + name */}
         <div className="px-5 pt-5 pb-4 flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center text-xl font-semibold text-white shrink-0">
-            {initials}
-          </div>
+          {user?.avatarUrl ? (
+            <img
+              src={user.avatarUrl}
+              alt={displayName}
+              className="w-14 h-14 rounded-2xl object-cover border border-border-subtle shrink-0"
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center text-xl font-semibold text-white shrink-0">
+              {initials}
+            </div>
+          )}
           <div className="min-w-0 flex-1">
             <p className="text-[16px] font-semibold text-text-primary truncate">{displayName}</p>
             <span className={clsx('badge mt-1', roleBadgeCls)}>

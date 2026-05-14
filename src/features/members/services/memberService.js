@@ -5,6 +5,11 @@ export const userService = {
   // §2.2: body key is `name` (not `fullName`)
   updateMe: (data) => api.patch('/users/me', data),
   changePassword: (data) => api.patch('/users/me/password', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/users/me/avatar', formData)
+  },
 
   /**
    * §2.6 GET /api/users — paginated with full filter/sort/page support.

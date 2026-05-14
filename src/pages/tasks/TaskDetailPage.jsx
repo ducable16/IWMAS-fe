@@ -4,7 +4,7 @@ import {
   ArrowLeft, ChevronDown, MoreHorizontal, Check, X,
   User, Flag, Calendar, Tag, GitBranch,
   Clock, CheckSquare, MessageSquare, History, Timer,
-  AlertTriangle, Loader2, ChevronRight,
+  AlertTriangle, Loader2, ChevronRight, Paperclip, Upload, Download, Trash2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import MentionTextarea from '@/components/ui/MentionTextarea'
@@ -12,6 +12,8 @@ import CommentContent from '@/components/ui/CommentContent'
 import {
   useTask, useTaskHistory, useUpdateTaskStatus,
   useUpdateTask, useAddTaskComment,
+  useUpdateTaskComment, useDeleteTaskComment,
+  useTaskAttachments, useUploadTaskAttachment, useDeleteTaskAttachment,
 } from '@/features/tasks/hooks/useTask'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useProjectMembers } from '@/features/projects/hooks/useProjects'
@@ -37,22 +39,44 @@ const PRIORITY_META = {
 
 const ACTIVITY_TABS = [
   { id: 'comments', label: 'Comments', icon: MessageSquare },
+  { id: 'attachments', label: 'Attachments', icon: Paperclip },
   { id: 'history',  label: 'History',  icon: History       },
   { id: 'worklog',  label: 'Work log', icon: Timer         },
 ]
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function Avatar({ name, size = 'sm' }) {
+function Avatar({ name, avatarUrl, size = 'sm' }) {
   const initials = name
     ? name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase()
     : '?'
-  const sz = size === 'sm' ? 'w-6 h-6 text-[10px]' : 'w-8 h-8 text-[12px]'
+  const sz = size === 'xs'
+    ? 'w-5 h-5 text-[9px]'
+    : size === 'sm'
+    ? 'w-6 h-6 text-[10px]'
+    : 'w-8 h-8 text-[12px]'
+  if (avatarUrl) {
+    return (
+      <img
+        src={avatarUrl}
+        alt={name || 'User'}
+        className={clsx('rounded-full object-cover border border-border-subtle shrink-0', sz)}
+      />
+    )
+  }
   return (
     <div className={clsx('rounded-full bg-accent flex items-center justify-center font-semibold text-white shrink-0', sz)}>
       {initials}
     </div>
   )
+}
+
+function formatFileSize(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const exponent = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  const value = bytes / 1024 ** exponent
+  return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[exponent]}`
 }
 
 function DetailRow({ icon: Icon, label, children }) {
@@ -160,6 +184,137 @@ function HistoryTab({ taskId }) {
   )
 }
 
+// ─── Single comment item ──────────────────────────────────────────────────────
+
+function CommentItem({ comment, taskId, currentUserId, mentionMap }) {
+  const [editing, setEditing]   = useState(false)
+  const [draft, setDraft]       = useState('')
+  const [confirming, setConfirming] = useState(false)
+
+  const { mutate: updateComment, isPending: isUpdating } = useUpdateTaskComment(taskId)
+  const { mutate: deleteComment, isPending: isDeleting } = useDeleteTaskComment(taskId)
+
+  const isOwn = comment.author?.id === currentUserId
+
+  const startEdit = () => {
+    setDraft(comment.content || '')
+    setEditing(true)
+    setConfirming(false)
+  }
+
+  const cancelEdit = () => {
+    setEditing(false)
+    setDraft('')
+  }
+
+  const submitEdit = () => {
+    const trimmed = draft.trim()
+    if (!trimmed || isUpdating) return
+    updateComment(
+      { commentId: comment.id, content: trimmed },
+      { onSuccess: () => setEditing(false) },
+    )
+  }
+
+  const confirmDelete = () => {
+    deleteComment(comment.id, { onSuccess: () => setConfirming(false) })
+  }
+
+  return (
+    <div className="flex items-start gap-3 group">
+      <Avatar name={comment.author?.fullName} avatarUrl={comment.author?.avatarUrl} size="sm" />
+      <div className="flex-1 min-w-0">
+        {/* Header row */}
+        <div className="flex items-baseline justify-between gap-2 mb-1">
+          <div className="flex items-baseline gap-2">
+            <span className="text-[13px] font-semibold text-text-primary">
+              {comment.author?.fullName || 'Unknown'}
+            </span>
+            <span className="text-[11px] text-text-muted">
+              {new Date(comment.createdAt).toLocaleString()}
+              {comment.updatedAt !== comment.createdAt && (
+                <span className="ml-1 italic">(edited)</span>
+              )}
+            </span>
+          </div>
+
+          {/* Actions — only visible when hovering and isOwn */}
+          {isOwn && !editing && (
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+              <button
+                onClick={startEdit}
+                className="text-[11px] text-text-muted hover:text-text-primary px-1.5 py-0.5 rounded hover:bg-bg-hover transition-colors"
+              >
+                Edit
+              </button>
+              {!confirming ? (
+                <button
+                  onClick={() => setConfirming(true)}
+                  className="text-[11px] text-text-muted hover:text-danger px-1.5 py-0.5 rounded hover:bg-danger/10 transition-colors"
+                >
+                  Delete
+                </button>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <button
+                    onClick={confirmDelete}
+                    disabled={isDeleting}
+                    className="text-[11px] text-danger font-medium px-1.5 py-0.5 rounded hover:bg-danger/10 transition-colors disabled:opacity-50"
+                  >
+                    {isDeleting ? '…' : 'Confirm'}
+                  </button>
+                  <button
+                    onClick={() => setConfirming(false)}
+                    className="text-[11px] text-text-muted px-1.5 py-0.5 rounded hover:bg-bg-hover transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Content or edit textarea */}
+        {editing ? (
+          <div className="space-y-2">
+            <textarea
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') cancelEdit()
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitEdit()
+              }}
+              rows={3}
+              className="w-full text-[13px] text-text-primary bg-bg-surface border border-accent/40 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-accent leading-relaxed"
+            />
+            <div className="flex items-center gap-2">
+              <button
+                onClick={submitEdit}
+                disabled={!draft.trim() || isUpdating}
+                className="btn-primary text-[12px] px-3 py-1 flex items-center gap-1.5 disabled:opacity-40"
+              >
+                {isUpdating ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2.5} />}
+                Save
+              </button>
+              <button
+                onClick={cancelEdit}
+                className="btn-ghost text-[12px] px-3 py-1"
+              >
+                Cancel
+              </button>
+              <span className="text-[11px] text-text-muted ml-auto">Ctrl+Enter to save</span>
+            </div>
+          </div>
+        ) : (
+          <CommentContent content={comment.content} mentionMap={mentionMap} />
+        )}
+      </div>
+    </div>
+  )
+}
+
 // ─── Comments tab ─────────────────────────────────────────────────────────────
 
 function CommentsTab({ taskId, comments = [], projectId }) {
@@ -187,21 +342,13 @@ function CommentsTab({ taskId, comments = [], projectId }) {
       {comments.length > 0 ? (
         <div className="space-y-5">
           {comments.map(c => (
-            <div key={c.id} className="flex items-start gap-3 group">
-              <Avatar name={c.author?.fullName} size="sm" />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-baseline gap-2 mb-1">
-                  <span className="text-[13px] font-semibold text-text-primary">
-                    {c.author?.fullName || 'Unknown'}
-                  </span>
-                  <span className="text-[11px] text-text-muted">
-                    {new Date(c.createdAt).toLocaleString()}
-                  </span>
-                </div>
-                {/* @mention badges are clickable when userId is in mentionMap */}
-                <CommentContent content={c.content} mentionMap={mentionMap} />
-              </div>
-            </div>
+            <CommentItem
+              key={c.id}
+              comment={c}
+              taskId={taskId}
+              currentUserId={user?.id}
+              mentionMap={mentionMap}
+            />
           ))}
         </div>
       ) : (
@@ -210,7 +357,7 @@ function CommentsTab({ taskId, comments = [], projectId }) {
 
       {/* Compose area */}
       <div className="flex items-start gap-3">
-        <Avatar name={user?.fullName || user?.name || user?.email} size="sm" />
+        <Avatar name={user?.fullName || user?.name || user?.email} avatarUrl={user?.avatarUrl} size="sm" />
         <div className="flex-1 min-w-0 space-y-2">
           <MentionTextarea
             value={content}
@@ -232,6 +379,85 @@ function CommentsTab({ taskId, comments = [], projectId }) {
           </div>
         </div>
       </div>
+    </div>
+  )
+}
+
+function AttachmentsTab({ taskId, canUploadAttachments, canDeleteAsManager, currentUserId }) {
+  const { data: attachments = [], isLoading } = useTaskAttachments(taskId)
+  const { mutate: uploadAttachment, isPending: isUploading } = useUploadTaskAttachment(taskId)
+  const { mutate: deleteAttachment, isPending: isDeleting } = useDeleteTaskAttachment(taskId)
+
+  const handleUpload = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    uploadAttachment(file, {
+      onSettled: () => {
+        e.target.value = ''
+      },
+    })
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[12px] text-text-muted">
+          Allowed: image, PDF, Word, Excel, text · Max 20 MB
+        </p>
+        {canUploadAttachments && (
+          <label className="btn-secondary cursor-pointer text-[12px]">
+            <Upload className="w-3.5 h-3.5" />
+            {isUploading ? 'Uploading…' : 'Upload file'}
+            <input
+              type="file"
+              className="hidden"
+              disabled={isUploading}
+              onChange={handleUpload}
+            />
+          </label>
+        )}
+      </div>
+
+      {isLoading ? (
+        <LiveLoading label="Loading attachments…" />
+      ) : attachments.length === 0 ? (
+        <p className="text-[13px] text-text-muted italic">No attachments yet.</p>
+      ) : (
+        <div className="divide-y divide-border-subtle border border-border-subtle rounded-xl overflow-hidden">
+          {attachments.map((item) => (
+            <div key={item.id} className="flex items-center gap-3 p-3 bg-bg-surface">
+              <Paperclip className="w-4 h-4 text-text-muted shrink-0" strokeWidth={1.75} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] text-text-primary truncate">{item.fileName}</p>
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  {formatFileSize(item.fileSize)} · Uploaded {item.createdAt ? new Date(item.createdAt).toLocaleString() : '—'}
+                  {item.uploadedBy ? ` · by #${item.uploadedBy}` : ''}
+                </p>
+              </div>
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost text-[12px] h-8 px-2.5"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Open
+              </a>
+              {(canDeleteAsManager || item.uploadedBy === currentUserId) && (
+                <button
+                  type="button"
+                  onClick={() => deleteAttachment(item.id)}
+                  disabled={isDeleting}
+                  className="btn-ghost text-[12px] h-8 px-2.5 text-danger hover:bg-danger/10"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -289,6 +515,8 @@ export default function TaskDetailPage() {
   // §4.8 / §4.9: ADMIN, project manager, or task assignee may edit / change status
   const isAssignee  = !!user && !!task && user.id === task.assignee?.id
   const canEditTask = can.isAdmin || can.isPm || isAssignee
+  const canUploadAttachments = can.isAdmin || can.isPm || can.isTm
+  const canDeleteAsManager = can.isAdmin || can.isPm
 
   if (isLoading) return (
     <div className="max-w-[1200px] mx-auto pt-6"><LiveLoading label="Loading task…" /></div>
@@ -511,6 +739,14 @@ export default function TaskDetailPage() {
             </div>
             <div className="min-h-[80px]">
               {activeTab === 'comments' && <CommentsTab taskId={id} comments={task?.comments} projectId={task?.projectId} />}
+              {activeTab === 'attachments' && (
+                <AttachmentsTab
+                  taskId={id}
+                  canUploadAttachments={canUploadAttachments}
+                  canDeleteAsManager={canDeleteAsManager}
+                  currentUserId={user?.id}
+                />
+              )}
               {activeTab === 'history'  && <HistoryTab taskId={id} />}
               {activeTab === 'worklog'  && (
                 <p className="text-[13px] text-text-muted py-4 text-center italic">No work logs yet.</p>
@@ -541,7 +777,7 @@ export default function TaskDetailPage() {
                 >
                   {assignee ? (
                     <>
-                      <Avatar name={assignee.fullName} size="xs" />
+                      <Avatar name={assignee.fullName} avatarUrl={assignee.avatarUrl} size="xs" />
                       <Link
                         to={`/users/${assignee.id}`}
                         onClick={(e) => e.stopPropagation()}
@@ -581,7 +817,7 @@ export default function TaskDetailPage() {
                             m.id === assignee?.id ? 'bg-accent/10 text-accent font-medium' : 'text-text-secondary',
                           )}
                         >
-                          <Avatar name={m.fullName} size="xs" />
+                          <Avatar name={m.fullName} avatarUrl={m.avatarUrl} size="xs" />
                           <span className="truncate flex-1">{m.fullName}</span>
                           {m.id === assignee?.id && <Check className="w-3.5 h-3.5 shrink-0 text-accent" strokeWidth={2.5} />}
                         </button>
@@ -849,7 +1085,7 @@ export default function TaskDetailPage() {
             <DetailRow icon={User} label="Reporter">
               {reporter ? (
                 <div className="flex items-center gap-2">
-                  <Avatar name={reporter.fullName} />
+                  <Avatar name={reporter.fullName} avatarUrl={reporter.avatarUrl} />
                   <Link
                     to={`/users/${reporter.id}`}
                     className="text-[13px] hover:text-accent hover:underline transition-colors"

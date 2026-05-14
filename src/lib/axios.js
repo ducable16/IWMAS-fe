@@ -5,7 +5,6 @@ import { useTenantStore } from '@/store/tenantStore'
 const instance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:9090/api',
   timeout: 15000,
-  headers: { 'Content-Type': 'application/json' },
   withCredentials: true, // send HttpOnly refresh-token cookie
 })
 
@@ -14,8 +13,18 @@ instance.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   const tenantId = useTenantStore.getState().tenantId
 
-  if (token) config.headers.Authorization = `Bearer ${token}`
-  if (tenantId) config.headers['X-Tenant-ID'] = tenantId
+  if (config.data instanceof FormData && config.headers) {
+    // Let browser set multipart/form-data with boundary automatically.
+    if (typeof config.headers.delete === 'function') {
+      config.headers.delete('Content-Type')
+    } else {
+      delete config.headers['Content-Type']
+      delete config.headers['content-type']
+    }
+  }
+
+  if (token && config.headers) config.headers.Authorization = `Bearer ${token}`
+  if (tenantId && config.headers) config.headers['X-Tenant-ID'] = tenantId
 
   return config
 })

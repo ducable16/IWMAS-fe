@@ -153,4 +153,15 @@ export const projectService = {
 
   // Convenience shortcut (used by sprint board)
   getTasks: (id) => api.get(`/projects/${id}/tasks`),
+
+  // Documents
+  getDocuments: (projectId) =>
+    api.get(`/projects/${projectId}/documents`),
+  uploadDocument: (projectId, file) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post(`/projects/${projectId}/documents`, formData)
+  },
+  deleteDocument: (projectId, documentId) =>
+    api.delete(`/projects/${projectId}/documents/${documentId}`),
 }
