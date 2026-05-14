@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Loader2, Plus, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react'
 import clsx from 'clsx'
 import { useAddProjectMember, useUserEffortRemaining } from '../hooks/useProjects'
-import { useAutocomplete, useDebouncedValue } from '@/features/search/hooks/useSearch'
+import { useAutocompleteExcludeProject } from '@/features/search/hooks/useSearch'
 import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
 import { PROJECT_ROLES, PROJECT_ROLE_LABEL } from '@/constants/enums'
 
@@ -261,7 +261,7 @@ export default function ProjectAddMemberModal({ open, projectId, onClose }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
-          {/* User autocomplete */}
+          {/* User autocomplete — excludes existing project participants §13.1 */}
           <AutocompleteSelect
             id="add-member-userId"
             label="User"
@@ -269,7 +269,7 @@ export default function ProjectAddMemberModal({ open, projectId, onClose }) {
             placeholder="Search by name, email..."
             value={form.userId}
             onChange={(val) => set('userId', val)}
-            useSearchHook={useAutocomplete}
+            useSearchHook={(q) => useAutocompleteExcludeProject(q, projectId)}
             error={errors.userId}
           />
 

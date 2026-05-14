@@ -10,18 +10,27 @@ import api from '@/lib/axios'
  */
 export const searchService = {
   /**
-   * §13.1 GET /api/autocomplete?q={prefix}
+   * §13.1 GET /api/autocomplete?q={prefix}[&projectId=...][&excludeProjectId=...]
    *
    * Trả về { prefix, suggestions: [{ term, entityId }], source, tookMs }.
    * Server không debounce — FE phải debounce (~150–250ms) và cancel inflight
    * bằng AbortSignal khi user gõ tiếp.
    *
+   * opts.projectId        — Restrict results to project participants (task assignee flow).
+   * opts.excludeProjectId — Exclude project participants from results (add-member flow).
+   * Hai param là mutually exclusive; nếu có cả hai, backend ưu tiên projectId.
+   *
    * 400 SEARCH_QUERY_TOO_SHORT (9501) nếu `q.trim().length < 2` —
    * hook sẽ tự skip nên không thường gặp.
+   *
+   * @param {string} q
+   * @param {AbortSignal} signal
+   * @param {{ projectId?: number|string, excludeProjectId?: number|string }} [opts]
    */
-  autocomplete: (q, signal, projectId) => {
+  autocomplete: (q, signal, opts = {}) => {
     const params = { q }
-    if (projectId) params.projectId = projectId
+    if (opts.projectId)        params.projectId        = opts.projectId
+    if (opts.excludeProjectId) params.excludeProjectId = opts.excludeProjectId
     return api.get('/autocomplete', { params, signal })
   },
 

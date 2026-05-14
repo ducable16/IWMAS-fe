@@ -23,7 +23,7 @@ export function useMentionAutocomplete(query, projectId, enabled = true) {
   return useQuery({
     queryKey: ['mention-autocomplete', trimmed, projectId],
     queryFn: async ({ signal }) => {
-      const res = await searchService.autocomplete(trimmed, signal, projectId)
+      const res = await searchService.autocomplete(trimmed, signal, { projectId })
       // §13.1 response shape: { prefix, suggestions: [{term, entityId}], source, tookMs }
       const suggestions = res.data?.suggestions ?? []
       return suggestions.map((s) => ({ id: s.entityId, fullName: s.term }))
