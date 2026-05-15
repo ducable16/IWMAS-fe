@@ -4,16 +4,17 @@ import {
   ArrowLeft, ChevronDown, MoreHorizontal, Check, X,
   User, Flag, Calendar, Tag, GitBranch,
   Clock, CheckSquare, MessageSquare, History, Timer,
-  AlertTriangle, Loader2, ChevronRight, Paperclip, Upload, Download, Trash2,
+  AlertTriangle, Loader2, Link2,
 } from 'lucide-react'
 import clsx from 'clsx'
 import MentionTextarea from '@/components/ui/MentionTextarea'
 import CommentContent from '@/components/ui/CommentContent'
+import DescriptionEditor from '@/features/tasks/components/DescriptionEditor'
+import AttachmentsSection from '@/features/tasks/components/AttachmentsSection'
 import {
   useTask, useTaskHistory, useUpdateTaskStatus,
   useUpdateTask, useAddTaskComment,
   useUpdateTaskComment, useDeleteTaskComment,
-  useTaskAttachments, useUploadTaskAttachment, useDeleteTaskAttachment,
 } from '@/features/tasks/hooks/useTask'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useProjectMembers } from '@/features/projects/hooks/useProjects'
@@ -39,7 +40,6 @@ const PRIORITY_META = {
 
 const ACTIVITY_TABS = [
   { id: 'comments', label: 'Comments', icon: MessageSquare },
-  { id: 'attachments', label: 'Attachments', icon: Paperclip },
   { id: 'history',  label: 'History',  icon: History       },
   { id: 'worklog',  label: 'Work log', icon: Timer         },
 ]
@@ -131,23 +131,36 @@ function StatusDropdown({ current, taskId }) {
   )
 }
 
-// ─── Collapsible section ──────────────────────────────────────────────────────
+// ─── Jira-style section block ─────────────────────────────────────────────────
 
-function CollapsibleSection({ title, defaultOpen = true, children }) {
+function SectionBlock({ title, count, actions, defaultOpen = true, children }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex items-center justify-between w-full px-4 py-3 bg-bg-subtle/60 hover:bg-bg-hover/40 transition-colors"
-      >
-        <span className="text-[12.5px] font-semibold text-text-primary uppercase tracking-wider">{title}</span>
-        <ChevronRight
-          className={clsx('w-4 h-4 text-text-muted transition-transform', open && 'rotate-90')}
-          strokeWidth={1.75}
-        />
-      </button>
-      {open && <div className="px-4 py-3">{children}</div>}
+    <div>
+      <div className="flex items-center gap-1.5 mb-3">
+        <button
+          onClick={() => setOpen((v) => !v)}
+          className="flex items-center gap-1.5 flex-1 min-w-0 text-left"
+        >
+          <ChevronDown
+            className={clsx(
+              'w-4 h-4 text-text-muted shrink-0 transition-transform',
+              !open && '-rotate-90',
+            )}
+            strokeWidth={1.75}
+          />
+          <span className="text-[14px] font-semibold text-text-primary">{title}</span>
+          {count != null && (
+            <span className="text-[11px] font-semibold bg-bg-subtle text-text-muted rounded px-1.5 py-0.5 tabular-nums">
+              {count}
+            </span>
+          )}
+        </button>
+        {actions && (
+          <div className="flex items-center gap-1 shrink-0 ml-auto">{actions}</div>
+        )}
+      </div>
+      {open && <div className="pl-5">{children}</div>}
     </div>
   )
 }
@@ -383,84 +396,7 @@ function CommentsTab({ taskId, comments = [], projectId }) {
   )
 }
 
-function AttachmentsTab({ taskId, canUploadAttachments, canDeleteAsManager, currentUserId }) {
-  const { data: attachments = [], isLoading } = useTaskAttachments(taskId)
-  const { mutate: uploadAttachment, isPending: isUploading } = useUploadTaskAttachment(taskId)
-  const { mutate: deleteAttachment, isPending: isDeleting } = useDeleteTaskAttachment(taskId)
-
-  const handleUpload = (e) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    uploadAttachment(file, {
-      onSettled: () => {
-        e.target.value = ''
-      },
-    })
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[12px] text-text-muted">
-          Allowed: image, PDF, Word, Excel, text · Max 20 MB
-        </p>
-        {canUploadAttachments && (
-          <label className="btn-secondary cursor-pointer text-[12px]">
-            <Upload className="w-3.5 h-3.5" />
-            {isUploading ? 'Uploading…' : 'Upload file'}
-            <input
-              type="file"
-              className="hidden"
-              disabled={isUploading}
-              onChange={handleUpload}
-            />
-          </label>
-        )}
-      </div>
-
-      {isLoading ? (
-        <LiveLoading label="Loading attachments…" />
-      ) : attachments.length === 0 ? (
-        <p className="text-[13px] text-text-muted italic">No attachments yet.</p>
-      ) : (
-        <div className="divide-y divide-border-subtle border border-border-subtle rounded-xl overflow-hidden">
-          {attachments.map((item) => (
-            <div key={item.id} className="flex items-center gap-3 p-3 bg-bg-surface">
-              <Paperclip className="w-4 h-4 text-text-muted shrink-0" strokeWidth={1.75} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] text-text-primary truncate">{item.fileName}</p>
-                <p className="text-[11px] text-text-muted mt-0.5">
-                  {formatFileSize(item.fileSize)} · Uploaded {item.createdAt ? new Date(item.createdAt).toLocaleString() : '—'}
-                  {item.uploadedBy ? ` · by #${item.uploadedBy}` : ''}
-                </p>
-              </div>
-              <a
-                href={item.url}
-                target="_blank"
-                rel="noreferrer"
-                className="btn-ghost text-[12px] h-8 px-2.5"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Open
-              </a>
-              {(canDeleteAsManager || item.uploadedBy === currentUserId) && (
-                <button
-                  type="button"
-                  onClick={() => deleteAttachment(item.id)}
-                  disabled={isDeleting}
-                  className="btn-ghost text-[12px] h-8 px-2.5 text-danger hover:bg-danger/10"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                  Delete
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+// AttachmentsTab removed — Attachments is now a standalone SectionBlock in the left column
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -475,10 +411,6 @@ export default function TaskDetailPage() {
   // Title inline editing
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft]     = useState('')
-
-  // Description inline editing
-  const [editingDesc, setEditingDesc] = useState(false)
-  const [descDraft, setDescDraft]     = useState('')
 
   // Assignee search
   const [memberSearch, setMemberSearch] = useState('')
@@ -639,66 +571,26 @@ export default function TaskDetailPage() {
             </button>
           </div>
 
-          {/* Editable description */}
-          <CollapsibleSection title="Description">
-            {editingDesc ? (
-              <div className="space-y-2.5">
-                <textarea
-                  autoFocus
-                  value={descDraft}
-                  onChange={e => setDescDraft(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Escape') { setEditingDesc(false); setDescDraft(task.description || '') }
-                  }}
-                  placeholder="Add a description…"
-                  rows={5}
-                  className="w-full text-[13px] text-text-primary bg-bg-surface border border-accent/40 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-accent leading-relaxed"
-                />
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      updateTask(buildPayload({ description: descDraft.trim() || null }))
-                      setEditingDesc(false)
-                    }}
-                    className="btn-primary text-[12px] py-1 px-3 flex items-center gap-1.5"
-                  >
-                    <Check className="w-3 h-3" strokeWidth={2.5} />
-                    Save
-                  </button>
-                  <button
-                    onClick={() => { setEditingDesc(false); setDescDraft(task.description || '') }}
-                    className="btn-ghost text-[12px] py-1 px-3"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div
-                onClick={canEditTask ? () => { setDescDraft(task?.description || ''); setEditingDesc(true) } : undefined}
-                title={canEditTask ? 'Click to edit' : undefined}
-                className={clsx(
-                  'rounded-lg px-2 py-1.5 -mx-2 transition-colors',
-                  canEditTask && 'cursor-text hover:bg-bg-hover/40',
-                )}
-              >
-                {task?.description ? (
-                  <p className="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap">
-                    {task.description}
-                  </p>
-                ) : (
-                  <p className="text-[13px] text-text-muted italic">Add a description…</p>
-                )}
-              </div>
-            )}
-          </CollapsibleSection>
+          {/* ── Description — Jira-style block ── */}
+          <SectionBlock title="Description">
+            <DescriptionEditor
+              taskId={id}
+              initialContent={task?.description}
+              onSave={(json) => updateTask(buildPayload({ description: json }))}
+              readOnly={!canEditTask}
+              isSaving={isUpdating}
+            />
+          </SectionBlock>
 
-          {/* Skill requirements */}
+          {/* ── Skill requirements ── */}
           {task?.skillRequirements?.length > 0 && (
-            <CollapsibleSection title="Skill requirements">
+            <SectionBlock title="Skill requirements">
               <div className="flex flex-wrap gap-2">
-                {task.skillRequirements.map(sr => (
-                  <div key={sr.id} className="flex items-center gap-1.5 bg-bg-subtle border border-border-subtle rounded-md px-2.5 py-1">
+                {task.skillRequirements.map((sr) => (
+                  <div
+                    key={sr.id}
+                    className="flex items-center gap-1.5 bg-bg-subtle border border-border-subtle rounded-md px-2.5 py-1"
+                  >
                     <span className="text-[12px] font-medium text-text-primary">{sr.skillName}</span>
                     <span className="text-[11px] text-text-muted">·</span>
                     <span className="text-[11px] text-text-muted">{sr.minimumLevel}</span>
@@ -708,14 +600,29 @@ export default function TaskDetailPage() {
                   </div>
                 ))}
               </div>
-            </CollapsibleSection>
+            </SectionBlock>
           )}
 
+          {/* ── Attachments — standalone Jira-style block ── */}
+          <AttachmentsSection
+            taskId={id}
+            canUpload={canUploadAttachments}
+            canDeleteAsManager={canDeleteAsManager}
+            currentUserId={user?.id}
+          />
 
-
-          <CollapsibleSection title="Linked items">
-            <p className="text-[13px] text-text-muted italic">No linked items.</p>
-          </CollapsibleSection>
+          {/* ── Linked items ── */}
+          <SectionBlock
+            title="Linked items"
+            actions={
+              <button className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded-md hover:bg-bg-hover">
+                <Link2 className="w-3.5 h-3.5" strokeWidth={1.75} />
+                Link
+              </button>
+            }
+          >
+            <p className="text-[13px] text-text-muted italic py-1">No linked items.</p>
+          </SectionBlock>
 
           {/* Activity */}
           <div className="space-y-3">
@@ -739,14 +646,6 @@ export default function TaskDetailPage() {
             </div>
             <div className="min-h-[80px]">
               {activeTab === 'comments' && <CommentsTab taskId={id} comments={task?.comments} projectId={task?.projectId} />}
-              {activeTab === 'attachments' && (
-                <AttachmentsTab
-                  taskId={id}
-                  canUploadAttachments={canUploadAttachments}
-                  canDeleteAsManager={canDeleteAsManager}
-                  currentUserId={user?.id}
-                />
-              )}
               {activeTab === 'history'  && <HistoryTab taskId={id} />}
               {activeTab === 'worklog'  && (
                 <p className="text-[13px] text-text-muted py-4 text-center italic">No work logs yet.</p>

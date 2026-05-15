@@ -4,6 +4,8 @@ import { useAuthStore } from '@/features/auth/store/authStore'
 import { authService } from '@/features/auth/services/authService'
 import FullPageSpinner from '@/components/feedback/FullPageSpinner'
 
+let isFetchingInitialSession = false
+
 export default function ProtectedRoute() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isInitialized = useAuthStore((s) => s.isInitialized)
@@ -13,23 +15,20 @@ export default function ProtectedRoute() {
   // On app startup, try to restore the session via the refresh-token cookie.
   // If it succeeds we get a fresh access token; if it fails we redirect to login.
   useEffect(() => {
-    if (isInitialized || isAuthenticated) return
+    if (isInitialized || isAuthenticated || isFetchingInitialSession) return
 
-    let cancelled = false
+    isFetchingInitialSession = true
     ;(async () => {
       try {
         const res = await authService.refresh()
-        if (!cancelled) {
-          setAuth(res.data.user, res.data.accessToken)
-        }
+        setAuth(res.data.user, res.data.accessToken)
       } catch {
         // No valid refresh token — user will be sent to /login below
       } finally {
-        if (!cancelled) setInitialized()
+        setInitialized()
+        isFetchingInitialSession = false
       }
     })()
-
-    return () => { cancelled = true }
   }, [isInitialized, isAuthenticated, setAuth, setInitialized])
 
   // Still attempting startup refresh — show spinner
