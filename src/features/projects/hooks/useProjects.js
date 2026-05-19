@@ -238,7 +238,10 @@ export function useDeleteProject() {
 
 /**
  * §3.10 POST /api/projects/{id}/members
- * Error codes: 4004 = already a member, 4005 = over 100% allocation
+ * Error codes:
+ *   4004 = already a member
+ *   4005 = over 100% allocation (USER_OVER_ALLOCATED)
+ *   4008 = allocatedEffortPercent missing (PROJECT_MEMBER_ALLOC_REQUIRED)
  */
 export function useAddProjectMember(projectId) {
   const queryClient = useQueryClient()
@@ -249,12 +252,13 @@ export function useAddProjectMember(projectId) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err) => {
-      // Interceptor rejects with { code, message }
       const code = err?.code
       if (code === 4004) {
         toast.error('This user is already a member of this project.')
       } else if (code === 4005) {
         toast.error("Adding this allocation would push the user's total above 100%.")
+      } else if (code === 4008) {
+        toast.error('Effort allocation (%) is required when adding a member.')
       } else {
         toast.error(err?.message || 'Failed to add member')
       }
@@ -264,7 +268,9 @@ export function useAddProjectMember(projectId) {
 
 /**
  * §3.11 PUT /api/projects/{id}/members/{memberId}
- * Error codes: 4005 = over 100% allocation
+ * Error codes:
+ *   4005 = over 100% allocation (USER_OVER_ALLOCATED)
+ *   4008 = allocatedEffortPercent missing (PROJECT_MEMBER_ALLOC_REQUIRED)
  */
 export function useUpdateProjectMember(projectId) {
   const queryClient = useQueryClient()
@@ -276,10 +282,11 @@ export function useUpdateProjectMember(projectId) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err) => {
-      // Interceptor rejects with { code, message }
       const code = err?.code
       if (code === 4005) {
         toast.error("Updated allocation would push the user's total above 100%.")
+      } else if (code === 4008) {
+        toast.error('Effort allocation (%) is required when updating a member.')
       } else {
         toast.error(err?.message || 'Failed to update member')
       }

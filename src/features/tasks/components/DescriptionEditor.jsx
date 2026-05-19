@@ -1,386 +1,277 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
-import { Check, Loader2, FileText, GripVertical, Plus, Trash2, Image as ImageIcon } from 'lucide-react'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import {
+  Check, Loader2, FileText,
+  Bold, Italic, Underline, Strikethrough, Code,
+  AlignLeft, AlignCenter, AlignRight,
+} from 'lucide-react'
 import clsx from 'clsx'
+import { useCreateBlockNote } from '@blocknote/react'
+import { BlockNoteView } from '@blocknote/ariakit'
+import '@blocknote/core/fonts/inter.css'
+import '@blocknote/ariakit/style.css'
+import '@/styles/blocknote-overrides.css'
 import { taskService } from '@/features/tasks/services/taskService'
-import { useQueryClient } from '@tanstack/react-query'
-import ImageLightbox from '@/components/ui/ImageLightbox'
-import { uid, makeBlock, parseContent, serializeBlocks, sanitizeHtml } from './editor/editorUtils'
-import { EditorToolbar } from './editor/EditorToolbar'
+import { parseContent } from './editor/editorUtils'
 
-/* ─── Read-only block renderer ────────────────────────────────────────────── */
-function BlockView({ block, idx, onImageClick }) {
-  const html = { __html: sanitizeHtml(block.html) || '&nbsp;' }
-  switch (block.type) {
-    case 'heading': {
-      const cls = [
-        'text-[18px] font-bold text-text-primary mt-2 mb-1',
-        'text-[15px] font-semibold text-text-primary mt-1',
-        'text-[13px] font-semibold text-text-secondary',
-      ][(block.level ?? 1) - 1]
-      return <div className={clsx(cls, 'leading-snug')} dangerouslySetInnerHTML={html} />
+/* ─── Legacy content → HTML ────────────────────────────────────────────────── */
+function blocksToHtml(blocks) {
+  return blocks.map(b => {
+    const content = b.html || ''
+    switch (b.type) {
+      case 'heading': return `<h${b.level || 1}>${content || '&nbsp;'}</h${b.level || 1}>`
+      case 'bullet':  return `<ul>${content.includes('<li') ? content : `<li>${content || '&nbsp;'}</li>`}</ul>`
+      case 'numbered':return `<ol>${content.includes('<li') ? content : `<li>${content || '&nbsp;'}</li>`}</ol>`
+      case 'code':    return `<pre><code>${content || '&nbsp;'}</code></pre>`
+      case 'image':   return b.url ? `<img src="${b.url}" alt="${b.caption || ''}" />` : '<p>&nbsp;</p>'
+      default:        return `<p>${content || '&nbsp;'}</p>`
     }
-    case 'bullet':
-      return (
-        <div className="flex items-start gap-2">
-          <span className="mt-[7px] w-1.5 h-1.5 rounded-full bg-text-muted shrink-0" />
-          <div className="text-[13px] text-text-secondary leading-relaxed" dangerouslySetInnerHTML={html} />
-        </div>
-      )
-    case 'numbered':
-      return (
-        <div className="flex items-start gap-2">
-          <span className="text-[13px] text-text-muted shrink-0 mt-0.5">{idx + 1}.</span>
-          <div className="text-[13px] text-text-secondary leading-relaxed" dangerouslySetInnerHTML={html} />
-        </div>
-      )
-    case 'code':
-      return (
-        <pre className="bg-bg-subtle rounded-lg px-3 py-2.5 my-1 overflow-x-auto">
-          <code className="text-[12px] font-mono text-text-primary" dangerouslySetInnerHTML={html} />
-        </pre>
-      )
-    case 'image':
-      if (!block.url) return null
-      return (
-        <div className="my-2">
-          <img src={block.url} alt={block.caption || ''} onClick={() => onImageClick?.(block.url, block.caption)}
-            className="max-w-full rounded-lg cursor-zoom-in hover:opacity-90 transition-opacity"
-            style={{ maxHeight: 360, objectFit: 'contain' }} />
-          {block.caption && <p className="text-[11px] text-text-muted mt-1">{block.caption}</p>}
-        </div>
-      )
-    default:
-      return <div className="text-[13px] text-text-secondary leading-relaxed min-h-[1.3em]" dangerouslySetInnerHTML={html} />
-  }
+  }).join('')
 }
 
-/* ─── Read-only mode ──────────────────────────────────────────────────────── */
-function DescriptionReadOnly({ initialContent, onClick, canEdit }) {
-  const [lightbox, setLightbox] = useState(null)
-  const isEmpty = !initialContent?.trim()
-  const blocks = isEmpty ? null : parseContent(initialContent)
-  return (
-    <>
-      <div onClick={canEdit ? onClick : undefined}
-        className={clsx('rounded-lg px-2 py-1.5 -mx-2 transition-colors min-h-[36px]', canEdit && 'cursor-text hover:bg-bg-hover/40')}>
-        {!blocks ? (
-          <p className="text-[13px] text-text-muted italic flex items-center gap-2 py-1">
-            <FileText className="w-4 h-4" strokeWidth={1.75} /> Add a description…
-          </p>
-        ) : (
-          <div className="space-y-1.5">
-            {blocks.map((b, i) => (
-              <BlockView key={b.id ?? i} block={b} idx={i}
-                onImageClick={(src, alt) => setLightbox({ src, alt: alt || '' })} />
-            ))}
-          </div>
-        )}
-      </div>
-      {lightbox && <ImageLightbox src={lightbox.src} alt={lightbox.alt} onClose={() => setLightbox(null)} />}
-    </>
-  )
+async function contentToHtml(raw) {
+  if (!raw?.trim()) return null
+  if (raw.trim().startsWith('<')) return raw
+  try {
+    const p = JSON.parse(raw)
+    if ((p?._v === 3 || p?._v === 2) && Array.isArray(p.blocks)) {
+      const blocks = parseContent(raw)
+      return blocks?.length ? blocksToHtml(blocks) : null
+    }
+    if (Array.isArray(p) && p[0]?.type) {
+      const blocks = parseContent(raw)
+      return blocks?.length ? blocksToHtml(blocks) : null
+    }
+  } catch { /* not JSON */ }
+  return raw.split('\n').map(l => `<p>${l}</p>`).join('')
 }
 
-/* ─── Contenteditable block ───────────────────────────────────────────────── */
-function EditableBlock({ block, onFocus, onKeyDown, domRef, taskId, onImageUrlChange }) {
-  const qc = useQueryClient()
-  const fileRef = useRef(null)
-  const [uploading, setUploading] = useState(false)
+/* ─── Shared hook ───────────────────────────────────────────────────────────── */
+function useEditorWithContent(initialContent, extraOptions = {}) {
+  const [ready, setReady] = useState(false)
+  const editor = useCreateBlockNote(extraOptions)
 
-  const handleUpload = async (file) => {
-    if (!file) return
-    setUploading(true)
-    try {
-      const res = await taskService.uploadAttachment(taskId, file)
-      const url = res.data?.url || res.data
-      onImageUrlChange(url, file.name)
-      qc.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
-    } finally { setUploading(false) }
-  }
+  useEffect(() => {
+    let cancelled = false
+    async function init() {
+      const html = await contentToHtml(initialContent)
+      if (cancelled) return
+      if (html) {
+        try {
+          const blocks = await editor.tryParseHTMLToBlocks(html)
+          if (!cancelled) editor.replaceBlocks(editor.document, blocks)
+        } catch (err) {
+          console.warn('[DescriptionEditor] Failed to parse HTML:', err)
+        }
+      }
+      if (!cancelled) setReady(true)
+    }
+    init()
+    return () => { cancelled = true }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (block.type === 'image') {
-    return (
-      <div className="my-1 space-y-1.5">
-        {block.url ? (
-          <div className="relative group/img">
-            <img src={block.url} alt={block.caption || ''} className="max-w-full rounded-lg" style={{ maxHeight: 320, objectFit: 'contain' }} />
-          </div>
-        ) : (
-          <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
-            className="flex items-center gap-2 text-[13px] text-text-muted border border-dashed border-border rounded-lg px-4 py-3 w-full hover:border-accent hover:text-accent transition-colors">
-            {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />}
-            {uploading ? 'Uploading…' : 'Click to upload image'}
-          </button>
-        )}
-        <input
-          value={block.caption || ''}
-          onChange={e => onImageUrlChange(block.url, e.target.value)}
-          placeholder="Add caption…"
-          className="w-full text-[11px] text-text-muted bg-transparent focus:outline-none border-none"
-        />
-        <input ref={fileRef} type="file" accept="image/*" className="hidden"
-          onChange={e => handleUpload(e.target.files?.[0])} />
-      </div>
-    )
-  }
+  return { editor, ready }
+}
 
-  if (block.type === 'code') {
-    return (
-      <pre className="bg-bg-subtle rounded-lg px-3 py-2 my-1">
-        <code
-          ref={domRef}
-          contentEditable
-          suppressContentEditableWarning
-          onFocus={onFocus}
-          onKeyDown={onKeyDown}
-          className="text-[12px] font-mono text-text-primary focus:outline-none block whitespace-pre-wrap"
-          dangerouslySetInnerHTML={{ __html: block.html || '' }}
-        />
-      </pre>
-    )
-  }
+/* ─── Block type definitions ────────────────────────────────────────────────── */
+const BLOCK_TYPES = [
+  { value: 'paragraph',        label: 'Text',      icon: '¶',  type: 'paragraph',        props: {} },
+  { value: 'heading1',         label: 'Heading 1', icon: 'H1', type: 'heading',          props: { level: 1 } },
+  { value: 'heading2',         label: 'Heading 2', icon: 'H2', type: 'heading',          props: { level: 2 } },
+  { value: 'heading3',         label: 'Heading 3', icon: 'H3', type: 'heading',          props: { level: 3 } },
+  { value: 'bulletListItem',   label: 'Bullet',    icon: '•',  type: 'bulletListItem',   props: {} },
+  { value: 'numberedListItem', label: 'Numbered',  icon: '1.', type: 'numberedListItem', props: {} },
+  { value: 'checkListItem',    label: 'To-do',     icon: '☐',  type: 'checkListItem',    props: {} },
+  { value: 'codeBlock',        label: 'Code',      icon: '<>', type: 'codeBlock',        props: {} },
+]
 
-  const cls = clsx(
-    'w-full focus:outline-none leading-relaxed break-words',
-    block.type === 'heading' && block.level === 1 && 'text-[20px] font-bold text-text-primary',
-    block.type === 'heading' && block.level === 2 && 'text-[16px] font-semibold text-text-primary',
-    block.type === 'heading' && block.level === 3 && 'text-[14px] font-semibold text-text-secondary',
-    block.type === 'bullet'   && 'text-[13px] text-text-secondary',
-    block.type === 'numbered' && 'text-[13px] text-text-secondary',
-    block.type === 'paragraph' && 'text-[13px] text-text-secondary',
-    !block.html && 'empty:before:content-[attr(data-placeholder)] empty:before:text-text-muted/60 empty:before:pointer-events-none',
-  )
-
+/* ─── Toolbar atom: icon button ─────────────────────────────────────────────── */
+function ToolbarBtn({ icon: Icon, active, title, onPress }) {
   return (
-    <div className="flex items-start gap-1.5">
-      {(block.type === 'bullet' || block.type === 'numbered') && (
-        <span className="mt-[5px] shrink-0 text-text-muted text-[13px] leading-none select-none">
-          {block.type === 'bullet' ? '•' : '1.'}
-        </span>
+    <button
+      type="button"
+      title={title}
+      onMouseDown={(e) => { e.preventDefault(); onPress() }}
+      className={clsx(
+        'w-6 h-6 flex items-center justify-center rounded transition-colors shrink-0',
+        active
+          ? 'bg-accent/10 text-accent'
+          : 'text-text-secondary hover:bg-[rgba(0,0,0,0.06)] hover:text-text-primary',
       )}
-      <div
-        ref={domRef}
-        contentEditable
-        suppressContentEditableWarning
-        onFocus={onFocus}
-        onKeyDown={onKeyDown}
-        onPaste={e => {
-          e.preventDefault()
-          const text = e.clipboardData.getData('text/plain')
-          document.execCommand('insertText', false, text)
+    >
+      <Icon className="w-3.5 h-3.5" strokeWidth={active ? 2.5 : 2} />
+    </button>
+  )
+}
+
+/* ─── Toolbar separator ─────────────────────────────────────────────────────── */
+function ToolbarSep() {
+  return <div className="w-px h-3.5 bg-[rgba(0,0,0,0.12)] mx-0.5 shrink-0" />
+}
+
+/* ─── Static formatting toolbar ─────────────────────────────────────────────── */
+const CHEVRON_SVG = "url(\"data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%23A39E98' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e\")"
+
+function EditorStaticToolbar({ editor }) {
+  const [styles, setStyles]     = useState({})
+  const [curType, setCurType]   = useState('paragraph')
+  const [curAlign, setCurAlign] = useState('left')
+
+  // Single subscription — tracks both inline styles and block type
+  useEffect(() => {
+    const unsub = editor.onSelectionChange((ed) => {
+      try {
+        setStyles(ed.getActiveStyles())
+        const pos = ed.getTextCursorPosition()
+        if (pos?.block) {
+          const { type, props: bProps } = pos.block
+          setCurType(type === 'heading' ? `heading${bProps?.level ?? 1}` : type)
+          setCurAlign(bProps?.textAlignment || 'left')
+        }
+      } catch { /* editor might not be focused yet */ }
+    })
+    return () => unsub()
+  }, [editor])
+
+  function changeBlockType(type, props = {}) {
+    try {
+      const pos = editor.getTextCursorPosition()
+      if (pos?.block) editor.updateBlock(pos.block, { type, props })
+    } catch {}
+  }
+
+  function toggleStyle(style) {
+    try { editor.toggleStyles({ [style]: true }) } catch {}
+  }
+
+  function setAlignment(alignment) {
+    try {
+      const pos = editor.getTextCursorPosition()
+      if (pos?.block) editor.updateBlock(pos.block, { props: { textAlignment: alignment } })
+    } catch {}
+  }
+
+  return (
+    <div className="flex items-center gap-0.5 px-2 py-1 border-b border-[rgba(0,0,0,0.07)] bg-[#F9F9F8] flex-wrap min-h-[34px]">
+
+      {/* Block type <select> */}
+      <select
+        value={curType}
+        onMouseDown={(e) => e.stopPropagation()}
+        onChange={(e) => {
+          const found = BLOCK_TYPES.find(b => b.value === e.target.value)
+          if (found) changeBlockType(found.type, found.props)
         }}
-        data-placeholder={block.html ? '' : 'Type something…'}
-        className={cls}
-        dangerouslySetInnerHTML={{ __html: block.html || '' }}
-      />
+        className="h-6 pl-1.5 pr-5 text-[11px] font-medium text-text-primary rounded
+                   bg-transparent hover:bg-[rgba(0,0,0,0.05)] border-none outline-none
+                   cursor-pointer appearance-none min-w-[80px] shrink-0"
+        style={{
+          backgroundImage: CHEVRON_SVG,
+          backgroundPosition: 'right 2px center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '14px 14px',
+        }}
+      >
+        {BLOCK_TYPES.map(b => (
+          <option key={b.value} value={b.value}>{b.icon}  {b.label}</option>
+        ))}
+      </select>
+
+      <ToolbarSep />
+
+      {/* Inline styles */}
+      <ToolbarBtn icon={Bold}          active={!!styles.bold}      title="Bold (Ctrl+B)"      onPress={() => toggleStyle('bold')} />
+      <ToolbarBtn icon={Italic}        active={!!styles.italic}    title="Italic (Ctrl+I)"    onPress={() => toggleStyle('italic')} />
+      <ToolbarBtn icon={Underline}     active={!!styles.underline} title="Underline (Ctrl+U)" onPress={() => toggleStyle('underline')} />
+      <ToolbarBtn icon={Strikethrough} active={!!styles.strike}    title="Strikethrough"      onPress={() => toggleStyle('strike')} />
+      <ToolbarBtn icon={Code}          active={!!styles.code}      title="Inline Code"        onPress={() => toggleStyle('code')} />
+
+      <ToolbarSep />
+
+      {/* Text alignment */}
+      <ToolbarBtn icon={AlignLeft}   active={curAlign === 'left'}   title="Align Left"   onPress={() => setAlignment('left')} />
+      <ToolbarBtn icon={AlignCenter} active={curAlign === 'center'} title="Align Center" onPress={() => setAlignment('center')} />
+      <ToolbarBtn icon={AlignRight}  active={curAlign === 'right'}  title="Align Right"  onPress={() => setAlignment('right')} />
     </div>
   )
 }
 
-/* ─── Edit mode ───────────────────────────────────────────────────────────── */
+/* ─── Edit mode ─────────────────────────────────────────────────────────────── */
 function DescriptionEditMode({ taskId, initialContent, onSave, onCancel, isSaving }) {
-  const initBlocks = () => {
-    const parsed = parseContent(initialContent)
-    return parsed?.length ? parsed.map(b => ({ ...b, id: b.id ?? uid() })) : [makeBlock()]
-  }
+  const { editor, ready } = useEditorWithContent(initialContent, {
+    uploadFile: async (file) => {
+      const res = await taskService.uploadAttachment(taskId, file)
+      return res.data?.url || res.data
+    },
+  })
 
-  const [blocks, setBlocks] = useState(initBlocks)
-  const [focusedIdx, setFocusedIdx] = useState(null)
-  const [dragIdx, setDragIdx] = useState(null)
-  const [dragOver, setDragOver] = useState(null)
-  const dragOkRef = useRef(false)
+  const handleSave = useCallback(async () => {
+    try {
+      const html = await editor.blocksToHTMLLossy(editor.document)
+      onSave(html)
+    } catch (err) {
+      console.error('[DescriptionEditor] Save failed:', err)
+    }
+  }, [editor, onSave])
 
-  // DOM refs for each block (keyed by block.id)
-  const domRefs = useRef({})
-
-  // Collect current HTML from DOM before any state operation
-  const syncHtml = useCallback(() => {
-    setBlocks(prev => prev.map(b => {
-      const el = domRefs.current[b.id]
-      if (!el || b.type === 'image') return b
-      return { ...b, html: el.innerHTML }
-    }))
-  }, [])
-
-  // Save
-  const handleSave = useCallback(() => {
-    const currentBlocks = blocks.map(b => {
-      const el = domRefs.current[b.id]
-      if (!el || b.type === 'image') return b
-      return { ...b, html: el.innerHTML }
-    })
-    onSave(serializeBlocks(currentBlocks))
-  }, [blocks, onSave])
-
-  // Keyboard shortcuts
+  // Ctrl+Enter → save  |  Escape → cancel
   useEffect(() => {
-    const h = e => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleSave()
+    const h = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); handleSave() }
       if (e.key === 'Escape') onCancel()
     }
     document.addEventListener('keydown', h)
     return () => document.removeEventListener('keydown', h)
   }, [handleSave, onCancel])
 
-  // Insert new block after index
-  const insertAfter = useCallback((idx) => {
-    syncHtml()
-    const nb = makeBlock()
-    setBlocks(prev => { const n = [...prev]; n.splice(idx + 1, 0, nb); return n })
-    setTimeout(() => domRefs.current[nb.id]?.focus(), 30)
-  }, [syncHtml])
-
-  // Delete block at index
-  const deleteBlock = useCallback((idx) => {
-    setBlocks(prev => {
-      if (prev.length <= 1) return prev
-      return prev.filter((_, i) => i !== idx)
-    })
-    setTimeout(() => {
-      const prev = blocks[Math.max(0, idx - 1)]
-      if (prev) domRefs.current[prev.id]?.focus()
-    }, 30)
-  }, [blocks])
-
-  // Change block type (syncs HTML first)
-  const changeType = useCallback((idx, type, level) => {
-    if (idx === null || idx === undefined) return
-    const el = domRefs.current[blocks[idx]?.id]
-    const html = el?.innerHTML ?? blocks[idx]?.html ?? ''
-    setBlocks(prev => prev.map((b, i) =>
-      i === idx ? { ...b, type, level: level ?? undefined, html } : b
-    ))
-    setTimeout(() => domRefs.current[blocks[idx]?.id]?.focus(), 30)
-  }, [blocks])
-
-  // Toolbar handlers
-  const handleInsertImage = useCallback(() => {
-    syncHtml()
-    const nb = makeBlock('image', { url: '', caption: '' })
-    const after = focusedIdx ?? blocks.length - 1
-    setBlocks(prev => { const n = [...prev]; n.splice(after + 1, 0, nb); return n })
-  }, [focusedIdx, blocks.length, syncHtml])
-
-  const handleInsertCode = useCallback(() => {
-    syncHtml()
-    const nb = makeBlock('code')
-    const after = focusedIdx ?? blocks.length - 1
-    setBlocks(prev => { const n = [...prev]; n.splice(after + 1, 0, nb); return n })
-    setTimeout(() => domRefs.current[nb.id]?.focus(), 30)
-  }, [focusedIdx, blocks.length, syncHtml])
-
-  const handleInsertLink = useCallback(() => {
-    const url = window.prompt('Enter URL:')
-    if (url) document.execCommand('createLink', false, url)
-  }, [])
-
-  // Per-block keydown
-  const makeKeyHandler = (idx) => (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault()
-      insertAfter(idx)
-    }
-    if (e.key === 'Backspace') {
-      const el = domRefs.current[blocks[idx].id]
-      if (!el?.textContent?.trim() && el?.innerHTML === '') {
-        e.preventDefault()
-        deleteBlock(idx)
-      }
-    }
-  }
-
-  // Drag handlers
-  const onDragStart = (e, i) => {
-    if (!dragOkRef.current) { e.preventDefault(); return }
-    setDragIdx(i); e.dataTransfer.effectAllowed = 'move'
-  }
-  const onDragOver = (e, i) => { e.preventDefault(); setDragOver(i) }
-  const onDrop = (e, i) => {
-    e.preventDefault()
-    if (dragIdx !== null && dragIdx !== i) {
-      setBlocks(prev => {
-        const n = [...prev]; const [r] = n.splice(dragIdx, 1); n.splice(i, 0, r); return n
-      })
-    }
-    setDragIdx(null); setDragOver(null); dragOkRef.current = false
-  }
-
-  const focusedBlock = focusedIdx !== null ? blocks[focusedIdx] : null
-
   return (
     <div className="space-y-2.5">
-      <div className="border border-border rounded-lg overflow-hidden focus-within:border-accent/60 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
-        {/* Toolbar */}
-        <EditorToolbar
-          focusedBlock={focusedBlock}
-          onChangeType={(type, level) => changeType(focusedIdx, type, level)}
-          onInsertImage={handleInsertImage}
-          onInsertCode={handleInsertCode}
-          onInsertBlock={() => insertAfter(focusedIdx ?? blocks.length - 1)}
-          onInsertLink={handleInsertLink}
-        />
+      {/* Editor container — NO overflow-hidden so side menu isn't clipped */}
+      <div
+        className={clsx(
+          'border rounded-lg bg-white transition-all',
+          'border-[#DDDDDD]',
+          'focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/20',
+        )}
+      >
+        {/* Static toolbar — rounded top corners */}
+        {ready && (
+          <div className="rounded-tl-lg rounded-tr-lg overflow-hidden">
+            <EditorStaticToolbar editor={editor} />
+          </div>
+        )}
 
-        {/* Blocks */}
-        <div className="p-3 space-y-1 min-h-[80px]" onDragOver={e => e.preventDefault()}>
-          {blocks.map((block, i) => (
-            <div
-              key={`${block.id}-${block.type}-${block.level}`}
-              draggable
-              onDragStart={e => onDragStart(e, i)}
-              onDragOver={e => onDragOver(e, i)}
-              onDrop={e => onDrop(e, i)}
-              onDragEnd={() => { setDragIdx(null); setDragOver(null); dragOkRef.current = false }}
-              className={clsx('group flex items-start gap-1 rounded py-0.5', dragOver === i && dragIdx !== i && 'border-t-2 border-accent')}
-            >
-              {/* Drag grip */}
-              <div
-                className="opacity-0 group-hover:opacity-100 transition-opacity mt-0.5 shrink-0 cursor-grab active:cursor-grabbing p-0.5 rounded text-text-muted hover:bg-bg-hover"
-                onMouseDown={() => { dragOkRef.current = true }}
-                onMouseUp={() => { dragOkRef.current = false }}
-              >
-                <GripVertical className="w-4 h-4" strokeWidth={1.5} />
-              </div>
+        {/* Loading skeleton */}
+        {!ready && (
+          <div className="flex items-center justify-center p-8 rounded-lg">
+            <Loader2 className="w-4 h-4 animate-spin text-text-muted" />
+          </div>
+        )}
 
-              {/* Block content */}
-              <div className="flex-1 min-w-0">
-                <EditableBlock
-                  block={block}
-                  taskId={taskId}
-                  domRef={el => { if (el) domRefs.current[block.id] = el }}
-                  onFocus={() => setFocusedIdx(i)}
-                  onKeyDown={makeKeyHandler(i)}
-                  onImageUrlChange={(url, caption) =>
-                    setBlocks(prev => prev.map((b, j) => j === i ? { ...b, url, caption } : b))
-                  }
-                />
-              </div>
-
-              {/* Delete */}
-              {blocks.length > 1 && (
-                <button type="button" onClick={() => deleteBlock(i)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity mt-0.5 shrink-0 p-1 rounded text-text-muted hover:text-danger hover:bg-danger/10">
-                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
-                </button>
-              )}
-            </div>
-          ))}
-
-          <button type="button" onMouseDown={() => insertAfter(blocks.length - 1)}
-            className="flex items-center gap-1.5 text-[12px] text-text-muted hover:text-text-primary mt-1 pl-5 transition-colors">
-            <Plus className="w-3.5 h-3.5" strokeWidth={2} /> Add block
-          </button>
+        {/* BlockNote view */}
+        <div className={ready ? 'block' : 'invisible h-0 overflow-hidden'}>
+          <BlockNoteView editor={editor} theme="light" />
         </div>
       </div>
 
-      {/* Save / Cancel */}
+      {/* Actions */}
       <div className="flex items-center gap-2">
-        <button type="button" onClick={handleSave} disabled={isSaving}
-          className="btn-primary text-[12px] px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-50">
-          {isSaving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" strokeWidth={2.5} />}
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={isSaving}
+          className="btn-primary text-[12px] px-3 py-1.5 flex items-center gap-1.5 disabled:opacity-50"
+        >
+          {isSaving
+            ? <Loader2 className="w-3 h-3 animate-spin" />
+            : <Check className="w-3 h-3" strokeWidth={2.5} />}
           {isSaving ? 'Saving…' : 'Save'}
         </button>
-        <button type="button" onClick={onCancel} disabled={isSaving}
-          className="btn-ghost text-[12px] px-3 py-1.5 disabled:opacity-50">
+        <button
+          type="button"
+          onClick={onCancel}
+          disabled={isSaving}
+          className="btn-ghost text-[12px] px-3 py-1.5 disabled:opacity-50"
+        >
           Cancel
         </button>
         <span className="text-[11px] text-text-muted ml-auto hidden sm:block">
@@ -391,8 +282,53 @@ function DescriptionEditMode({ taskId, initialContent, onSave, onCancel, isSavin
   )
 }
 
-/* ─── Public export ───────────────────────────────────────────────────────── */
-export default function DescriptionEditor({ taskId, initialContent, onSave, readOnly = false, isSaving = false }) {
+/* ─── Read-only mode ─────────────────────────────────────────────────────────── */
+function DescriptionReadOnly({ initialContent, onClick, canEdit }) {
+  const isEmpty = !initialContent?.trim()
+  const { editor, ready } = useEditorWithContent(isEmpty ? null : initialContent)
+
+  if (isEmpty) {
+    return canEdit ? (
+      <button
+        type="button"
+        onClick={onClick}
+        className="w-full text-left rounded-lg px-2 py-1.5 -mx-2 hover:bg-[rgba(0,0,0,0.03)] transition-colors min-h-[36px]"
+      >
+        <p className="text-[13px] text-text-muted italic flex items-center gap-2 py-1">
+          <FileText className="w-4 h-4" strokeWidth={1.75} /> Add a description…
+        </p>
+      </button>
+    ) : null
+  }
+
+  return (
+    <div
+      onClick={canEdit ? onClick : undefined}
+      className={clsx(
+        'rounded-lg -mx-3 transition-colors min-h-[36px]',
+        canEdit && 'cursor-text hover:bg-[rgba(0,0,0,0.03)]',
+      )}
+    >
+      {!ready && (
+        <div className="flex items-center gap-2 p-3 text-[13px] text-text-muted">
+          <Loader2 className="w-4 h-4 animate-spin" />
+        </div>
+      )}
+      <div className={ready ? 'block' : 'invisible h-0 overflow-hidden'}>
+        <BlockNoteView editor={editor} editable={false} theme="light" />
+      </div>
+    </div>
+  )
+}
+
+/* ─── Public export ──────────────────────────────────────────────────────────── */
+export default function DescriptionEditor({
+  taskId,
+  initialContent,
+  onSave,
+  readOnly = false,
+  isSaving = false,
+}) {
   const [editing, setEditing] = useState(false)
   const [editKey, setEditKey] = useState(0)
   const savedRef = useRef(initialContent)
@@ -410,12 +346,18 @@ export default function DescriptionEditor({ taskId, initialContent, onSave, read
         key={editKey}
         taskId={taskId}
         initialContent={savedRef.current}
-        onSave={json => { onSave(json); setEditing(false) }}
+        onSave={(html) => { onSave(html); setEditing(false) }}
         onCancel={() => setEditing(false)}
         isSaving={isSaving}
       />
     )
   }
 
-  return <DescriptionReadOnly initialContent={initialContent} onClick={startEdit} canEdit={!readOnly} />
+  return (
+    <DescriptionReadOnly
+      initialContent={initialContent}
+      onClick={startEdit}
+      canEdit={!readOnly}
+    />
+  )
 }

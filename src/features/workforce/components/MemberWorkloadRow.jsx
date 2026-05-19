@@ -5,18 +5,27 @@ import UtilizationBar from './UtilizationBar'
 
 /**
  * A single row in the team workload table.
- * Displays avatar, name, badge, utilization bar, and task stats.
+ *
+ * When `projectAllocations` is present (endpoint §9.6 — project members),
+ * it contains exactly 1 item — the allocation for the current project.
+ * In that case we show a dual-bar:
+ *   Primary (top)    → project-specific utilization
+ *   Secondary (below) → total utilization across all projects
+ *
+ * When `projectAllocations` is absent (team-wide view §9.4) we show the
+ * standard single total bar.
  */
 export default function MemberWorkloadRow({ member, onClick }) {
   const {
     userFullName = 'Unknown',
     position = '',
     workloadLevel = 'AVAILABLE',
-    utilizationPercent = 0,
-    weeklyRemainingHours = 0,
-    weeklyCapacityHours = 0,
+    utilizationPercent = null,
+    weeklyRemainingHours = null,
+    weeklyCapacityHours = null,
     activeTaskCount = 0,
     overdueTaskCount = 0,
+    projectAllocations = null,
   } = member
 
   const initials = userFullName
@@ -26,11 +35,14 @@ export default function MemberWorkloadRow({ member, onClick }) {
     .join('')
     .toUpperCase()
 
+  // Project-specific allocation (only present in §9.6 project member endpoint)
+  const projectAlloc = projectAllocations?.[0] ?? null
+
   return (
     <button
       onClick={onClick}
       className={clsx(
-        'w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-150',
+        'w-full flex items-start gap-4 p-4 rounded-xl transition-all duration-150',
         'bg-bg-surface border border-border-subtle',
         'hover:border-border-strong hover:shadow-sm hover:bg-bg-subtle/50',
         'active:scale-[0.995]',
@@ -39,7 +51,7 @@ export default function MemberWorkloadRow({ member, onClick }) {
     >
       {/* Avatar */}
       <div className={clsx(
-        'w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0',
+        'w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 mt-0.5',
         'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/15 text-accent',
       )}>
         {initials}
@@ -55,24 +67,53 @@ export default function MemberWorkloadRow({ member, onClick }) {
         )}
       </div>
 
-      {/* Badge */}
-      <div className="shrink-0">
-        <WorkloadLevelBadge level={workloadLevel} />
+      {/* Badge — project-specific level takes priority */}
+      <div className="shrink-0 mt-0.5">
+        <WorkloadLevelBadge level={projectAlloc ? projectAlloc.workloadLevel : workloadLevel} />
       </div>
 
-      {/* Utilization bar */}
-      <div className="flex-1 min-w-[120px]">
-        <UtilizationBar
-          utilizationPercent={utilizationPercent}
-          workloadLevel={workloadLevel}
-          weeklyRemainingHours={weeklyRemainingHours}
-          weeklyCapacityHours={weeklyCapacityHours}
-          compact
-        />
+      {/* Utilization bar(s) */}
+      <div className="flex-1 min-w-[140px] space-y-2">
+        {projectAlloc ? (
+          <>
+            {/* Primary: project-specific */}
+            <div>
+              <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
+                {projectAlloc.projectName}
+              </p>
+              <UtilizationBar
+                utilizationPercent={projectAlloc.utilizationPercent}
+                workloadLevel={projectAlloc.workloadLevel}
+                compact
+              />
+            </div>
+            {/* Secondary: total */}
+            <div>
+              <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
+                Total (all projects)
+              </p>
+              <UtilizationBar
+                utilizationPercent={utilizationPercent}
+                workloadLevel={workloadLevel}
+                weeklyRemainingHours={weeklyRemainingHours}
+                weeklyCapacityHours={weeklyCapacityHours}
+                compact
+              />
+            </div>
+          </>
+        ) : (
+          <UtilizationBar
+            utilizationPercent={utilizationPercent}
+            workloadLevel={workloadLevel}
+            weeklyRemainingHours={weeklyRemainingHours}
+            weeklyCapacityHours={weeklyCapacityHours}
+            compact
+          />
+        )}
       </div>
 
       {/* Stats */}
-      <div className="shrink-0 text-right min-w-[110px]">
+      <div className="shrink-0 text-right min-w-[110px] mt-0.5">
         <p className="text-[12px] text-text-secondary">
           <span className="font-medium tabular-nums">{activeTaskCount}</span>
           <span className="text-text-muted"> tasks</span>

@@ -3,15 +3,29 @@ import clsx from 'clsx'
 /**
  * Horizontal progress bar showing utilizationPercent.
  * - Green < 70%, amber 70–100%, red > 100%
- * - >100% fills completely with striped animation + glow to signal overflow
+ * - > 100% fills completely with striped animation + glow to signal overflow
+ * - null utilizationPercent (BLOCKED / UNDEFINED) → muted dash, no bar
  */
 export default function UtilizationBar({
-  utilizationPercent = 0,
+  utilizationPercent = null,
   workloadLevel = 'AVAILABLE',
-  weeklyRemainingHours = 0,
-  weeklyCapacityHours = 0,
+  weeklyRemainingHours = null,
+  weeklyCapacityHours = null,
   compact = false,
 }) {
+  // BLOCKED / UNDEFINED return null — render a placeholder
+  if (utilizationPercent === null || utilizationPercent === undefined) {
+    return (
+      <div className={clsx('w-full', compact ? 'min-w-[100px]' : 'min-w-[140px]')}>
+        <div className="flex items-center gap-2">
+          <div className="flex-1 h-2 rounded-full bg-bg-subtle border border-border-subtle" />
+          <span className="text-[12px] font-bold text-text-muted tabular-nums shrink-0">—</span>
+        </div>
+        {!compact && <p className="text-[11px] text-text-muted mt-1">No capacity data</p>}
+      </div>
+    )
+  }
+
   const pct = Math.max(0, utilizationPercent)
   const isOverloaded = workloadLevel === 'OVERLOADED'
   const barWidth = Math.min(pct, 100) // visual bar capped at 100% width
@@ -50,9 +64,9 @@ export default function UtilizationBar({
       </div>
 
       {/* Capacity caption */}
-      {!compact && (
+      {!compact && weeklyCapacityHours != null && (
         <p className="text-[11px] text-text-muted mt-1">
-          {weeklyRemainingHours.toFixed(1)} h remaining / {weeklyCapacityHours.toFixed(1)} h capacity
+          {(weeklyRemainingHours ?? 0).toFixed(1)} h remaining / {weeklyCapacityHours.toFixed(1)} h capacity
         </p>
       )}
     </div>

@@ -3,7 +3,8 @@ let _seq = 0
 export const uid = () => `blk-${Date.now()}-${++_seq}`
 
 /* ─── HTML helpers ────────────────────────────────────────────────────────── */
-const ALLOW = new Set(['strong','b','em','i','u','s','del','strike','code','br','a','span'])
+// ul, ol, li needed for list blocks
+const ALLOW = new Set(['strong','b','em','i','u','s','del','strike','code','br','a','span','ul','ol','li'])
 
 export function sanitizeHtml(html) {
   if (!html) return ''
@@ -17,9 +18,33 @@ export function escapeHtml(t = '') {
 }
 
 /* ─── Block factory ───────────────────────────────────────────────────────── */
-export const makeBlock = (type = 'paragraph', extra = {}) => ({
-  id: uid(), type, html: '', ...extra,
-})
+export const makeBlock = (type = 'paragraph', extra = {}) => {
+  // List blocks start with an empty <li> so contenteditable has something to edit
+  const defaultHtml = (type === 'bullet' || type === 'numbered') ? '<li><br></li>' : ''
+  return { id: uid(), type, html: defaultHtml, ...extra }
+}
+
+/* ─── Merge consecutive list blocks of the same type into one ─────────────── */
+function mergeListBlocks(blocks) {
+  if (!blocks?.length) return blocks
+  const result = []
+  for (const b of blocks) {
+    const isList = b.type === 'bullet' || b.type === 'numbered'
+    if (!isList) { result.push(b); continue }
+
+    // Ensure html is <li>-wrapped (migration from old flat html)
+    const liHtml = b.html?.trim().startsWith('<li') ? b.html : `<li>${b.html || ''}</li>`
+
+    const prev = result[result.length - 1]
+    if (prev?.type === b.type) {
+      // Merge into previous block
+      prev.html += liHtml
+    } else {
+      result.push({ ...b, html: liHtml })
+    }
+  }
+  return result
+}
 
 /* ─── Parse raw description → Block[] ────────────────────────────────────── */
 export function parseContent(raw) {
@@ -28,13 +53,13 @@ export function parseContent(raw) {
     const p = JSON.parse(raw)
     // v3 — our current format
     if (p?._v === 3 && Array.isArray(p.blocks))
-      return p.blocks.map(b => ({ ...b, id: b.id ?? uid() }))
+      return mergeListBlocks(p.blocks.map(b => ({ ...b, id: b.id ?? uid() })))
     // v2 — previous format with `text` field
     if (p?._v === 2 && Array.isArray(p.blocks))
-      return p.blocks.map(b => ({ ...b, id: b.id ?? uid(), html: b.html ?? escapeHtml(b.text ?? '') }))
+      return mergeListBlocks(p.blocks.map(b => ({ ...b, id: b.id ?? uid(), html: b.html ?? escapeHtml(b.text ?? '') })))
     // BlockNote v1 — array with ProseMirror content nodes
     if (Array.isArray(p) && p[0]?.type) {
-      return p.map(b => {
+      const converted = p.map(b => {
         if (b.type === 'image')
           return { id: uid(), type: 'image', url: b.props?.url || '', caption: b.props?.caption || '', html: '' }
         const html = Array.isArray(b.content)
@@ -55,6 +80,7 @@ export function parseContent(raw) {
           : 'paragraph'
         return { id: uid(), type, level: b.props?.level, html }
       })
+      return mergeListBlocks(converted)
     }
   } catch { /* not JSON */ }
   // Legacy plain text

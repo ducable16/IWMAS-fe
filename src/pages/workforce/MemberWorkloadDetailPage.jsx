@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useSearchParams, useNavigate, Link } from 'react-router-dom'
-import { ArrowLeft, AlertTriangle, Clock, ExternalLink } from 'lucide-react'
+import { ArrowLeft, AlertTriangle, Clock, ExternalLink, FolderOpen } from 'lucide-react'
 import clsx from 'clsx'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
 import UtilizationBar from '@/features/workforce/components/UtilizationBar'
@@ -61,6 +61,60 @@ function TaskRow({ task }) {
       >
         <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.75} />
       </Link>
+    </div>
+  )
+}
+
+/* ── Per-project breakdown table ──────────────────────────── */
+
+function ProjectAllocationsTable({ allocations }) {
+  if (!allocations?.length) return null
+  return (
+    <div className="card p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <FolderOpen className="w-4 h-4 text-text-muted" strokeWidth={1.75} />
+        <h3 className="text-[13px] font-semibold text-text-secondary uppercase tracking-wider">
+          Per-project breakdown
+        </h3>
+      </div>
+      <div className="space-y-3">
+        {allocations.map((pa) => (
+          <div key={pa.projectId} className="flex items-center gap-4 py-2.5 px-3 rounded-xl bg-bg-subtle hover:bg-bg-hover transition-colors">
+            {/* Project name */}
+            <div className="min-w-0 w-[180px] shrink-0">
+              <p className="text-[13px] font-semibold text-text-primary truncate">{pa.projectName}</p>
+              {pa.allocatedEffortPercent != null && (
+                <p className="text-[11px] text-text-muted mt-0.5">
+                  Allocated: <span className="font-medium">{pa.allocatedEffortPercent}%</span>
+                </p>
+              )}
+            </div>
+            {/* Badge */}
+            <div className="shrink-0">
+              <WorkloadLevelBadge level={pa.workloadLevel} />
+            </div>
+            {/* Bar */}
+            <div className="flex-1 min-w-[120px]">
+              <UtilizationBar
+                utilizationPercent={pa.utilizationPercent}
+                workloadLevel={pa.workloadLevel}
+                compact
+              />
+            </div>
+            {/* Load hours */}
+            <div className="shrink-0 text-right">
+              <p className="text-[12px] text-text-secondary tabular-nums">
+                {pa.loadInWindowHours != null ? (
+                  <><span className="font-semibold">{pa.loadInWindowHours.toFixed(1)}</span> h load</>
+                ) : '—'}
+              </p>
+              {pa.dailyCapacityHours != null && (
+                <p className="text-[11px] text-text-muted">{pa.dailyCapacityHours.toFixed(1)} h/day cap</p>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -143,6 +197,9 @@ function WorkloadDetailContent({ data, weekStart, weekEnd, onWeekChange, isSelf 
           </div>
         </div>
       </div>
+
+      {/* ── Per-project allocations breakdown ── */}
+      <ProjectAllocationsTable allocations={data.projectAllocations} />
 
       {/* ── Overdue section ── */}
       {overdueTasks.length > 0 && (

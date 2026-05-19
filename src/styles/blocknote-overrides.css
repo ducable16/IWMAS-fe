@@ -1,1 +1,92 @@
-/* ─── blocknote-overrides.css ─── kept for reference, no longer used */
+/* ─── BlockNote light theme — matches IWAS design tokens ─── */
+
+/* Font & radius baseline */
+.bn-root[data-color-scheme] {
+  --bn-font-family: 'NotionInter', 'Inter', -apple-system, sans-serif;
+  --bn-border-radius: 8px;
+}
+
+/* ── Light theme overrides (project default) ────────────────── */
+.bn-root[data-color-scheme="light"] {
+  --bn-colors-editor-background:    transparent;
+  --bn-colors-editor-text:          rgba(0, 0, 0, 0.95);
+  --bn-colors-menu-text:            rgba(0, 0, 0, 0.95);
+  --bn-colors-menu-background:      #FFFFFF;
+  --bn-colors-tooltip-text:         rgba(0, 0, 0, 0.80);
+  --bn-colors-tooltip-background:   #F6F5F4;
+  --bn-colors-hovered-text:         rgba(0, 0, 0, 0.95);
+  --bn-colors-hovered-background:   rgba(0, 0, 0, 0.05);
+  --bn-colors-selected-text:        #FFFFFF;
+  --bn-colors-selected-background:  #0075DE;
+  --bn-colors-disabled-text:        #A39E98;
+  --bn-colors-disabled-background:  #F6F5F4;
+  --bn-colors-shadow:               rgba(0, 0, 0, 0.08);
+  --bn-colors-border:               rgba(0, 0, 0, 0.10);
+  --bn-colors-side-menu:            rgba(0, 0, 0, 0.25);
+}
+
+/* ── Editor area padding ─────────────────────────────────────── */
+.bn-editor {
+  /* left: 52px leaves room for the 2 side-menu buttons (add + drag) */
+  padding: 10px 8px 14px 52px !important;
+  min-height: 100px;
+}
+
+.bn-container {
+  width: 100%;
+}
+
+/* ── Side menu (drag handle + add-block button) ──────────────── */
+/* Constrain the floating side menu buttons to a reasonable size  */
+.bn-side-menu {
+  height: 28px !important;
+}
+
+.bn-side-menu .bn-ak-button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  padding: 2px !important;
+  border-radius: 4px !important;
+}
+
+/* Constrain icons inside side menu buttons */
+.bn-side-menu svg,
+.bn-side-menu .bn-ak-button svg {
+  width: 14px !important;
+  height: 14px !important;
+  flex-shrink: 0;
+}
+
+
+/* ── Floating FormattingToolbar (appears on text selection) ──── */
+.bn-toolbar {
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  border-radius: 8px !important;
+  box-shadow:
+    rgba(0, 0, 0, 0.04) 0px 4px 18px,
+    rgba(0, 0, 0, 0.03) 0px 2px 6px !important;
+}
+
+/* ── Slash menu ──────────────────────────────────────────────── */
+.bn-suggestion-menu {
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  border-radius: 8px !important;
+  box-shadow:
+    rgba(0, 0, 0, 0.04) 0px 4px 18px,
+    rgba(0, 0, 0, 0.03) 0px 2px 6px !important;
+}
+
+/* ── Link toolbar ────────────────────────────────────────────── */
+.bn-link-toolbar {
+  border: 1px solid rgba(0, 0, 0, 0.10) !important;
+  border-radius: 8px !important;
+  box-shadow: rgba(0, 0, 0, 0.08) 0px 4px 18px !important;
+}
+
+/* ── Read-only: suppress BlockNote outer container bg ───────── */
+.bn-root[data-color-scheme="light"] .bn-editor[contenteditable="false"] {
+  cursor: default;
+}

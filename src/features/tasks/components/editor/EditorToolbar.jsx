@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { ChevronDown, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Image as ImageIcon, Code2, Plus, Link2, Undo2, Redo2 } from 'lucide-react'
+import { ChevronDown, Bold, Italic, Underline, Strikethrough, List, ListOrdered, Image as ImageIcon, Plus, Undo2, Redo2 } from 'lucide-react'
 import clsx from 'clsx'
 
 /* ─── Primitives ──────────────────────────────────────────────────────────── */
@@ -154,7 +154,7 @@ export function ListDropdown({ onChangeType }) {
 }
 
 /* ─── Main toolbar ────────────────────────────────────────────────────────── */
-export function EditorToolbar({ focusedBlock, onChangeType, onInsertImage, onInsertCode, onInsertBlock, onInsertLink, onCancel }) {
+export function EditorToolbar({ focusedBlock, onChangeType, onInsertImage, onInsertBlock }) {
   return (
     <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border-subtle flex-wrap bg-bg-subtle/50 rounded-t-lg">
       {/* Text type */}
@@ -165,13 +165,11 @@ export function EditorToolbar({ focusedBlock, onChangeType, onInsertImage, onIns
       {/* List */}
       <ListDropdown onChangeType={t => onChangeType(t)} />
       <ToolbarSep />
-      {/* Media */}
+      {/* Image */}
       <ToolbarBtn icon={ImageIcon} label="Insert image" onMouseDown={onInsertImage} />
-      <ToolbarBtn icon={Code2} label="Insert code block" onMouseDown={onInsertCode} />
       <ToolbarSep />
-      {/* Utilities */}
+      {/* Add block */}
       <ToolbarBtn icon={Plus} label="Add block" onMouseDown={onInsertBlock} />
-      <ToolbarBtn icon={Link2} label="Insert link" onMouseDown={onInsertLink} />
       <ToolbarSep />
       {/* Undo / Redo */}
       <ToolbarBtn icon={Undo2} label="Undo (Ctrl+Z)" onMouseDown={() => document.execCommand('undo')} />
