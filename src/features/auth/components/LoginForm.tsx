@@ -1,0 +1,106 @@
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useLogin } from '../hooks/useAuth'
+import Field from '@/components/ui/Field'
+
+type LoginFormValues = {
+  email: string
+  password: string
+}
+
+const schema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+}).required()
+
+export default function LoginForm() {
+  const [showPw, setShowPw] = useState(false)
+  const login = useLogin()
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<LoginFormValues>({ resolver: zodResolver(schema) })
+
+  const onSubmit = (data: LoginFormValues) => login.mutate(data)
+
+  return (
+    <div className="animate-fade-in">
+      <div className="mb-8">
+        <h1 className="text-[32px] leading-[1.05] tracking-[-1px] font-bold text-text-primary">
+          Sign in
+        </h1>
+        <p className="text-text-secondary mt-2 text-caption-light">
+          Enter your credentials to access your workspace.
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+
+        {/* Email */}
+        <Field label="Email" id="login-email" error={errors.email?.message}>
+          <input
+            {...register('email')}
+            id="login-email"
+            type="email"
+            placeholder="you@company.com"
+            autoComplete="email"
+            className={errors.email ? 'input-field-error' : 'input-field'}
+          />
+        </Field>
+
+        {/* Password */}
+        <Field label="Password" id="login-password" error={errors.password?.message}>
+          <div className="relative">
+            <input
+              {...register('password')}
+              id="login-password"
+              type={showPw ? 'text' : 'password'}
+              placeholder="••••••••"
+              autoComplete="current-password"
+              className={`${errors.password ? 'input-field-error' : 'input-field'} pr-10`}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPw(!showPw)}
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary transition-colors p-0.5"
+              aria-label={showPw ? 'Hide password' : 'Show password'}
+            >
+              {showPw
+                ? <EyeOff className="w-4 h-4" strokeWidth={1.75} />
+                : <Eye className="w-4 h-4" strokeWidth={1.75} />}
+            </button>
+          </div>
+        </Field>
+
+        {/* Remember me + Forgot */}
+        <div className="flex items-center justify-between text-[12.5px] pt-1">
+          <label className="flex items-center gap-2 text-text-secondary cursor-pointer select-none">
+            <input
+              type="checkbox"
+              className="w-3.5 h-3.5 rounded border-border accent-accent"
+            />
+            Remember me
+          </label>
+          <Link to="/forgot-password" className="text-accent hover:text-accent-hover transition-colors font-medium">
+            Forgot password?
+          </Link>
+        </div>
+
+        <button
+          type="submit"
+          disabled={login.isPending}
+          className="btn-primary w-full py-2.5 mt-2"
+        >
+          {login.isPending && <Loader2 className="w-4 h-4 animate-spin" />}
+          {login.isPending ? 'Signing in…' : 'Sign in'}
+        </button>
+      </form>
+    </div>
+  )
+}
