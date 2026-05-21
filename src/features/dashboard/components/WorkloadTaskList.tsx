@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { Clock, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 import { TaskStatusBadge, TaskPriorityBadge } from '@/components/ui/Badge'
+import { fmtDay } from '@/utils/date'
 import type { Id, WorkloadTask } from '@/types'
 
 type DashboardWorkloadTask = WorkloadTask & {
@@ -19,12 +20,6 @@ type WorkloadTaskListProps = {
   emptyLabel?: string
 }
 
-function formatDueDate(dateStr?: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric',
-  })
-}
 
 export default function WorkloadTaskList({
   tasks = [],
@@ -81,7 +76,7 @@ export default function WorkloadTaskList({
               )}
             >
               <Clock className="w-3 h-3" strokeWidth={1.75} />
-              {formatDueDate(task.dueDate)}
+              {fmtDay(task.dueDate)}
             </span>
           </div>
         )

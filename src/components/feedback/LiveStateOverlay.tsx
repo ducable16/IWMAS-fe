@@ -14,7 +14,7 @@ interface LiveEmptyProps {
   label?: ReactNode
 }
 
-export function LiveLoading({ label = 'Loading from APIâ€¦' }: LiveLoadingProps) {
+export function LiveLoading({ label = 'Loading from API...' }: LiveLoadingProps) {
   return (
     <div className="card p-8 flex flex-col items-center justify-center gap-2 text-text-muted">
       <Loader2 className="w-5 h-5 animate-spin text-accent" strokeWidth={1.75} />

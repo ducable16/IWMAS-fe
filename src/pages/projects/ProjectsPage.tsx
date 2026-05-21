@@ -1,7 +1,6 @@
 import { useState, useCallback, useDeferredValue } from 'react'
 import {
-  Plus, Search, ChevronDown, ChevronLeft, ChevronRight,
-  ArrowUpDown, ArrowUp, ArrowDown,
+  Plus, ChevronDown,
 } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate } from 'react-router-dom'
@@ -15,7 +14,11 @@ import {
   PROJECT_STATUS_META as STATUS_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { fmtDate } from '@/utils/date'
 import { ProjectStatusBadge } from '@/components/ui/Badge'
+import { Pagination } from '@/components/ui/Pagination'
+import SortableHeader from '@/components/ui/SortableHeader'
+import SearchInput from '@/components/ui/SearchInput'
 import type { Project } from '@/types'
 import type { ProjectStatus } from '@/constants/enums'
 
@@ -52,109 +55,8 @@ const DEFAULT_PARAMS: ProjectFilterParams = {
 
 /* ── Helpers ───────────────────────────────────────────────── */
 
-function formatDate(d?: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
 
 /* ── Sortable Column Header ────────────────────────────────── */
-
-type SortHeaderProps = {
-  label: string
-  field: SortField
-  params: ProjectFilterParams
-  onSort: (field: SortField) => void
-  className?: string
-}
-
-function SortHeader({ label, field, params, onSort, className }: SortHeaderProps) {
-  const backendField = SORT_FIELDS[field]
-  const active = params.sortBy === backendField
-  const isDesc = params.sortDirection === 'DESC'
-  const icon = active
-    ? isDesc
-      ? <ArrowDown className="w-3 h-3" strokeWidth={2} />
-      : <ArrowUp className="w-3 h-3" strokeWidth={2} />
-    : <ArrowUpDown className="w-3 h-3 opacity-0 group-hover:opacity-100" strokeWidth={1.75} />
-
-  return (
-    <th
-      className={clsx(
-        'text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 cursor-pointer select-none group transition-colors hover:text-text-secondary',
-        className,
-      )}
-      onClick={() => onSort(field)}
-    >
-      <span className="inline-flex items-center gap-1">
-        {label}
-        <span className={clsx('transition-opacity', active ? 'text-accent' : 'text-text-muted')}>
-          {icon}
-        </span>
-      </span>
-    </th>
-  )
-}
-
-/* ── Pagination ─────────────────────────────────────────────── */
-
-type PaginationProps = {
-  page: number
-  totalPages: number
-  totalElements: number
-  size: number
-  onChange: (page: number) => void
-}
-
-function Pagination({ page, totalPages, totalElements, size, onChange }: PaginationProps) {
-  if (totalPages <= 1) return null
-
-  const pages = Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
-    let start = Math.max(0, page - 3)
-    const end = Math.min(totalPages - 1, start + 6)
-    start = Math.max(0, end - 6)
-    return start + i
-  }).filter((p) => p < totalPages)
-
-  return (
-    <div className="flex items-center justify-between px-5 py-3 border-t border-border-subtle bg-bg-subtle/30">
-      <span className="text-[12px] text-text-muted">
-        Showing {page * size + 1}–{Math.min((page + 1) * size, totalElements)} of{' '}
-        {totalElements} {totalElements === 1 ? 'project' : 'projects'}
-      </span>
-      <div className="flex items-center gap-1">
-        <button
-          disabled={page === 0}
-          onClick={() => onChange(page - 1)}
-          className="p-1.5 rounded-lg border border-border text-text-secondary hover:border-border-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronLeft className="w-3.5 h-3.5" />
-        </button>
-        {pages.map((pg) => (
-          <button
-            key={pg}
-            onClick={() => onChange(pg)}
-            className={clsx(
-              'min-w-[28px] h-7 rounded-lg text-[12px] font-medium border transition-colors',
-              pg === page
-                ? 'bg-accent text-white border-accent'
-                : 'border-border text-text-secondary hover:border-border-strong',
-            )}
-          >
-            {pg + 1}
-          </button>
-        ))}
-        <button
-          disabled={page >= totalPages - 1}
-          onClick={() => onChange(page + 1)}
-          className="p-1.5 rounded-lg border border-border text-text-secondary hover:border-border-strong disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  )
-}
 
 /* ── Main Page ─────────────────────────────────────────────── */
 
@@ -252,16 +154,11 @@ export default function ProjectsPage() {
 
       {/* ── Toolbar ── */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
-        {/* Search */}
-        <div className="flex items-center gap-2 bg-bg-surface border border-border rounded-lg px-3 py-1.5 flex-1 min-w-[200px] max-w-[320px] focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 transition-all">
-          <Search className="w-3.5 h-3.5 text-text-muted shrink-0" strokeWidth={1.75} />
-          <input
-            value={params.search}
-            onChange={(e) => set('search', e.target.value)}
-            placeholder="Search by name or code…"
-            className="bg-transparent text-[13px] text-text-primary placeholder-text-muted focus:outline-none w-full"
-          />
-        </div>
+        <SearchInput
+          value={params.search}
+          onChange={(value) => set('search', value)}
+          placeholder="Search by name or code..."
+        />
 
         {/* Status toggle pills */}
         <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg flex-shrink-0">
@@ -328,12 +225,12 @@ export default function ProjectsPage() {
               <thead>
                 <tr className="border-b border-border-subtle bg-bg-subtle/50">
                   <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 pl-5 w-[100px]">Code</th>
-                  <SortHeader label="Project"    field="name"      params={params} onSort={handleSort} />
-                  <SortHeader label="Status"     field="status"    params={params} onSort={handleSort} />
+                  <SortableHeader label="Project" active={params.sortBy === SORT_FIELDS.name} direction={params.sortDirection} onClick={() => handleSort('name')} />
+                  <SortableHeader label="Status" active={params.sortBy === SORT_FIELDS.status} direction={params.sortDirection} onClick={() => handleSort('status')} />
                   <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Manager</th>
-                  <SortHeader label="Start"      field="startDate" params={params} onSort={handleSort} />
-                  <SortHeader label="End"        field="endDate"   params={params} onSort={handleSort} />
-                  <SortHeader label="Created"    field="createdAt" params={params} onSort={handleSort} />
+                  <SortableHeader label="Start" active={params.sortBy === SORT_FIELDS.startDate} direction={params.sortDirection} onClick={() => handleSort('startDate')} />
+                  <SortableHeader label="End" active={params.sortBy === SORT_FIELDS.endDate} direction={params.sortDirection} onClick={() => handleSort('endDate')} />
+                  <SortableHeader label="Created" active={params.sortBy === SORT_FIELDS.createdAt} direction={params.sortDirection} onClick={() => handleSort('createdAt')} />
                   <th className="py-2.5 px-3 w-10"><span className="sr-only">Open</span></th>
                 </tr>
               </thead>
@@ -378,21 +275,21 @@ export default function ProjectsPage() {
                       {/* Start date */}
                       <td className="py-3 px-3">
                         <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
-                          {formatDate(project.startDate)}
+                          {fmtDate(project.startDate)}
                         </span>
                       </td>
 
                       {/* End date */}
                       <td className="py-3 px-3">
                         <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
-                          {formatDate(project.endDate)}
+                          {fmtDate(project.endDate)}
                         </span>
                       </td>
 
                       {/* Created */}
                       <td className="py-3 px-3">
                         <span className="text-[12.5px] text-text-muted tabular-nums whitespace-nowrap">
-                          {formatDate(project.createdAt)}
+                          {fmtDate(project.createdAt)}
                         </span>
                       </td>
 

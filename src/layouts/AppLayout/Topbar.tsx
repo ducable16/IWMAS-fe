@@ -8,6 +8,7 @@ import NotificationBell from '@/features/notifications/components/NotificationBe
 import { USER_ROLE_SHORT_LABEL } from '@/constants/enums'
 import type { User as AuthUser } from '@/types'
 import clsx from 'clsx'
+import { Avatar } from '@/components/ui/Avatar'
 
 const ROUTE_LABELS: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -20,11 +21,6 @@ const ROUTE_LABELS: Record<string, string> = {
   '/notifications': 'Notifications',
   '/search': 'Search',
   '/settings': 'Settings',
-}
-
-type UserAvatarProps = {
-  user: AuthUser | null
-  size?: 'sm' | 'lg'
 }
 
 type ProfileDropdownProps = {
@@ -41,31 +37,6 @@ function getUserRoleLabel(user: AuthUser | null) {
   if (!role) return '-'
 
   return USER_ROLE_SHORT_LABEL[role as keyof typeof USER_ROLE_SHORT_LABEL] || role
-}
-
-function UserAvatar({ user, size = 'sm' }: UserAvatarProps) {
-  const displayName = getUserDisplayName(user)
-  const initials = displayName[0]?.toUpperCase() || 'U'
-  const sizeClass = size === 'lg' ? 'w-9 h-9 text-[13px]' : 'w-7 h-7 text-[11px]'
-
-  if (user?.avatarUrl) {
-    return (
-      <img
-        src={user.avatarUrl}
-        alt={displayName}
-        className={clsx('rounded-full object-cover border border-border-subtle shrink-0', sizeClass)}
-      />
-    )
-  }
-
-  return (
-    <div className={clsx(
-      'rounded-full bg-accent flex items-center justify-center font-semibold text-white shrink-0',
-      sizeClass,
-    )}>
-      {initials}
-    </div>
-  )
 }
 
 function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
@@ -115,7 +86,7 @@ function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
         aria-expanded={open}
         aria-label="Open user menu"
       >
-        <UserAvatar user={user} />
+        <Avatar name={getUserDisplayName(user)} avatarUrl={user?.avatarUrl} size="sm" />
         <div className="hidden lg:block leading-tight text-left">
           <p className="text-[12.5px] font-medium text-text-primary">
             {displayName}
@@ -144,7 +115,7 @@ function ProfileDropdown({ user, onLogout }: ProfileDropdownProps) {
         >
           <div className="px-4 py-3 border-b border-border-subtle bg-bg-subtle/40">
             <div className="flex items-center gap-2.5">
-              <UserAvatar user={user} size="lg" />
+              <Avatar name={getUserDisplayName(user)} avatarUrl={user?.avatarUrl} size="md" />
               <div className="min-w-0">
                 <p className="text-[13px] font-semibold text-text-primary truncate">
                   {displayName}

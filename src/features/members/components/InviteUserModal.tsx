@@ -1,10 +1,12 @@
 import { useState } from 'react'
-import { X, UserPlus, Loader2 } from 'lucide-react'
+import { UserPlus } from 'lucide-react'
+import { Modal } from '@/components/ui/Modal'
+import ModalFormActions from '@/components/ui/ModalFormActions'
 import { useInviteUser } from '../hooks/useInviteUser'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
 import { USER_ROLES, USER_ROLE_LABEL, USER_POSITIONS, USER_POSITION_LABEL } from '@/constants/enums'
-import type { ChangeEvent, FormEvent, MouseEvent } from 'react'
+import type { ChangeEvent, FormEvent } from 'react'
 import type { UserPosition, UserRole } from '@/constants/enums'
 
 const ROLES: UserRole[] = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN'].filter((role): role is UserRole =>
@@ -41,7 +43,7 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
   const [form, setForm] = useState<InviteUserForm>(EMPTY_FORM)
   const [errors, setErrors] = useState<InviteUserErrors>({})
 
-  if (!open) return null
+
 
   const set = (key: keyof InviteUserForm) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -86,13 +88,9 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(4px)' }}
-      onClick={(e: MouseEvent<HTMLDivElement>) => e.target === e.currentTarget && handleClose()}
-    >
-      <div className="bg-bg-surface border border-border rounded-xl w-full max-w-md animate-fade-in">
-        <div className="flex items-center justify-between px-5 pt-5 pb-4 border-b border-border">
+    <Modal open={open} onClose={handleClose} maxWidth="max-w-md">
+      <Modal.Header
+        title={
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
               <UserPlus className="w-4 h-4 text-accent" strokeWidth={1.75} />
@@ -104,16 +102,9 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
               <p className="text-[11.5px] text-text-muted">Add a new user to workspace</p>
             </div>
           </div>
-          <button
-            onClick={handleClose}
-            disabled={isPending}
-            className="text-text-muted hover:text-text-primary transition-colors p-1 rounded-md hover:bg-bg-subtle"
-            aria-label="Close"
-            id="invite-close-btn"
-          >
-            <X className="w-4 h-4" strokeWidth={1.75} />
-          </button>
-        </div>
+        }
+        onClose={handleClose}
+      />
 
         <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3.5">
           <div className="grid grid-cols-2 gap-3">
@@ -188,27 +179,16 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
             ))}
           </SelectField>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={isPending}
-              className="btn-ghost text-[13px]"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="btn-primary text-[13px] min-w-[100px] justify-center"
-              id="invite-submit-btn"
-            >
-              {isPending && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-              {isPending ? 'Inviting...' : 'Invite user'}
-            </button>
-          </div>
+          <ModalFormActions
+            onCancel={handleClose}
+            isPending={isPending}
+            cancelDisabled={isPending}
+            pendingLabel="Inviting..."
+            submitLabel="Invite user"
+            submitButtonId="invite-submit-btn"
+            submitClassName="min-w-[100px] justify-center"
+          />
         </form>
-      </div>
-    </div>
+    </Modal>
   )
 }

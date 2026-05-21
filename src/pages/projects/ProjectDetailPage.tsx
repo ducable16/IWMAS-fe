@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
-  ArrowLeft, Pencil, Trash2, Users, Calendar,
-  X, Save, Loader2, Plus, Edit2, BarChart3, Paperclip, Upload, Download,
-  type LucideIcon,
+  ArrowLeft, Pencil, Trash2, X, Save, Loader2,
+  type LucideIcon, BarChart3, Paperclip
 } from 'lucide-react'
 import clsx from 'clsx'
 import {
@@ -18,19 +17,17 @@ import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import {
   PROJECT_STATUS_META as STATUS_META,
-  PROJECT_ROLE_LABEL,
-  PROJECT_STATUS_LABEL,
-  toOptions,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
-import { ProjectStatusBadge } from '@/components/ui/Badge'
-import type { ChangeEvent, ReactNode } from 'react'
+import type { ChangeEvent } from 'react'
 import type { ProjectMember } from '@/types'
 import type { ProjectStatus } from '@/constants/enums'
 
-/* ── Helpers ───────────────────────────────────────────────── */
+import { ProjectOverviewTab } from '@/features/projects/components/ProjectOverviewTab'
+import { ProjectMembersTab } from '@/features/projects/components/ProjectMembersTab'
+import { ProjectDocumentsTab } from '@/features/projects/components/ProjectDocumentsTab'
 
 type ProjectDetailTab = 'overview' | 'members' | 'documents' | 'workload'
 
@@ -45,61 +42,6 @@ type ProjectDetailForm = {
 }
 
 type ProjectDetailErrors = Partial<Record<keyof ProjectDetailForm, string | null>>
-
-type InfoRowProps = {
-  label: string
-  children: ReactNode
-}
-
-type FieldProps = {
-  label: string
-  required?: boolean
-  error?: ReactNode
-  children: ReactNode
-}
-
-function formatDate(d?: string | null) {
-  if (!d) return '—'
-  return new Date(d).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
-}
-
-function formatFileSize(bytes?: number) {
-  const valueInBytes = bytes ?? 0
-  if (!Number.isFinite(valueInBytes) || valueInBytes <= 0) return '0 B'
-  const units = ['B', 'KB', 'MB', 'GB']
-  const exponent = Math.min(Math.floor(Math.log(valueInBytes) / Math.log(1024)), units.length - 1)
-  const value = valueInBytes / 1024 ** exponent
-  return `${value >= 10 ? value.toFixed(0) : value.toFixed(1)} ${units[exponent]}`
-}
-
-const STATUS_OPTIONS   = toOptions(PROJECT_STATUS_LABEL)
-
-/** Inline view row */
-function InfoRow({ label, children }: InfoRowProps) {
-  return (
-    <div className="flex items-start gap-3 py-2.5">
-      <span className="text-[12px] text-text-muted font-medium w-28 shrink-0 pt-0.5">{label}</span>
-      <span className="text-[13px] text-text-primary">{children}</span>
-    </div>
-  )
-}
-
-/** Compact field wrapper for inline edit */
-function Field({ label, required, error, children }: FieldProps) {
-  return (
-    <div>
-      <label className="block text-[12px] font-medium text-text-secondary mb-1">
-        {label}{required && <span className="text-danger ml-0.5">*</span>}
-      </label>
-      {children}
-      {error && <p className="text-[11px] text-danger mt-0.5">{error}</p>}
-    </div>
-  )
-}
-
-/* ── Main Page ─────────────────────────────────────────────── */
 
 export default function ProjectDetailPage() {
   const { id } = useParams()
@@ -119,7 +61,6 @@ export default function ProjectDetailPage() {
   const isPending                  = updateProject.isPending
 
   // §3.5 / §3.8-3.10: ADMIN always; PM only when they are the project manager.
-  // Computed AFTER project loads (project may be undefined during fetch).
   const isOwnProject     = !!project && project.managerId === user?.id
   const canEdit          = can.isAdmin || (can.isPm && isOwnProject)
   const canManageMembers = can.isAdmin || (can.isPm && isOwnProject)
@@ -199,7 +140,6 @@ export default function ProjectDetailPage() {
 
   const handleCancel = () => {
     if (!project) return
-    // Reset form to original project values
     setForm({
       name:        project.name        || '',
       code:        project.code        || '',
@@ -323,8 +263,8 @@ export default function ProjectDetailPage() {
                     className="btn-primary text-[13px]"
                   >
                     {isPending
-                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      : <Save className="w-3.5 h-3.5" />}
+                       ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                       : <Save className="w-3.5 h-3.5" />}
                     {isPending ? 'Saving…' : 'Save changes'}
                   </button>
                 </>
@@ -382,309 +322,43 @@ export default function ProjectDetailPage() {
 
       {/* ── Tab: Overview ── */}
       {activeTab === 'overview' && (
-      <div className="grid lg:grid-cols-2 gap-5 mb-6">
-
-        {/* Left — Details card */}
-        <div className="card p-5">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-3 uppercase tracking-wide">
-            Details
-          </h3>
-
-          {isEditing ? (
-            /* ── Edit mode ── */
-            <div className="space-y-3">
-              <Field label="Status">
-                <select value={form.status} onChange={set('status')} className="field">
-                  {STATUS_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-              </Field>
-
-
-              <Field label="Manager" required error={errors.managerId}>
-                <select
-                  value={form.managerId}
-                  onChange={set('managerId')}
-                  className={clsx('field', errors.managerId && 'field-error')}
-                >
-                  <option value="">Select a manager…</option>
-                  {managers.map((u) => (
-                    <option key={u.id} value={u.id}>{u.fullName}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <div className="grid grid-cols-2 gap-3">
-                <Field label="Start Date">
-                  <input
-                    type="date"
-                    value={form.startDate}
-                    onChange={set('startDate')}
-                    className="field"
-                  />
-                </Field>
-                <Field label="End Date">
-                  <input
-                    type="date"
-                    value={form.endDate}
-                    onChange={set('endDate')}
-                    className="field"
-                  />
-                </Field>
-              </div>
-            </div>
-          ) : (
-            /* ── View mode ── */
-            <div className="divide-y divide-border-subtle">
-              <InfoRow label="Status">
-                <ProjectStatusBadge status={String(project.status || 'PLANNING')} />
-              </InfoRow>
-
-              <InfoRow label="Manager">
-                <span className="flex items-center gap-2">
-                  <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/15 flex items-center justify-center text-[10px] font-semibold text-accent">
-                    {managerName[0]?.toUpperCase() ?? '?'}
-                  </span>
-                  {managerName}
-                </span>
-              </InfoRow>
-              <InfoRow label="Start Date">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                  {formatDate(project.startDate)}
-                </span>
-              </InfoRow>
-              <InfoRow label="End Date">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-text-muted" />
-                  {formatDate(project.endDate)}
-                </span>
-              </InfoRow>
-              {project.actualEndDate && (
-                <InfoRow label="Actual End">{formatDate(project.actualEndDate)}</InfoRow>
-              )}
-              <InfoRow label="Created">{formatDate(project.createdAt)}</InfoRow>
-            </div>
-          )}
-        </div>
-
-        {/* Right — Description card */}
-        <div className="card p-5">
-          <h3 className="text-[13px] font-semibold text-text-primary mb-3 uppercase tracking-wide">
-            Description
-          </h3>
-          {isEditing ? (
-            <textarea
-              value={form.description}
-              onChange={set('description')}
-              placeholder="Brief description of the project…"
-              rows={8}
-              className="field resize-none w-full"
-            />
-          ) : (
-            <p className="text-[13px] text-text-secondary leading-relaxed whitespace-pre-wrap">
-              {project.description || 'No description provided.'}
-            </p>
-          )}
-        </div>
-      </div>
+        <ProjectOverviewTab
+          project={project}
+          isEditing={isEditing}
+          form={form}
+          errors={errors}
+          set={set}
+          managers={managers}
+          managerName={managerName}
+        />
       )}
 
       {/* ── Tab: Members ── */}
       {activeTab === 'members' && (
-      <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-          <h3 className="text-[13px] font-semibold text-text-primary uppercase tracking-wide flex items-center gap-2">
-            <Users className="w-4 h-4 text-text-muted" />
-            Project Members
-            <span className="text-[11px] text-text-muted font-normal ml-1">
-              ({members.length})
-            </span>
-          </h3>
-          {canManageMembers && (
-            <button
-              onClick={() => setAddMemberOpen(true)}
-              className="btn-ghost text-[12px] h-8 px-3"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Add Member
-            </button>
-          )}
-        </div>
-
-        {membersLoading ? (
-          <div className="p-8"><LiveLoading label="Loading members…" /></div>
-        ) : members.length === 0 ? (
-          <div className="p-8">
-            <LiveEmpty label="No members assigned to this project yet." />
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="bg-bg-subtle/50 border-b border-border-subtle">
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 pl-5">Member</th>
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Role</th>
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Effort %</th>
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Joined</th>
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Left</th>
-                  <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3">Note</th>
-                  {canManageMembers && (
-                    <th className="py-2.5 px-3 w-20"><span className="sr-only">Actions</span></th>
-                  )}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-subtle">
-                {members.map((m) => (
-                  <tr key={m.id} className="hover:bg-bg-subtle/50 transition-colors group">
-                    <td className="py-3 px-3 pl-5">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[10px] font-semibold text-accent shrink-0">
-                          {m.userFullName?.[0]?.toUpperCase() || '?'}
-                        </div>
-                        <Link
-                          to={`/users/${m.userId}`}
-                          className="text-[13px] font-medium text-text-primary truncate max-w-[160px] hover:text-accent hover:underline transition-colors"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          {m.userFullName}
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="badge badge-neutral">
-                        {PROJECT_ROLE_LABEL[m.roleInProject as keyof typeof PROJECT_ROLE_LABEL] || m.roleInProject}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-1.5 bg-bg-subtle rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-accent rounded-full transition-all"
-                            style={{ width: `${m.allocatedEffortPercent ?? 0}%` }}
-                          />
-                        </div>
-                        <span className="text-[12px] text-text-secondary tabular-nums">
-                          {m.allocatedEffortPercent ?? 0}%
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-[12.5px] text-text-muted tabular-nums">
-                        {formatDate(m.joinDate)}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-[12.5px] text-text-muted tabular-nums">
-                        {m.leaveDate ? formatDate(m.leaveDate) : '—'}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3">
-                      <span className="text-[12.5px] text-text-muted truncate block max-w-[150px]">
-                        {m.note || '—'}
-                      </span>
-                    </td>
-                    {canManageMembers && (
-                      <td className="py-3 px-3 text-right">
-                        <div className="flex items-center justify-end gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={() => setEditingMember(m)}
-                            className="text-text-muted hover:text-accent transition-colors p-1 rounded"
-                            title="Edit member"
-                          >
-                            <Edit2 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleRemoveMember(m)}
-                            className="text-text-muted hover:text-danger transition-colors p-1 rounded"
-                            title="Remove member"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    )}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        <ProjectMembersTab
+          members={members}
+          membersLoading={membersLoading}
+          canManageMembers={canManageMembers}
+          onAddMemberClick={() => setAddMemberOpen(true)}
+          onEditMemberClick={(m) => setEditingMember(m)}
+          onRemoveMemberClick={handleRemoveMember}
+        />
       )}
 
       {/* ── Tab: Documents ── */}
       {activeTab === 'documents' && (
-        <div className="card overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-            <h3 className="text-[13px] font-semibold text-text-primary uppercase tracking-wide flex items-center gap-2">
-              <Paperclip className="w-4 h-4 text-text-muted" />
-              Project Documents
-              <span className="text-[11px] text-text-muted font-normal ml-1">
-                ({documents.length})
-              </span>
-            </h3>
-            {canUploadDocuments && (
-              <label className="btn-ghost text-[12px] h-8 px-3 cursor-pointer">
-                <Upload className="w-3.5 h-3.5 mr-1" />
-                {isUploadingDocument ? 'Uploading…' : 'Upload Document'}
-                <input
-                  type="file"
-                  className="hidden"
-                  disabled={isUploadingDocument}
-                  onChange={handleUploadDocument}
-                />
-              </label>
-            )}
-          </div>
-
-          {documentsLoading ? (
-            <div className="p-8"><LiveLoading label="Loading documents…" /></div>
-          ) : documents.length === 0 ? (
-            <div className="p-8">
-              <LiveEmpty label="No documents uploaded yet." />
-            </div>
-          ) : (
-            <div className="divide-y divide-border-subtle">
-              {documents.map((doc) => {
-                const canDeleteDoc = can.isAdmin || isOwnProject || doc.uploadedBy === user?.id
-                return (
-                  <div key={doc.id} className="px-5 py-3 flex items-center gap-3">
-                    <Paperclip className="w-4 h-4 text-text-muted shrink-0" strokeWidth={1.75} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] text-text-primary truncate">{doc.fileName}</p>
-                      <p className="text-[11px] text-text-muted mt-0.5">
-                        {formatFileSize(doc.fileSize)} · Uploaded {doc.createdAt ? new Date(doc.createdAt).toLocaleString() : '—'}
-                        {doc.uploadedBy ? ` · by #${doc.uploadedBy}` : ''}
-                      </p>
-                    </div>
-                    <a
-                      href={doc.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="btn-ghost text-[12px] h-8 px-2.5"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      Open
-                    </a>
-                    {canDeleteDoc && (
-                      <button
-                        type="button"
-                        onClick={() => deleteDocument(doc.id)}
-                        disabled={isDeletingDocument}
-                        className="btn-ghost text-[12px] h-8 px-2.5 text-danger hover:bg-danger/10"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        Delete
-                      </button>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          )}
-        </div>
+        <ProjectDocumentsTab
+          documents={documents}
+          documentsLoading={documentsLoading}
+          canUploadDocuments={canUploadDocuments}
+          isUploadingDocument={isUploadingDocument}
+          isDeletingDocument={isDeletingDocument}
+          onUploadDocument={handleUploadDocument}
+          onDeleteDocument={deleteDocument}
+          user={user}
+          isOwnProject={isOwnProject}
+          isAdmin={can.isAdmin}
+        />
       )}
 
       {/* ── Tab: Workload ── */}

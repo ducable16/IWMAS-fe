@@ -114,7 +114,7 @@ function MentionPopup({
     >
       {suggestions.length === 0 && isFetching ? (
         <div className="px-3 py-4 text-[12px] text-text-muted text-center">
-          Searchingâ€¦
+          Searching...
         </div>
       ) : suggestions.length === 0 ? (
         <div className="px-3 py-4 text-[12px] text-text-muted text-center">
@@ -157,7 +157,7 @@ function MentionPopup({
                   </span>
                   {isActive && (
                     <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-mono border border-accent/20 shrink-0">
-                      â†µ
+                      Enter
                     </kbd>
                   )}
                 </button>
@@ -176,7 +176,7 @@ export default function MentionTextarea({
   onChange,
   onSubmit,
   projectId,
-  placeholder = 'Add a commentâ€¦',
+  placeholder = 'Add a comment...',
   rows = 2,
   disabled = false,
   className,

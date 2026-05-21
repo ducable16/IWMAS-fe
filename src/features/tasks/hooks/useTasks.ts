@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { taskService } from '../services/taskService'
+import { formatEstimate } from '@/utils/date'
 import type { Task, TaskListItem, TaskListResult, TaskSearchParams } from '@/types'
 
 export type SprintBoardColumnId = 'todo' | 'inprogress' | 'review' | 'done'
@@ -46,13 +47,13 @@ function normaliseTask(t: Task): TaskListItem {
     type: String(t.type || 'TASK'),
     assignee: assigneeName.substring(0, 2).toUpperCase(),
     assigneeFull: assigneeName,
-    assigneeEmail: t.assignee?.email || 'â€”',
+    assigneeEmail: t.assignee?.email || '-',
     assigneeId: t.assignee?.id ?? null,
     reporterFull: reporterName,
     reporterId: t.reporter?.id ?? null,
-    sprint: t.sprint || 'â€”',
+    sprint: t.sprint || '-',
     due: t.dueDate || null,
-    estimate: t.estimatedHours ? `${t.estimatedHours}h` : 'â€”',
+    estimate: formatEstimate(t.estimatedHours),
     labels: t.labels || [],
     projectId: t.projectId,
     customFields: t.customFields || {},
@@ -98,9 +99,9 @@ export function useTasks() {
           status: t.status ? String(t.status).toLowerCase() : 'todo',
           priority: t.priority ? String(t.priority).toLowerCase() : 'medium',
           assignee: assigneeName.substring(0, 2).toUpperCase(),
-          sprint: 'â€”',
-          due: t.dueDate || 'â€”',
-          estimate: t.estimatedHours ? `${t.estimatedHours}h` : 'â€”',
+          sprint: '-',
+          due: t.dueDate || '-',
+          estimate: formatEstimate(t.estimatedHours),
         }
       })
     },
@@ -137,7 +138,7 @@ export function useSprintBoard() {
           assignee: assigneeName.substring(0, 2).toUpperCase(),
           tags: [],
           comments: 0,
-          estimate: t.estimatedHours ? `${t.estimatedHours}h` : '',
+          estimate: formatEstimate(t.estimatedHours),
           done: key === 'done',
         })
       }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { memo, useCallback, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import clsx from 'clsx'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
@@ -16,7 +16,7 @@ type TeamMember = {
 type MemberRowProps = {
   member: TeamMember
   expanded: boolean
-  onToggle: () => void
+  onToggle: (id: Id) => void
 }
 
 type TeamWorkloadPanelProps = {
@@ -26,13 +26,19 @@ type TeamWorkloadPanelProps = {
   emptyLabel?: string
 }
 
-function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
-  const { data, isLoading, isError, error } = useUserWorkloadDetail(member.id)
+const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
+  const { data, isLoading, isError, error } = useUserWorkloadDetail(
+    member.id,
+    undefined,
+    undefined,
+    expanded,
+  )
+  const hasLoaded = !!data
 
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-surface">
       <button
-        onClick={onToggle}
+        onClick={() => onToggle(member.id)}
         className={clsx(
           'w-full flex items-start gap-4 p-4 text-left',
           'hover:bg-bg-subtle/40 transition-colors rounded-xl',
@@ -53,14 +59,16 @@ function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
             <div className="shrink-0">
               {data?.workloadLevel ? (
                 <WorkloadLevelBadge level={data.workloadLevel} />
+              ) : isLoading ? (
+                <span className="text-[11.5px] text-text-muted">Loading...</span>
               ) : (
-                <span className="text-[11.5px] text-text-muted">Loading…</span>
+                <span className="text-[11.5px] text-text-muted">Not loaded</span>
               )}
             </div>
           </div>
 
           <div className="mt-2">
-            {data ? (
+            {hasLoaded ? (
               <UtilizationBar
                 utilizationPercent={data.utilizationPercent}
                 workloadLevel={data.workloadLevel}
@@ -74,19 +82,20 @@ function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
           </div>
 
           <div className="mt-2 text-[11.5px] text-text-muted">
-            {data ? (
+            {hasLoaded ? (
               <span>
                 <span className="font-semibold text-text-secondary tabular-nums">
                   {data.activeTaskCount ?? 0}
-                </span>{' '}active tasks
+                </span>{' '}
+                active tasks
                 {data.overdueTaskCount > 0 && (
                   <span className="text-danger font-semibold">
-                    {' '}· {data.overdueTaskCount} overdue
+                    {' '}- {data.overdueTaskCount} overdue
                   </span>
                 )}
               </span>
             ) : (
-              <span>Tasks: —</span>
+              <span>Tasks: -</span>
             )}
           </div>
         </div>
@@ -109,7 +118,7 @@ function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
       )}
     </div>
   )
-}
+})
 
 export default function TeamWorkloadPanel({
   title = 'Team workload & tasks',
@@ -118,12 +127,15 @@ export default function TeamWorkloadPanel({
   emptyLabel = 'No members to display.',
 }: TeamWorkloadPanelProps) {
   const [expandedId, setExpandedId] = useState<Id | null>(null)
+  const handleToggle = useCallback((id: Id) => {
+    setExpandedId((current) => current === id ? null : id)
+  }, [])
 
   if (isLoading) {
     return (
       <div className="card p-5">
         <h3 className="section-title text-[13px] mb-4">{title}</h3>
-        <p className="text-[12.5px] text-text-muted">Loading team workload…</p>
+        <p className="text-[12.5px] text-text-muted">Loading team workload...</p>
       </div>
     )
   }
@@ -146,9 +158,7 @@ export default function TeamWorkloadPanel({
             key={member.id}
             member={member}
             expanded={expandedId === member.id}
-            onToggle={() =>
-              setExpandedId(expandedId === member.id ? null : member.id)
-            }
+            onToggle={handleToggle}
           />
         ))}
       </div>
