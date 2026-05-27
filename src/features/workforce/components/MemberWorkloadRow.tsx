@@ -26,9 +26,8 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
     userFullName = 'Unknown',
     position = '',
     workloadLevel = 'AVAILABLE',
-    utilizationPercent = null,
-    weeklyRemainingHours = null,
-    weeklyCapacityHours = null,
+    nearTermPercent = null,
+    overallPercent = null,
     activeTaskCount = 0,
     overdueTaskCount = 0,
     projectAllocations = null,
@@ -88,7 +87,7 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
                 {projectAlloc.projectName}
               </p>
               <UtilizationBar
-                utilizationPercent={projectAlloc.utilizationPercent}
+                utilizationPercent={projectAlloc.nearTermPercent}
                 workloadLevel={projectAlloc.workloadLevel}
                 compact
               />
@@ -99,20 +98,16 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
                 Total (all projects)
               </p>
               <UtilizationBar
-                utilizationPercent={utilizationPercent}
+                utilizationPercent={overallPercent}
                 workloadLevel={workloadLevel}
-                weeklyRemainingHours={weeklyRemainingHours}
-                weeklyCapacityHours={weeklyCapacityHours}
                 compact
               />
             </div>
           </>
         ) : (
           <UtilizationBar
-            utilizationPercent={utilizationPercent}
+            utilizationPercent={nearTermPercent}
             workloadLevel={workloadLevel}
-            weeklyRemainingHours={weeklyRemainingHours}
-            weeklyCapacityHours={weeklyCapacityHours}
             compact
           />
         )}

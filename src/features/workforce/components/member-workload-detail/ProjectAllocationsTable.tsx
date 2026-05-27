@@ -7,6 +7,8 @@ type Allocation = ProjectWorkloadAllocation & {
   allocatedEffortPercent?: number | null
   loadInWindowHours?: number | null
   dailyCapacityHours?: number | null
+  nearTermPercent?: number | null
+  overallPercent?: number | null
 }
 
 interface ProjectAllocationsTableProps {
@@ -45,7 +47,7 @@ export default function ProjectAllocationsTable({ allocations }: ProjectAllocati
             </div>
             <div className="flex-1 min-w-[120px]">
               <UtilizationBar
-                utilizationPercent={allocation.utilizationPercent}
+                utilizationPercent={allocation.nearTermPercent}
                 workloadLevel={allocation.workloadLevel}
                 compact
               />

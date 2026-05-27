@@ -39,7 +39,7 @@ export default function DescriptionReadOnly({
           <Loader2 className="w-4 h-4 animate-spin" />
         </div>
       )}
-      <div className={ready ? 'block' : 'invisible h-0 overflow-hidden'}>
+      <div className={clsx('task-description-content', ready ? 'block' : 'invisible h-0 overflow-hidden')}>
         <BlockNoteView editor={editor as never} editable={false} theme="light" />
       </div>
     </div>

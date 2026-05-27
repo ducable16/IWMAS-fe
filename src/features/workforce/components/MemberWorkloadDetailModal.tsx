@@ -28,8 +28,6 @@ export default function MemberWorkloadDetailModal({
 
   const { data, isLoading, isError, error } = useUserWorkloadDetail(
     userId,
-    weekStart,
-    weekEnd,
     open,
   )
 
@@ -110,10 +108,10 @@ export default function MemberWorkloadDetailModal({
                 <WorkloadLevelBadge level={detail.workloadLevel} />
 
                 <UtilizationBar
-                  utilizationPercent={detail.utilizationPercent}
+                  utilizationPercent={detail.nearTermPercent}
                   workloadLevel={detail.workloadLevel}
-                  weeklyRemainingHours={detail.weeklyRemainingHours}
-                  weeklyCapacityHours={detail.weeklyCapacityHours}
+                  weeklyRemainingHours={null}
+                  weeklyCapacityHours={null}
                 />
               </div>
 

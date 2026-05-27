@@ -85,7 +85,7 @@ export function useSearchTasks(params: TaskSearchParams = {}, enabled = true) {
   })
 }
 
-export function useTasks() {
+export function useTasks(enabled = true) {
   return useQuery({
     queryKey: ['tasks', 'mine'],
     queryFn: async () => {
@@ -102,9 +102,12 @@ export function useTasks() {
           sprint: '-',
           due: t.dueDate || '-',
           estimate: formatEstimate(t.estimatedHours),
+          estimatedHours: t.estimatedHours ?? null,
+          actualHours: t.actualHours ?? null,
         }
       })
     },
+    enabled,
   })
 }
 

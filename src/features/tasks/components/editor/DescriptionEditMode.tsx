@@ -63,7 +63,7 @@ export default function DescriptionEditMode({
           </div>
         )}
 
-        <div className={ready ? 'block' : 'invisible h-0 overflow-hidden'}>
+        <div className={clsx('task-description-content', ready ? 'block' : 'invisible h-0 overflow-hidden')}>
           <BlockNoteView editor={editor as never} theme="light" />
         </div>
       </div>

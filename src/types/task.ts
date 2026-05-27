@@ -30,6 +30,7 @@ export interface Task {
 
 export interface TaskSkillRequirement {
   id: Id
+  skillId: Id           // §4.6 — the skill being required
   skillName?: string | undefined
   minimumLevel?: string | undefined
   isRequired?: boolean | undefined
@@ -165,10 +166,32 @@ export interface TaskCommentRequest {
 }
 
 export interface TimeLogRequest {
-  taskId?: Id
-  logDate?: string
-  date?: string
-  hours?: number
-  description?: string
-  note?: string
+  taskId: Id
+  logDate: string             // §5.3: YYYY-MM-DD
+  hoursSpent: number          // §5.3: 0.1–24.0
+  remainingHours?: number     // §5.3: member-reported remaining effort (feeds workload v3 simulation)
+  description?: string        // §5.3: free text
+}
+
+// §5 TimeLogResponse — returned by GET/POST/PUT time-log endpoints
+export interface TimeLogResponse {
+  id: Id
+  taskId: Id
+  taskTitle?: string | null
+  userId: Id
+  logDate: string
+  hoursSpent: number
+  remainingHours?: number | null
+  description?: string | null
+  createdAt?: string
+}
+
+// §4.12 TaskStatusHistory — returned by GET /api/tasks/{id}/history
+export interface TaskStatusHistory {
+  id: Id
+  oldStatus: string | null
+  newStatus: string
+  changedBy: Id
+  note?: string | null
+  changedAt: string
 }

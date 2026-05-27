@@ -78,7 +78,7 @@ export default function NotificationItem({ notification, compact = false, onNavi
           {notification.title}
         </p>
         <p className={`text-[11.5px] text-text-secondary mt-0.5 leading-snug ${compact ? 'line-clamp-1' : 'line-clamp-2'}`}>
-          {notification.content || notification.message}
+          {notification.content}
         </p>
         <p className="text-[11px] text-text-muted mt-1">
           {dayjs(notification.createdAt).fromNow()}

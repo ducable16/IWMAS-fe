@@ -66,7 +66,10 @@ function getActiveCount(filters: TaskFilters): number {
     (filters.types || []).length,
     filters.assigneeId ? 1 : 0,
     filters.reporterId ? 1 : 0,
+    filters.sprint ? 1 : 0,
     filters.dueDateFrom || filters.dueDateTo ? 1 : 0,
+    (filters.labels || []).length,
+    Object.keys(filters.customFields || {}).length,
   ].reduce((total, count) => total + count, 0)
 }
 

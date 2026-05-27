@@ -111,16 +111,48 @@ export default function TaskCreateFields({
         />
       </div>
 
-      <div>
-        <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
-          Due date
-        </label>
-        <input
-          type="date"
-          value={form.dueDate}
-          onChange={(e) => setField('dueDate', e.target.value)}
-          className="input-field text-[12.5px]"
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <div>
+          <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+            Start date
+          </label>
+          <input
+            type="date"
+            value={form.startDate}
+            onChange={(e) => setField('startDate', e.target.value)}
+            className="input-field w-full text-[12.5px]"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+            Due date
+          </label>
+          <input
+            type="date"
+            value={form.dueDate}
+            onChange={(e) => setField('dueDate', e.target.value)}
+            className="input-field w-full text-[12.5px]"
+          />
+        </div>
+        <div>
+          <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
+            Estimate
+          </label>
+          <div className="relative">
+            <input
+              type="number"
+              min="0"
+              step="0.5"
+              value={form.estimatedHours}
+              onChange={(e) => setField('estimatedHours', e.target.value)}
+              placeholder="0"
+              className="input-field w-full pr-12 text-[12.5px]"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-text-muted pointer-events-none">
+              hrs
+            </span>
+          </div>
+        </div>
       </div>
 
       <div>

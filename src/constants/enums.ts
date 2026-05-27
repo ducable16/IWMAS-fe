@@ -66,15 +66,15 @@ export const PROJECT_STATUS_META = {
   CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
 }
 
-
-
 // ── Project role-in-project ───────────────────────────────────────────────────
-export const PROJECT_ROLES = ['MANAGER', 'MEMBER'] as const
+// API §11: LEAD | MEMBER | SUPPORTER  (LEAD = PM được tự động gán khi tạo project)
+export const PROJECT_ROLES = ['LEAD', 'MEMBER', 'SUPPORTER'] as const
 export type ProjectRole = typeof PROJECT_ROLES[number]
 
 export const PROJECT_ROLE_LABEL = {
-  MANAGER:   'Project Manager',
+  LEAD:      'Lead',
   MEMBER:    'Member',
+  SUPPORTER: 'Supporter',
 }
 
 // ── Task status ───────────────────────────────────────────────────────────────
@@ -114,7 +114,7 @@ export type TaskType = typeof TASK_TYPES[number]
 export const TASK_TYPE_LABEL = {
   FEATURE:     'Feature',
   BUG:         'Bug',
-  RESEARCH:    'Research'
+  RESEARCH:    'Research',
 }
 
 export const TASK_TYPE_META = {
@@ -195,16 +195,33 @@ export const SEARCH_SOURCE_LABEL = {
 }
 
 // ── Workload level (§9 / §11) ─────────────────────────────────────────────────
-export const WORKLOAD_LEVELS = ['AVAILABLE', 'HEALTHY_BUSY', 'OVERLOADED', 'BLOCKED', 'UNDEFINED'] as const
+//
+// v3 risk badge — driven by the schedule simulation, not raw utilisation.
+// Severity (worst first): OVERDUE > WILL_SLIP > TIGHT > HEALTHY > AVAILABLE
+export const WORKLOAD_LEVELS = [
+  'OVERDUE', 'WILL_SLIP', 'TIGHT', 'HEALTHY', 'AVAILABLE', 'BLOCKED', 'UNDEFINED',
+] as const
 export type WorkloadLevel = typeof WORKLOAD_LEVELS[number]
 
 export const WORKLOAD_LEVEL_META = {
-  AVAILABLE:    { label: 'Available',    bg: 'bg-success/15',       text: 'text-success',    dot: 'bg-success',      border: 'border-success/25'    },
-  HEALTHY_BUSY: { label: 'Healthy Busy', bg: 'bg-warning/15',       text: 'text-warning',    dot: 'bg-warning',      border: 'border-warning/25'    },
-  OVERLOADED:   { label: 'Overloaded',   bg: 'bg-danger/15',        text: 'text-danger',     dot: 'bg-danger',       border: 'border-danger/25'     },
-  // §11 — new values (API v2)
-  BLOCKED:      { label: 'Observer',     bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle' },
-  UNDEFINED:    { label: 'N/A',          bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle' },
+  OVERDUE:   { label: 'Overdue',   bg: 'bg-danger/15',        text: 'text-danger',     dot: 'bg-danger',        border: 'border-danger/25'     },
+  WILL_SLIP: { label: 'Will Slip', bg: 'bg-orange-500/15',    text: 'text-orange-600', dot: 'bg-orange-500',    border: 'border-orange-500/25' },
+  TIGHT:     { label: 'Tight',     bg: 'bg-warning/15',       text: 'text-warning',    dot: 'bg-warning',       border: 'border-warning/25'    },
+  HEALTHY:   { label: 'Healthy',   bg: 'bg-success/15',       text: 'text-success',    dot: 'bg-success',       border: 'border-success/25'    },
+  AVAILABLE: { label: 'Available', bg: 'bg-info/15',          text: 'text-info',       dot: 'bg-info',          border: 'border-info/25'       },
+  BLOCKED:   { label: 'Observer',  bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle'  },
+  UNDEFINED: { label: 'N/A',       bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle'  },
+}
+
+// ── AhpCriterion (recommender — leaf criteria §11) ───────────────────────────
+export const AHP_CRITERIA = ['SKILL_COVERAGE', 'SKILL_LEVEL', 'WORKLOAD', 'ON_TIME'] as const
+export type AhpCriterion = typeof AHP_CRITERIA[number]
+
+export const AHP_CRITERION_LABEL = {
+  SKILL_COVERAGE: 'Skill Coverage',
+  SKILL_LEVEL:    'Skill Level',
+  WORKLOAD:       'Workload',
+  ON_TIME:        'On-time Delivery',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

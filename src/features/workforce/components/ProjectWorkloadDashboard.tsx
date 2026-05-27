@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, AlertTriangle, UserCheck } from 'lucide-react'
-import WeekNavigator from './WeekNavigator'
+import WeekNavigator, { getCurrentWeekRange } from './WeekNavigator'
 import MemberWorkloadRow from './MemberWorkloadRow'
 import { useProjectWorkload } from '../hooks/useWorkload'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
@@ -18,17 +18,17 @@ type ProjectWorkloadDashboardProps = {
  */
 export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadDashboardProps) {
   const navigate = useNavigate()
-  const [weekStart, setWeekStart] = useState('')
-  const [weekEnd, setWeekEnd]     = useState('')
+  const [weekStart, setWeekStart] = useState(() => getCurrentWeekRange().weekStart)
+  const [weekEnd, setWeekEnd]     = useState(() => getCurrentWeekRange().weekEnd)
 
   const { data: members = [], isLoading, isError, error, refetch } = useProjectWorkload(
-    projectId, weekStart, weekEnd,
+    projectId,
   )
 
-  const handleWeekChange = (ws: string, we: string) => {
-    setWeekStart(ws)
-    setWeekEnd(we)
-  }
+  const handleWeekChange = useCallback((ws: string, we: string) => {
+    setWeekStart((prev) => (prev === ws ? prev : ws))
+    setWeekEnd((prev) => (prev === we ? prev : we))
+  }, [])
 
   const handleRowClick = (member: WorkloadMember) => {
     const params = new URLSearchParams()
@@ -40,8 +40,8 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
   // Summary counts
   const workloadMembers = members as WorkloadMember[]
   const total      = workloadMembers.length
-  const overloaded = workloadMembers.filter((m) => m.workloadLevel === 'OVERLOADED').length
-  const available  = workloadMembers.filter((m) => m.workloadLevel === 'AVAILABLE').length
+  const overloaded = workloadMembers.filter((m) => m.workloadLevel === 'OVERDUE' || m.workloadLevel === 'WILL_SLIP').length
+  const available  = workloadMembers.filter((m) => m.workloadLevel === 'AVAILABLE' || m.workloadLevel === 'HEALTHY').length
 
   return (
     <div className="space-y-4">

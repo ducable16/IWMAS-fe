@@ -29,8 +29,6 @@ type TeamWorkloadPanelProps = {
 const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
   const { data, isLoading, isError, error } = useUserWorkloadDetail(
     member.id,
-    undefined,
-    undefined,
     expanded,
   )
   const hasLoaded = !!data
@@ -70,10 +68,10 @@ const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: Member
           <div className="mt-2">
             {hasLoaded ? (
               <UtilizationBar
-                utilizationPercent={data.utilizationPercent}
+                utilizationPercent={data.nearTermPercent}
                 workloadLevel={data.workloadLevel}
-                weeklyRemainingHours={data.weeklyRemainingHours}
-                weeklyCapacityHours={data.weeklyCapacityHours}
+                weeklyRemainingHours={null}
+                weeklyCapacityHours={null}
                 compact
               />
             ) : (

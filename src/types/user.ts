@@ -56,6 +56,11 @@ export interface OtpRequest {
   otp: string
 }
 
+/** §1.6 — send OTP to email for verification */
+export interface SendOtpRequest {
+  email: string
+}
+
 export interface ResetPasswordRequest {
   token: string
   newPassword: string
@@ -70,6 +75,11 @@ export interface UpdateOwnProfileRequest {
 
 export interface ChangePasswordRequest {
   currentPassword: string
+  newPassword: string
+}
+
+/** §2.4 — Admin forcefully resets a user's password (no current password required) */
+export interface AdminResetPasswordRequest {
   newPassword: string
 }
 

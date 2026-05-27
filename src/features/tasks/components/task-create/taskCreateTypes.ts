@@ -8,7 +8,9 @@ export interface TaskCreateForm {
   type: string
   projectId: Id | ''
   assigneeId: Id | ''
+  startDate: string
   dueDate: string
+  estimatedHours: string
 }
 
 export interface Suggestion {
@@ -33,5 +35,15 @@ export const EMPTY_TASK_CREATE_FORM: TaskCreateForm = {
   type: 'TASK',
   projectId: '',
   assigneeId: '',
+  startDate: '',
   dueDate: '',
+  estimatedHours: '',
+}
+
+export function getTodayDateInputValue() {
+  const today = new Date()
+  const year = today.getFullYear()
+  const month = String(today.getMonth() + 1).padStart(2, '0')
+  const day = String(today.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
 }

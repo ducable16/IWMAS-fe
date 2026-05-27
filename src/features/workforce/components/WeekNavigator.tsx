@@ -1,4 +1,3 @@
-import { useState, useEffect, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 type WeekNavigatorProps = {
@@ -24,12 +23,29 @@ function getSunday(mondayDate: Date) {
   return d
 }
 
+function parseDate(value?: string | null) {
+  if (!value) return null
+  const d = new Date(value)
+  if (Number.isNaN(d.getTime())) return null
+  d.setHours(0, 0, 0, 0)
+  return d
+}
+
 /** Format ISO date string YYYY-MM-DD */
 function toISO(date: Date) {
   const y = date.getFullYear()
   const m = String(date.getMonth() + 1).padStart(2, '0')
   const d = String(date.getDate()).padStart(2, '0')
   return `${y}-${m}-${d}`
+}
+
+export function getCurrentWeekRange() {
+  const monday = getMonday(new Date())
+  const sunday = getSunday(monday)
+  return {
+    weekStart: toISO(monday),
+    weekEnd: toISO(sunday),
+  }
 }
 
 /** Format "Mon 4 May" */
@@ -58,54 +74,24 @@ function formatRange(monday: Date, sunday: Date) {
  * with prev/next arrows and "This week" button.
  */
 export default function WeekNavigator({ onChange, weekStart }: WeekNavigatorProps) {
-  const parseDate = (value?: string | null) => {
-    if (!value) return null
-    const d = new Date(value)
-    if (Number.isNaN(d.getTime())) return null
-    d.setHours(0, 0, 0, 0)
-    return d
-  }
-
   const parsedWeekStart = parseDate(weekStart)
-  const initialMonday = parsedWeekStart ? getMonday(parsedWeekStart) : getMonday(new Date())
-  const [monday, setMonday] = useState(() => initialMonday)
-
+  const monday = parsedWeekStart ? getMonday(parsedWeekStart) : getMonday(new Date())
   const sunday = getSunday(monday)
+  const mondayISO = toISO(monday)
   const currentMonday = getMonday(new Date())
-  const isCurrentWeek = toISO(monday) === toISO(currentMonday)
-
-  const emit = useCallback((mon: Date) => {
-    const sun = getSunday(mon)
-    onChange?.(toISO(mon), toISO(sun))
-  }, [onChange])
-
-  // Emit on mount
-  useEffect(() => {
-    emit(monday)
-  }, [emit, monday])
-
-  useEffect(() => {
-    const parsed = parseDate(weekStart)
-    if (!parsed) return
-    const nextMonday = getMonday(parsed)
-    if (toISO(nextMonday) !== toISO(monday)) {
-      setMonday(nextMonday)
-    }
-  }, [weekStart, monday])
+  const isCurrentWeek = mondayISO === toISO(currentMonday)
 
   const shiftWeek = (delta: number) => {
-    setMonday((prev) => {
-      const next = new Date(prev)
-      next.setDate(next.getDate() + delta * 7)
-      emit(next)
-      return next
-    })
+    const next = new Date(monday)
+    next.setDate(next.getDate() + delta * 7)
+    const nextSunday = getSunday(next)
+    onChange?.(toISO(next), toISO(nextSunday))
   }
 
   const goToThisWeek = () => {
     const mon = getMonday(new Date())
-    setMonday(mon)
-    emit(mon)
+    const sun = getSunday(mon)
+    onChange?.(toISO(mon), toISO(sun))
   }
 
   return (

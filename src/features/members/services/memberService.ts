@@ -1,5 +1,6 @@
 import api from '@/lib/axios'
 import type {
+  AdminResetPasswordRequest,
   ChangePasswordRequest,
   CreateUserRequest,
   EmployeeSkillRequest,
@@ -52,8 +53,15 @@ export const userService = {
   getById: (id: Id) => api.get<User>(`/users/${id}`),
   create: (data: CreateUserRequest) => api.post<User>('/users', data),
   update: (id: Id, data: UpdateUserRequest) => api.patch<User>(`/users/${id}`, data),
-  activate: (id: Id) => api.patch(`/users/${id}/activate`),
+  activate:   (id: Id) => api.patch(`/users/${id}/activate`),
   deactivate: (id: Id) => api.patch(`/users/${id}/deactivate`),
+
+  /**
+   * §2.4 PATCH /api/users/{id}/password — ADMIN only
+   * Forcefully resets a user's password without requiring the current password.
+   */
+  resetPassword: (id: Id, data: AdminResetPasswordRequest) =>
+    api.patch<string>(`/users/${id}/password`, data),
 
   getUserProjects: (userId: Id, params: QueryRecord = {}) => {
     const qs = new URLSearchParams()

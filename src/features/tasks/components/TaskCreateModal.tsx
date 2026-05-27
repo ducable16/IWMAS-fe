@@ -6,6 +6,7 @@ import { useCreateTask } from '@/features/tasks/hooks/useTask'
 import TaskCreateFields from './task-create/TaskCreateFields'
 import {
   EMPTY_TASK_CREATE_FORM,
+  getTodayDateInputValue,
   type SetTaskCreateField,
   type TaskCreateForm,
 } from './task-create/taskCreateTypes'
@@ -36,6 +37,7 @@ export default function TaskCreateModal({
         ...EMPTY_TASK_CREATE_FORM,
         status: defaultStatus || 'TODO',
         projectId: defaultProjectId || '',
+        startDate: getTodayDateInputValue(),
       })
     }
   }, [open, defaultStatus, defaultProjectId])
@@ -46,6 +48,7 @@ export default function TaskCreateModal({
   const handleSubmit = (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
     if (!form.title.trim() || isPending) return
+    const estimatedHours = Number.parseFloat(form.estimatedHours)
 
     createTask(
       {
@@ -56,7 +59,9 @@ export default function TaskCreateModal({
         type: form.type,
         projectId: form.projectId || null,
         assigneeId: form.assigneeId || null,
+        startDate: form.startDate || null,
         dueDate: form.dueDate || null,
+        estimatedHours: Number.isFinite(estimatedHours) && estimatedHours >= 0 ? estimatedHours : null,
       },
       { onSuccess: onClose },
     )

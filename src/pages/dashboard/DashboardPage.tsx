@@ -45,7 +45,10 @@ export default function DashboardPage() {
   )
   const activeProjectStatuses: string[] = ['PLANNING', 'IN_PROGRESS']
 
-  const { data: teamSnapshot, isLoading: isTeamLoading } = useWorkloadTeam(isAdmin || isPm)
+  const { data: teamSnapshot, isLoading: isTeamLoading } = useWorkloadTeam(
+    undefined,
+    isAdmin || isPm,
+  )
 
   const { data: allProjects } = useProjects(
     { statuses: activeProjectStatuses, page: 0, size: 1 },
@@ -114,9 +117,9 @@ export default function DashboardPage() {
 
   const teamMembers: DashboardMember[] = isAdmin
     ? (teamSnapshot || []).map((m) => ({
-      id: m.id,
-      fullName: m.name || 'Unknown',
-      position: m.role || '',
+      id: m.userId,
+      fullName: m.userFullName || 'Unknown',
+      position: m.workloadLevel || '',
     }))
     : Array.from(pmMemberMap.values())
 

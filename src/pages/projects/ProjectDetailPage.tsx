@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import toast from 'react-hot-toast'
 import {
   ArrowLeft, Pencil, Trash2, X, Save, Loader2,
   type LucideIcon, BarChart3, Paperclip
@@ -160,7 +161,9 @@ export default function ProjectDetailPage() {
 
   const handleRemoveMember = (member: ProjectMember) => {
     if (!window.confirm(`Remove ${member.userFullName} from this project?`)) return
-    removeMember(member.id)
+    removeMember(member.id, {
+      onSuccess: () => toast.success(`${member.userFullName || 'Member'} removed from project`),
+    })
   }
 
   const handleUploadDocument = (e: ChangeEvent<HTMLInputElement>) => {

@@ -15,14 +15,13 @@ import type {
 } from '@/types'
 
 interface ProjectQueryParams {
-  [key: string]: string | number | boolean | string[] | undefined
   search?: string
   statuses?: string[]
-  managerId?: Id
-  startDateFrom?: string
-  startDateTo?: string
-  endDateFrom?: string
-  endDateTo?: string
+  managerId?: Id | null
+  startDateFrom?: string | null
+  startDateTo?: string | null
+  endDateFrom?: string | null
+  endDateTo?: string | null
   sortBy?: string
   sortDirection?: string
   page?: number
@@ -277,7 +276,6 @@ export function useRemoveProjectMember(projectId: Id | null | undefined) {
   return useMutation({
     mutationFn: (memberId: Id) => projectService.removeMember(projectId as Id, memberId),
     onSuccess: () => {
-      toast.success('Member removed')
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to remove member')),

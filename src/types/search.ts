@@ -30,3 +30,48 @@ export interface AutocompleteOption {
   avatarUrl?: string | null | undefined
   raw?: SearchResult | undefined
 }
+
+// ── §13.2 User search full results ────────────────────────────────────────────
+export interface UserSearchResult {
+  id: Id
+  email: string
+  fullName: string
+  position: string | null
+  avatarUrl: string | null
+  role: string
+}
+
+export interface SearchUsersResponse {
+  items: UserSearchResult[]
+  total: number
+  page: number
+  size: number
+  source?: string
+  tookMs?: number
+}
+
+// ── §13.4 Project search full results ────────────────────────────────────────
+export interface ProjectSearchResult {
+  id: Id
+  name: string
+  code: string | null
+  status: string
+  managerId: Id
+}
+
+export interface SearchProjectsParams {
+  q: string
+  page?: number
+  size?: number
+  sortBy?: string
+  sortDir?: string
+}
+
+export interface SearchProjectsResponse {
+  items: ProjectSearchResult[]
+  total: number
+  page: number
+  size: number
+  source?: string
+  tookMs?: number
+}

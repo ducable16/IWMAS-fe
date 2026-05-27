@@ -15,11 +15,11 @@ import type {
 interface ProjectQueryParams {
   search?: string
   statuses?: QueryValue[]
-  managerId?: Id
-  startDateFrom?: string
-  startDateTo?: string
-  endDateFrom?: string
-  endDateTo?: string
+  managerId?: Id | null
+  startDateFrom?: string | null
+  startDateTo?: string | null
+  endDateFrom?: string | null
+  endDateTo?: string | null
   sortBy?: string
   sortDirection?: string
   page?: number

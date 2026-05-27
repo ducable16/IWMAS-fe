@@ -1,16 +1,11 @@
-import { X } from 'lucide-react'
+import ActiveFilterChips from '@/components/ui/ActiveFilterChips'
 import {
   PRIORITY_META,
   STATUS_META,
   TYPE_META,
 } from '@/features/tasks/components/TaskFilterDrawer'
+import type { ActiveFilterChip } from '@/components/ui/ActiveFilterChips'
 import type { MemberView, Project, QueryValue, TaskFilterChange, TaskFilters } from '@/types'
-
-interface FilterChip {
-  key: string
-  label: string
-  clear: () => void
-}
 
 type ActiveTaskFiltersProps = {
   filters: TaskFilters
@@ -31,7 +26,7 @@ export default function ActiveTaskFilters({
   onChange,
   onClearAll,
 }: ActiveTaskFiltersProps) {
-  const chips: FilterChip[] = []
+  const chips: ActiveFilterChip[] = []
 
   if (filters.projectId) {
     const project = projects.find((item) => item.id === filters.projectId)
@@ -123,30 +118,5 @@ export default function ActiveTaskFilters({
     }),
   )
 
-  if (chips.length === 0) return null
-
-  return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {chips.map((chip) => (
-        <span
-          key={chip.key}
-          className="inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent border border-accent/25"
-        >
-          {chip.label}
-          <button
-            onClick={chip.clear}
-            className="text-accent/60 hover:text-accent transition-colors"
-          >
-            <X className="w-2.5 h-2.5" />
-          </button>
-        </span>
-      ))}
-      <button
-        onClick={onClearAll}
-        className="text-[11px] text-text-muted hover:text-danger transition-colors ml-1"
-      >
-        Clear all
-      </button>
-    </div>
-  )
+  return <ActiveFilterChips chips={chips} onClearAll={onClearAll} />
 }

@@ -90,3 +90,8 @@
 .bn-root[data-color-scheme="light"] .bn-editor[contenteditable="false"] {
   cursor: default;
 }
+
+.task-description-content .bn-editor {
+  font-size: 13px;
+  line-height: 1.55;
+}

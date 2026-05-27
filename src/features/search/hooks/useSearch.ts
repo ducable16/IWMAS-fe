@@ -137,3 +137,34 @@ export function useUserSearch(params: UserSearchParams = {}) {
     placeholderData: keepPreviousData,
   })
 }
+
+/**
+ * §13.4 Project Search — full paginated result list.
+ *
+ * `params`: { q, page?, size?, sortBy?, sortDir? }
+ * Returns the §13.4 response shape:
+ *   { items, total, page, size, source, tookMs }
+ */
+interface ProjectSearchParams {
+  q?: string
+  page?: number
+  size?: number
+  sortBy?: string
+  sortDir?: string
+}
+
+export function useProjectSearch(params: ProjectSearchParams = {}) {
+  const q = (params.q ?? '').trim()
+  const enabled = q.length > 0
+
+  return useQuery({
+    queryKey: ['search', 'projects', { ...params, q }],
+    enabled,
+    queryFn: async ({ signal }) => {
+      const res = await searchService.searchProjects({ ...params, q }, signal)
+      return res.data
+    },
+    staleTime: 30_000,
+    placeholderData: keepPreviousData,
+  })
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
@@ -6,7 +6,7 @@ import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ProjectAllocationsTable from '@/features/workforce/components/member-workload-detail/ProjectAllocationsTable'
 import WorkloadTaskSections from '@/features/workforce/components/member-workload-detail/WorkloadTaskSections'
 import UtilizationBar from '@/features/workforce/components/UtilizationBar'
-import WeekNavigator from '@/features/workforce/components/WeekNavigator'
+import WeekNavigator, { getCurrentWeekRange } from '@/features/workforce/components/WeekNavigator'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyWorkload, useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
@@ -70,10 +70,10 @@ function WorkloadDetailContent({
 
         <div className="mt-5 pt-4 border-t border-border-subtle">
           <UtilizationBar
-            utilizationPercent={data.utilizationPercent}
+            utilizationPercent={data.nearTermPercent}
             workloadLevel={data.workloadLevel}
-            weeklyRemainingHours={data.weeklyRemainingHours}
-            weeklyCapacityHours={data.weeklyCapacityHours}
+            weeklyRemainingHours={null}
+            weeklyCapacityHours={null}
           />
         </div>
 
@@ -101,10 +101,10 @@ function WorkloadDetailContent({
           </div>
           <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p className="text-[20px] font-bold text-text-primary tabular-nums">
-              {data.weeklyRemainingHours?.toFixed(1) ?? '-'}
+              {data.unestimatedTaskCount > 0 ? data.unestimatedTaskCount : '-'}
               <span className="text-[13px] font-normal text-text-muted"> h</span>
             </p>
-            <p className="text-[11.5px] text-text-muted mt-0.5">Remaining hrs</p>
+            <p className="text-[11.5px] text-text-muted mt-0.5">Unestimated</p>
           </div>
         </div>
       </div>
@@ -129,7 +129,7 @@ function SelfWorkloadView({
   weekEnd: string
   onWeekChange: WeekChangeHandler
 }) {
-  const { data, isLoading, isError, error, refetch } = useMyWorkload(weekStart, weekEnd)
+  const { data, isLoading, isError, error, refetch } = useMyWorkload()
 
   if (isLoading) return <LiveLoading label="Loading your workload..." />
   if (isError) return <LiveError error={error} onRetry={refetch} />
@@ -159,8 +159,6 @@ function OtherUserWorkloadView({
 }) {
   const { data, isLoading, isError, error, refetch } = useUserWorkloadDetail(
     userId,
-    weekStart,
-    weekEnd,
   )
 
   if (isLoading) return <LiveLoading label="Loading workload detail..." />
@@ -190,13 +188,17 @@ export default function MemberWorkloadDetailPage() {
   const isSelf = targetUserId === currentUser?.id
   const canViewOther = can.viewAllWorkload && !isSelf
 
-  const [weekStart, setWeekStart] = useState(searchParams.get('weekStart') || '')
-  const [weekEnd, setWeekEnd] = useState(searchParams.get('weekEnd') || '')
+  const [weekStart, setWeekStart] = useState(
+    () => searchParams.get('weekStart') || getCurrentWeekRange().weekStart,
+  )
+  const [weekEnd, setWeekEnd] = useState(
+    () => searchParams.get('weekEnd') || getCurrentWeekRange().weekEnd,
+  )
 
-  const handleWeekChange = (ws: string, we: string) => {
-    setWeekStart(ws)
-    setWeekEnd(we)
-  }
+  const handleWeekChange = useCallback((ws: string, we: string) => {
+    setWeekStart((prev) => (prev === ws ? prev : ws))
+    setWeekEnd((prev) => (prev === we ? prev : we))
+  }, [])
 
   return (
     <div className="max-w-[860px] mx-auto space-y-6">

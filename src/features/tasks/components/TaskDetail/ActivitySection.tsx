@@ -2,6 +2,7 @@ import { MessageSquare, History, Timer } from 'lucide-react'
 import clsx from 'clsx'
 import { CommentsTab } from './CommentsTab'
 import { HistoryTab } from './HistoryTab'
+import { WorkLogTab } from './WorkLogTab'
 import type { Id, TaskComment } from '@/types'
 
 const ACTIVITY_TABS = [
@@ -42,9 +43,7 @@ export function ActivitySection({ activeTab, onTabChange, taskId, comments, proj
       <div className="min-h-[80px]">
         {activeTab === 'comments' && <CommentsTab taskId={taskId} comments={comments} projectId={projectId} />}
         {activeTab === 'history'  && <HistoryTab taskId={taskId} />}
-        {activeTab === 'worklog'  && (
-          <p className="text-[13px] text-text-muted py-4 text-center italic">No work logs yet.</p>
-        )}
+        {activeTab === 'worklog'  && <WorkLogTab taskId={taskId} />}
       </div>
     </div>
   )
