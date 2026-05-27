@@ -110,6 +110,7 @@ export interface TaskListResult {
 export interface TaskComment {
   id: Id
   content: string
+  mentions?: Record<string, UserPublicView> | undefined
   author?: UserPublicView | undefined
   createdAt?: string | undefined
   updatedAt?: string | undefined

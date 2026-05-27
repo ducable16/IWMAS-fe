@@ -1,7 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { taskService } from '../services/taskService'
-import type { ApiError, CreateTaskRequest, Id, UpdateTaskRequest, UpdateTaskStatusRequest } from '@/types'
+import type {
+  ApiError,
+  CreateTaskRequest,
+  Id,
+  Task,
+  TaskComment,
+  UpdateTaskRequest,
+  UpdateTaskStatusRequest,
+} from '@/types'
 
 interface UpdateCommentVariables {
   commentId: Id
@@ -10,6 +18,30 @@ interface UpdateCommentVariables {
 
 const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
+
+function appendComment(task: Task | undefined, comment: TaskComment): Task | undefined {
+  if (!task) return task
+  const comments = task.comments || []
+  if (comments.some((item) => item.id === comment.id)) return task
+  return { ...task, comments: [...comments, comment] }
+}
+
+function replaceComment(task: Task | undefined, comment: TaskComment): Task | undefined {
+  if (!task) return task
+  const comments = task.comments || []
+  return {
+    ...task,
+    comments: comments.map((item) => item.id === comment.id ? comment : item),
+  }
+}
+
+function removeComment(task: Task | undefined, commentId: Id): Task | undefined {
+  if (!task) return task
+  return {
+    ...task,
+    comments: (task.comments || []).filter((item) => item.id !== commentId),
+  }
+}
 
 export function useTask(id: Id | null | undefined) {
   return useQuery({
@@ -63,7 +95,13 @@ export function useAddTaskComment(taskId: Id | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (content: string) => taskService.addComment(taskId as Id, { content }),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res.data) {
+        queryClient.setQueryData<Task | undefined>(
+          ['tasks', taskId],
+          (task) => appendComment(task, res.data),
+        )
+      }
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
     },
   })
@@ -74,7 +112,13 @@ export function useUpdateTaskComment(taskId: Id | null | undefined) {
   return useMutation({
     mutationFn: ({ commentId, content }: UpdateCommentVariables) =>
       taskService.updateComment(taskId as Id, commentId, { content }),
-    onSuccess: () => {
+    onSuccess: (res) => {
+      if (res.data) {
+        queryClient.setQueryData<Task | undefined>(
+          ['tasks', taskId],
+          (task) => replaceComment(task, res.data),
+        )
+      }
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to update comment')),
@@ -85,7 +129,11 @@ export function useDeleteTaskComment(taskId: Id | null | undefined) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (commentId: Id) => taskService.deleteComment(taskId as Id, commentId),
-    onSuccess: () => {
+    onSuccess: (_res, commentId) => {
+      queryClient.setQueryData<Task | undefined>(
+        ['tasks', taskId],
+        (task) => removeComment(task, commentId),
+      )
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete comment')),

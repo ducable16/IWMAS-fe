@@ -2,11 +2,12 @@ import { useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import { useUpdateTaskComment, useDeleteTaskComment } from '@/features/tasks/hooks/useTask'
 import CommentContent from '@/components/ui/CommentContent'
+import MentionTextarea from '@/components/ui/MentionTextarea'
 import { Avatar } from './Avatar'
 import { fmtDateTime } from '@/utils/date'
 import type { CommentItemProps } from './taskDetail.types'
 
-export function CommentItem({ comment, taskId, currentUserId, mentionMap }: CommentItemProps) {
+export function CommentItem({ comment, taskId, currentUserId, projectId }: CommentItemProps) {
   const [editing, setEditing]   = useState(false)
   const [draft, setDraft]       = useState('')
   const [confirming, setConfirming] = useState(false)
@@ -98,16 +99,15 @@ export function CommentItem({ comment, taskId, currentUserId, mentionMap }: Comm
         {/* Content or edit textarea */}
         {editing ? (
           <div className="space-y-2">
-            <textarea
+            <MentionTextarea
               autoFocus
               value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Escape') cancelEdit()
-                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) submitEdit()
-              }}
+              onChange={setDraft}
+              onSubmit={submitEdit}
+              projectId={projectId}
+              mentions={comment.mentions}
+              submitOnEnter={false}
               rows={3}
-              className="w-full text-[13px] text-text-primary bg-bg-surface border border-accent/40 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-accent leading-relaxed"
             />
             <div className="flex items-center gap-2">
               <button
@@ -128,7 +128,7 @@ export function CommentItem({ comment, taskId, currentUserId, mentionMap }: Comm
             </div>
           </div>
         ) : (
-          <CommentContent content={comment.content} mentionMap={mentionMap} />
+          <CommentContent content={comment.content} mentions={comment.mentions} />
         )}
       </div>
     </div>

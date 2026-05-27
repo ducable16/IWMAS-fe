@@ -1,15 +1,22 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { notificationService } from '../services/notificationService'
+import {
+  markAllNotificationsReadInCache,
+  markNotificationReadInCache,
+  NOTIFICATIONS_QUERY_KEY,
+  UNREAD_COUNT_QUERY_KEY,
+  UNREAD_NOTIFICATIONS_QUERY_KEY,
+} from '../utils/notificationCache'
 import type { ApiError, Id } from '@/types'
 
 const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
 
-/** §8.3 GET /api/notifications/unread/count — polls every 30s for bell badge */
+/** Section 8.3 GET /api/notifications/unread/count - fallback polling for bell badge */
 export function useUnreadCount() {
   return useQuery({
-    queryKey: ['notifications', 'unread-count'],
+    queryKey: UNREAD_COUNT_QUERY_KEY,
     queryFn: async () => {
       const res = await notificationService.getUnreadCount()
       return (typeof res.data === 'object' && res.data && 'count' in res.data
@@ -21,10 +28,10 @@ export function useUnreadCount() {
   })
 }
 
-/** §8.1 GET /api/notifications — all notifications, newest first */
+/** Section 8.1 GET /api/notifications - all notifications, newest first */
 export function useNotifications(enabled = true) {
   return useQuery({
-    queryKey: ['notifications'],
+    queryKey: NOTIFICATIONS_QUERY_KEY,
     queryFn: async () => {
       const res = await notificationService.getAll()
       return Array.isArray(res.data) ? res.data : []
@@ -34,10 +41,10 @@ export function useNotifications(enabled = true) {
   })
 }
 
-/** §8.2 GET /api/notifications/unread */
+/** Section 8.2 GET /api/notifications/unread */
 export function useUnreadNotifications(enabled = true) {
   return useQuery({
-    queryKey: ['notifications', 'unread'],
+    queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY,
     queryFn: async () => {
       const res = await notificationService.getUnread()
       return Array.isArray(res.data) ? res.data : []
@@ -47,25 +54,31 @@ export function useUnreadNotifications(enabled = true) {
   })
 }
 
-/** §8.4 PATCH /api/notifications/:id/read */
+/** Section 8.4 PATCH /api/notifications/:id/read */
 export function useMarkAsRead() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (id: Id) => notificationService.markAsRead(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+    onSuccess: (res, id) => {
+      markNotificationReadInCache(queryClient, id, res.data)
+      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_QUERY_KEY })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to mark as read')),
   })
 }
 
-/** §8.5 PATCH /api/notifications/read-all */
+/** Section 8.5 PATCH /api/notifications/read-all */
 export function useMarkAllAsRead() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: () => notificationService.markAllAsRead(),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] })
+      markAllNotificationsReadInCache(queryClient)
+      queryClient.invalidateQueries({ queryKey: NOTIFICATIONS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY })
+      queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_QUERY_KEY })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to mark all as read')),
   })

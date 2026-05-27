@@ -4,6 +4,7 @@ import ProtectedRoute from './ProtectedRoute'
 import AppLayout from '@/layouts/AppLayout'
 import AuthLayout from '@/layouts/AuthLayout'
 import FullPageSpinner from '@/components/feedback/FullPageSpinner'
+import { useNotificationRealtime } from '@/features/notifications/hooks/useNotificationRealtime'
 
 const LoginPage = lazy(() => import('@/pages/auth/LoginPage'))
 const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage'))
@@ -24,9 +25,15 @@ const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
 const NotificationsPage = lazy(() => import('@/pages/notifications/NotificationsPage'))
 const NotFoundPage = lazy(() => import('@/pages/errors/NotFoundPage'))
 
+function NotificationRealtimeBridge() {
+  useNotificationRealtime()
+  return null
+}
+
 export default function AppRouter() {
   return (
     <BrowserRouter>
+      <NotificationRealtimeBridge />
       <Suspense fallback={<FullPageSpinner />}>
         <Routes>
           <Route element={<AuthLayout />}>

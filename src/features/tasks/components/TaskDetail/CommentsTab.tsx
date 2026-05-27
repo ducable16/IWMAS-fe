@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Loader2 } from 'lucide-react'
 import { useAddTaskComment } from '@/features/tasks/hooks/useTask'
-import { useProjectMembers } from '@/features/projects/hooks/useProjects'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import MentionTextarea from '@/components/ui/MentionTextarea'
 import { Avatar } from './Avatar'
@@ -13,15 +12,6 @@ export function CommentsTab({ taskId, comments = [], projectId }: CommentsTabPro
   const { mutate, isPending } = useAddTaskComment(taskId)
   const user = useAuthStore(s => s.user)
 
-  // Build { fullName → userId } map from project members so that
-  // @mention badges in comments can link to /users/:id
-  const { data: projectMembers = [] } = useProjectMembers(projectId)
-  const mentionMap = Object.fromEntries(
-    projectMembers
-      .filter((m) => m.userId && m.userFullName)
-      .map((m) => [m.userFullName, m.userId]),
-  )
-
   const handleSubmit = () => {
     if (!content.trim() || isPending) return
     mutate(content, { onSuccess: () => setContent('') })
@@ -29,7 +19,6 @@ export function CommentsTab({ taskId, comments = [], projectId }: CommentsTabPro
 
   return (
     <div className="space-y-6">
-      {/* Comment list */}
       {comments.length > 0 ? (
         <div className="space-y-5">
           {comments.map(c => (
@@ -38,7 +27,7 @@ export function CommentsTab({ taskId, comments = [], projectId }: CommentsTabPro
               comment={c}
               taskId={taskId}
               currentUserId={user?.id}
-              mentionMap={mentionMap}
+              projectId={projectId}
             />
           ))}
         </div>
@@ -46,7 +35,6 @@ export function CommentsTab({ taskId, comments = [], projectId }: CommentsTabPro
         <p className="text-[13px] text-text-muted italic">No comments yet.</p>
       )}
 
-      {/* Compose area */}
       <div className="flex items-start gap-3">
         <Avatar name={user?.fullName || user?.email} avatarUrl={user?.avatarUrl} size="sm" />
         <div className="flex-1 min-w-0 space-y-2">
@@ -55,7 +43,7 @@ export function CommentsTab({ taskId, comments = [], projectId }: CommentsTabPro
             onChange={setContent}
             onSubmit={handleSubmit}
             projectId={projectId}
-            placeholder="Add a comment… (type @ to mention)"
+            placeholder="Add a comment... (type @ to mention)"
             rows={2}
             disabled={isPending}
           />

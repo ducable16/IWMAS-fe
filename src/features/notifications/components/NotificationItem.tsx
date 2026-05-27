@@ -13,7 +13,8 @@ import {
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useMarkAsRead } from '../hooks/useNotifications'
-import type { Id, Notification } from '@/types'
+import { resolveNotificationRoute } from '../utils/notificationRouting'
+import type { Notification } from '@/types'
 
 dayjs.extend(relativeTime)
 
@@ -34,12 +35,6 @@ type NotificationItemProps = {
   onNavigate?: () => void
 }
 
-function resolveRoute(referenceType?: string | null, referenceId?: Id | null) {
-  if (referenceType === 'TASK')    return `/tasks/${referenceId}`
-  if (referenceType === 'PROJECT') return `/projects/${referenceId}`
-  return '/workforce'
-}
-
 export default function NotificationItem({ notification, compact = false, onNavigate }: NotificationItemProps) {
   const navigate = useNavigate()
   const { mutate: markAsRead } = useMarkAsRead()
@@ -51,7 +46,7 @@ export default function NotificationItem({ notification, compact = false, onNavi
 
   const handleClick = () => {
     if (!notification.isRead) markAsRead(notification.id)
-    const route = resolveRoute(notification.referenceType, notification.referenceId)
+    const route = resolveNotificationRoute(notification.referenceType, notification.referenceId)
     navigate(route)
     onNavigate?.()
   }

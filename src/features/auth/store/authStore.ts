@@ -19,7 +19,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   isInitialized: false, // true after first refresh attempt on startup
 
   setAuth: (user, token) =>
-    set({ user, token, isAuthenticated: true }),
+    set({ user, token, isAuthenticated: true, isInitialized: true }),
   updateUser: (user) => set({ user }),
   setInitialized: () => set({ isInitialized: true }),
   logout: () =>
