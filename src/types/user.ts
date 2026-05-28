@@ -5,6 +5,7 @@ export interface UserPublicView {
   id: Id
   email: string
   fullName?: string | undefined
+  /** Permanent public URL resolved by the API, or null when no avatar is set. */
   avatarUrl?: string | null | undefined
   position?: UserPosition | string | null | undefined
   role?: UserRole | string | null | undefined
@@ -30,6 +31,7 @@ export interface MemberView {
   lastActive: string | null
   createdAt: string | null
   verified: boolean | null
+  /** Permanent public URL resolved by the API, or null when no avatar is set. */
   avatarUrl: string | null
   workloadScore: number
 }

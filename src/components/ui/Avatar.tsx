@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import { useState } from 'react'
 
 export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl'
 
@@ -18,16 +19,21 @@ const SIZE_MAP: Record<AvatarSize, { box: string; text: string }> = {
 }
 
 export function Avatar({ name, avatarUrl, size = 'sm', className }: AvatarProps) {
+  const [failedUrl, setFailedUrl] = useState<string | null>(null)
   const initials = name
     ? name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
     : '?'
   const { box, text } = SIZE_MAP[size]
+  const imageSrc = avatarUrl?.trim() || null
 
-  if (avatarUrl) {
+  if (imageSrc && imageSrc !== failedUrl) {
     return (
       <img
-        src={avatarUrl}
+        src={imageSrc}
         alt={name || 'User'}
+        loading="lazy"
+        decoding="async"
+        onError={() => setFailedUrl(imageSrc)}
         className={clsx('rounded-full object-cover border border-border-subtle shrink-0', box, className)}
       />
     )
