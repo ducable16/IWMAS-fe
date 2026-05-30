@@ -18,10 +18,22 @@ import type { ApiError, CreateTaskRequest, Id, TaskFilters, TaskListItem } from 
 
 type TaskBoardViewProps = {
   filters: TaskFilters
+  canCreate?: boolean
 }
 
 const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
+
+const getCreateTaskErrorMessage = (err: unknown) => {
+  const code = (err as ApiError | undefined)?.code
+  if (code === 5007) {
+    return getErrorMessage(
+      err,
+      'Assignee does not meet the required skill level for this task',
+    )
+  }
+  return getErrorMessage(err, 'Failed to create task')
+}
 
 function computeGrouped(tasks: TaskListItem[]): GroupedTasks {
   return TASK_STATUSES.reduce((acc, status) => {
@@ -30,7 +42,7 @@ function computeGrouped(tasks: TaskListItem[]): GroupedTasks {
   }, {} as GroupedTasks)
 }
 
-export default function TaskBoardView({ filters }: TaskBoardViewProps) {
+export default function TaskBoardView({ filters, canCreate = false }: TaskBoardViewProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const boardRef = useRef<HTMLDivElement | null>(null)
@@ -69,7 +81,7 @@ export default function TaskBoardView({ filters }: TaskBoardViewProps) {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       toast.success('Task created')
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to create task')),
+    onError: (err: unknown) => toast.error(getCreateTaskErrorMessage(err)),
   })
 
   useEffect(() => {
@@ -191,6 +203,7 @@ export default function TaskBoardView({ filters }: TaskBoardViewProps) {
             onStartAdd={() => setAddingIn(col.key)}
             onCancelAdd={() => setAddingIn(null)}
             onSubmitAdd={(title) => handleAddTask(col.key, title)}
+            canCreate={canCreate}
           />
         ))}
       </div>

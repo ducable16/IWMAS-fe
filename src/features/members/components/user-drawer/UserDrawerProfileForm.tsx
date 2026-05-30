@@ -13,6 +13,7 @@ type UserDrawerProfileFormProps = {
   form: UserDrawerForm
   isEditing: boolean
   canEditRole: boolean
+  canEditEmail: boolean
   onChange: (key: keyof UserDrawerForm) => (e: ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void
 }
 
@@ -21,6 +22,7 @@ export default function UserDrawerProfileForm({
   form,
   isEditing,
   canEditRole,
+  canEditEmail,
   onChange,
 }: UserDrawerProfileFormProps) {
   return (
@@ -75,6 +77,22 @@ export default function UserDrawerProfileForm({
                 placeholder="Full name"
                 maxLength={100}
                 className="input-field"
+              />
+            </Field>
+
+            <Field
+              label="Email"
+              id="drawer-email"
+              hint={canEditEmail ? undefined : 'Only Admin can modify email.'}
+            >
+              <input
+                id="drawer-email"
+                type="email"
+                value={form.email}
+                onChange={canEditEmail ? onChange('email') : undefined}
+                placeholder="user@company.com"
+                readOnly={!canEditEmail}
+                className={canEditEmail ? 'input-field' : 'input-readonly'}
               />
             </Field>
 

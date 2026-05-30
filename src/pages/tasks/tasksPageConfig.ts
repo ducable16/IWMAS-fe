@@ -20,6 +20,7 @@ export const VIEW_MODES: ViewModeOption[] = [
 export const DEFAULT_FILTERS: TaskFilters = {
   search: '',
   projectId: null,
+  skillId: null,
   statuses: [],
   priorities: [],
   types: [],

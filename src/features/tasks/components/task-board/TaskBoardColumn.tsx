@@ -31,6 +31,7 @@ type BoardColumnProps = {
   onStartAdd: () => void
   onCancelAdd: () => void
   onSubmitAdd: (title: string) => void
+  canCreate?: boolean
 }
 
 const TYPE_META_BY_KEY = TYPE_META as Record<string, { label: string; color: string }>
@@ -167,6 +168,7 @@ export default function TaskBoardColumn({
   onStartAdd,
   onCancelAdd,
   onSubmitAdd,
+  canCreate = false,
 }: BoardColumnProps) {
   return (
     <div className="flex-shrink-0 w-[272px] flex flex-col gap-2">
@@ -207,9 +209,9 @@ export default function TaskBoardColumn({
         )}
       </div>
 
-      {isAdding ? (
+      {canCreate && isAdding ? (
         <AddTaskForm onSubmit={onSubmitAdd} onCancel={onCancelAdd} />
-      ) : (
+      ) : canCreate ? (
         <button
           onClick={onStartAdd}
           className="flex items-center gap-2 px-2 py-1.5 text-[12px] text-text-muted hover:text-text-primary transition-colors rounded-md hover:bg-bg-hover"
@@ -217,7 +219,7 @@ export default function TaskBoardColumn({
           <Plus className="w-3.5 h-3.5" strokeWidth={1.75} />
           Add task
         </button>
-      )}
+      ) : null}
     </div>
   )
 }

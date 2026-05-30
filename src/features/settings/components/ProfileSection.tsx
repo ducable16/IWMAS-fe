@@ -50,7 +50,6 @@ export default function ProfileSection() {
   const validate = () => {
     const next: ProfileErrors = {}
     if (!form.name.trim()) next.name = 'Full name is required.'
-    if (!form.email.trim()) next.email = 'Email is required.'
     return next
   }
 
@@ -65,7 +64,6 @@ export default function ProfileSection() {
     try {
       const res = await userService.updateMe({
         name: form.name,
-        email: form.email,
         phone: form.phone,
         position: form.position,
       })
@@ -75,7 +73,6 @@ export default function ProfileSection() {
         updateUser({
           ...user,
           fullName: form.name,
-          email: form.email,
           phone: form.phone,
           position: form.position,
         } as User)
@@ -167,15 +164,16 @@ export default function ProfileSection() {
           />
         </Field>
 
-        <Field label="Email" id="prof-email" required error={errors.email}>
+        <Field label="Email" id="prof-email" readOnly >
           <input
             id="prof-email"
             name="email"
             type="email"
             value={form.email}
-            onChange={set('email')}
             placeholder="you@company.com"
-            className={errors.email ? 'input-field-error' : 'input-field'}
+            readOnly
+            disabled
+            className="input-readonly"
           />
         </Field>
 
@@ -204,7 +202,7 @@ export default function ProfileSection() {
           />
         </Field>
 
-        <Field label="Role" readOnly hint="Assigned by admin">
+        <Field label="Role" readOnly>
           <div className="input-readonly">{user?.role || 'Project Manager'}</div>
         </Field>
 

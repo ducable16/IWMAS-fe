@@ -62,15 +62,16 @@ export default function TaskCreateModal({
         startDate: form.startDate || null,
         dueDate: form.dueDate || null,
         estimatedHours: Number.isFinite(estimatedHours) && estimatedHours >= 0 ? estimatedHours : null,
+        skillRequirements: form.skillRequirements,
       },
       { onSuccess: onClose },
     )
   }
 
   return (
-    <Modal open={open} onClose={onClose} maxWidth="max-w-[520px]">
+    <Modal open={open} onClose={onClose} maxWidth="max-w-[640px]">
       <Modal.Header title="Create task" onClose={onClose} />
-      <Modal.Body className="space-y-3">
+      <Modal.Body className="space-y-3 max-h-[72vh] overflow-y-auto">
         <form onSubmit={handleSubmit} className="space-y-3">
           <TaskCreateFields
             form={form}

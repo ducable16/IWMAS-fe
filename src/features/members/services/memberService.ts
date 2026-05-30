@@ -4,6 +4,7 @@ import type {
   ChangePasswordRequest,
   CreateUserRequest,
   EmployeeSkillRequest,
+  EmployeeSkill,
   Id,
   PageResponse,
   Project,
@@ -116,11 +117,12 @@ export const userService = {
 }
 
 export const employeeSkillService = {
-  getMine: () => api.get('/users/me/skills'),
-  addMine: (data: EmployeeSkillRequest) => api.post('/users/me/skills', data),
-  updateMine: (skillId: Id, data: EmployeeSkillRequest) => api.put(`/users/me/skills/${skillId}`, data),
-  removeMine: (skillId: Id) => api.delete(`/users/me/skills/${skillId}`),
-
-  getByUser: (userId: Id) => api.get(`/users/${userId}/skills`),
-  addForUser: (userId: Id, data: EmployeeSkillRequest) => api.post(`/users/${userId}/skills`, data),
+  getMine: () => api.get<EmployeeSkill[]>('/users/me/skills'),
+  getByUser: (userId: Id) => api.get<EmployeeSkill[]>(`/users/${userId}/skills`),
+  addForUser: (userId: Id, data: EmployeeSkillRequest) =>
+    api.post<EmployeeSkill>(`/users/${userId}/skills`, data),
+  updateForUser: (userId: Id, employeeSkillId: Id, data: EmployeeSkillRequest) =>
+    api.put<EmployeeSkill>(`/users/${userId}/skills/${employeeSkillId}`, data),
+  removeForUser: (userId: Id, employeeSkillId: Id) =>
+    api.delete(`/users/${userId}/skills/${employeeSkillId}`),
 }

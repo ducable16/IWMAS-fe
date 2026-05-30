@@ -37,6 +37,14 @@ export default function ActiveTaskFilters({
     })
   }
 
+  if (filters.skillId) {
+    chips.push({
+      key: 'skillId',
+      label: `Skill: #${filters.skillId}`,
+      clear: () => onChange('skillId', null),
+    })
+  }
+
   ;(filters.statuses || []).forEach((status) =>
     chips.push({
       key: `status-${status}`,

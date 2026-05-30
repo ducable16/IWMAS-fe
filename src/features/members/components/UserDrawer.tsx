@@ -20,6 +20,7 @@ type UserDrawerProps = {
 
 const BLANK_FORM: UserDrawerForm = {
   fullName: '',
+  email: '',
   phone: '',
   position: '',
   role: 'TEAM_MEMBER',
@@ -29,6 +30,7 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
   const currentUser = useAuthStore((state) => state.user)
   const isAdmin = canManageUsers(currentUser?.role)
   const canEditRole = canChangeUserRole(currentUser?.role)
+  const canEditEmail = currentUser?.role === 'ADMIN'
   const isSelf = currentUser?.id === user?.id
 
   const { mutate: updateUser, isPending: isUpdating } = useUpdateMember()
@@ -42,6 +44,7 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
     if (!user) return
     setForm({
       fullName: user.fullName || '',
+      email: user.email || '',
       phone: user.phone || '',
       position: user.position || '',
       role: user.role || 'TEAM_MEMBER',
@@ -65,8 +68,12 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
       setForm((current) => ({ ...current, [key]: e.target.value }))
 
   const handleSave = () => {
-    const { role: _role, ...rest } = form
-    const payload = canEditRole ? form : rest
+    const { role: _role, email: _email, ...basePayload } = form
+    const payload = {
+      ...basePayload,
+      ...(canEditRole ? { role: form.role } : {}),
+      ...(canEditEmail ? { email: form.email } : {}),
+    }
     updateUser(
       { id: user.id, data: payload },
       { onSuccess: () => setIsEditing(false) },
@@ -76,6 +83,7 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
   const handleCancel = () => {
     setForm({
       fullName: user.fullName || '',
+      email: user.email || '',
       phone: user.phone || '',
       position: user.position || '',
       role: user.role || 'TEAM_MEMBER',
@@ -121,6 +129,7 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
             form={form}
             isEditing={isEditing}
             canEditRole={canEditRole}
+            canEditEmail={canEditEmail}
             onChange={set}
           />
 

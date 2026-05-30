@@ -1,4 +1,5 @@
-import { useState, useCallback, useDeferredValue } from 'react'
+import { useState, useCallback, useDeferredValue, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
@@ -19,12 +20,30 @@ import type { TaskFilterChange, TaskFilters } from '@/types'
 import type { ViewMode } from './tasksPageConfig'
 
 export default function TasksPage() {
-  const [filters, setFilters] = useState(DEFAULT_FILTERS)
+  const [searchParams] = useSearchParams()
+  const skillIdParam = searchParams.get('skillId')
+  const [filters, setFilters] = useState<TaskFilters>(() => ({
+    ...DEFAULT_FILTERS,
+    skillId: skillIdParam || null,
+  }))
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [createOpen, setCreateOpen] = useState(false)
 
   const deferredFilters = useDeferredValue(filters)
+
+  useEffect(() => {
+    const nextSkillId = skillIdParam || null
+    setFilters((prev) =>
+      prev.skillId === nextSkillId
+        ? prev
+        : {
+            ...prev,
+            skillId: nextSkillId,
+            page: 0,
+          },
+    )
+  }, [skillIdParam])
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSearchTasks(deferredFilters, viewMode === 'list')
@@ -83,7 +102,7 @@ export default function TasksPage() {
       <div className="space-y-5 max-w-[1400px] mx-auto">
         <TasksPageHeader
           subtitle={subtitle}
-          canCreate={!can.isTm}
+          canCreate={can.createTask}
           onCreate={() => setCreateOpen(true)}
         />
 
@@ -123,7 +142,7 @@ export default function TasksPage() {
           />
         )}
 
-        {viewMode === 'board' && <TaskBoardView filters={deferredFilters} />}
+        {viewMode === 'board' && <TaskBoardView filters={deferredFilters} canCreate={can.createTask} />}
         {viewMode === 'calendar' && <TaskCalendarView filters={deferredFilters} />}
         {viewMode === 'timeline' && <TaskTimelineView filters={deferredFilters} />}
       </div>

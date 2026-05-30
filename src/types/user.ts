@@ -1,4 +1,4 @@
-import type { SkillLevel, UserPosition, UserRole } from '@/constants/enums'
+import type { UserPosition, UserRole } from '@/constants/enums'
 import type { Id } from './api'
 
 export interface UserPublicView {
@@ -70,7 +70,6 @@ export interface ResetPasswordRequest {
 
 export interface UpdateOwnProfileRequest {
   name?: string | undefined
-  email?: string | undefined
   phone?: string | undefined
   position?: UserPosition | string | undefined
 }
@@ -96,15 +95,8 @@ export interface CreateUserRequest {
 
 export interface UpdateUserRequest {
   fullName?: string | undefined
+  email?: string | undefined
   phone?: string | undefined
   position?: UserPosition | string | undefined
   role?: UserRole | string | undefined
-}
-
-export interface EmployeeSkillRequest {
-  skillId?: Id
-  skillName?: string
-  level?: SkillLevel | string
-  yearsOfExperience?: number
-  note?: string
 }

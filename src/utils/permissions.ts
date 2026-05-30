@@ -33,10 +33,10 @@ export const canLogTime = (r: MaybeRole): boolean => isAuth(r)
 export const canCommentOnTask = (r: MaybeRole): boolean => isAuth(r)
 export const canModerateComments = (r: MaybeRole): boolean => isAdmin(r)
 
-export const canManageSkillCatalog = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
+export const canManageSkillCatalog = (r: MaybeRole): boolean => isAdmin(r)
 export const canViewSkillCatalog = (r: MaybeRole): boolean => isAuth(r)
-export const canManageEmployeeSkills = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
-export const canManageOwnSkills = (r: MaybeRole): boolean => isAuth(r)
+export const canManageEmployeeSkills = (r: MaybeRole): boolean => isHr(r)
+export const canManageOwnSkills = (r: MaybeRole): boolean => isHr(r)
 
 export const canViewAllWorkload = (r: MaybeRole): boolean => isAdmin(r) || isHr(r) || isPm(r)
 export const canViewOwnWorkload = (r: MaybeRole): boolean => isAuth(r)

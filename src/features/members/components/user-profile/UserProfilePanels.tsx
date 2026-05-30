@@ -22,7 +22,7 @@ import { TASK_STATUS_DETAIL_META as STATUS_META } from '@/constants/enums'
 import { fmtRelative } from '@/utils/date'
 import type { Id, Project, Task } from '@/types'
 
-export type MainTab = 'tasks' | 'projects'
+export type MainTab = 'tasks' | 'projects' | 'skills'
 type TaskSubTab = 'assigned' | 'reported'
 
 type UserIdProps = {

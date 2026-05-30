@@ -34,11 +34,11 @@ const STATUS_OPTIONS = [
 
 export default function MembersPage() {
   const can = useCan()
-  const isAdmin = can.manageUsers
+  const canAddUser = can.isAdmin
 
   const [params, setParams] = useState(DEFAULT_MEMBER_PARAMS)
   const [selectedUser, setSelectedUser] = useState<MemberView | null>(null)
-  const [inviteOpen, setInviteOpen] = useState(false)
+  const [addUserOpen, setAddUserOpen] = useState(false)
 
   const [searchParams, setSearchParams] = useSearchParams()
   const deepUserId = searchParams.get('userId')
@@ -107,14 +107,14 @@ export default function MembersPage() {
               : `${totalElements.toLocaleString()} ${totalElements === 1 ? 'user' : 'users'} in workspace`}
           </p>
         </div>
-        {isAdmin && (
+        {canAddUser && (
           <button
             className="btn-primary"
-            onClick={() => setInviteOpen(true)}
-            id="invite-user-btn"
+            onClick={() => setAddUserOpen(true)}
+            id="add-user-btn"
           >
             <UserPlus className="w-3.5 h-3.5" strokeWidth={1.75} />
-            Invite user
+            Add user
           </button>
         )}
       </div>
@@ -157,7 +157,7 @@ export default function MembersPage() {
       {isError && <LiveError error={error} onRetry={refetch} />}
 
       {!isLoading && !isError && totalElements === 0 && !hasFilters && (
-        <LiveEmpty label="No users yet. Invite your first team member." />
+        <LiveEmpty label="No users yet. Add your first team member." />
       )}
 
       {!isLoading && !isError && totalElements === 0 && hasFilters && (
@@ -181,8 +181,8 @@ export default function MembersPage() {
       <UserDrawer user={drawerUser} onClose={closeDrawer} />
 
       <InviteUserModal
-        open={inviteOpen}
-        onClose={() => setInviteOpen(false)}
+        open={addUserOpen}
+        onClose={() => setAddUserOpen(false)}
       />
     </div>
   )

@@ -7,7 +7,7 @@ const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
 
 /**
- * POST /users — invite / create a new user (admin only).
+ * POST /users — add / create a new user (admin only).
  */
 export function useInviteUser() {
   const queryClient = useQueryClient()
@@ -16,12 +16,12 @@ export function useInviteUser() {
     mutationFn: (data: CreateUserRequest) => userService.create(data),
 
     onSuccess: () => {
-      toast.success('User invited successfully')
+      toast.success('User added successfully')
       queryClient.invalidateQueries({ queryKey: ['members'] })
     },
 
     onError: (err: unknown) => {
-      toast.error(getErrorMessage(err, 'Failed to invite user'))
+      toast.error(getErrorMessage(err, 'Failed to add user'))
     },
   })
 }

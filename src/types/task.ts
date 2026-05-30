@@ -61,6 +61,7 @@ export interface TaskListItem {
 export interface TaskSearchParams {
   search?: string | undefined
   projectId?: Id | null | undefined
+  skillId?: Id | null | undefined
   statuses?: string[] | undefined
   priorities?: string[] | undefined
   types?: string[] | undefined
@@ -80,6 +81,7 @@ export interface TaskSearchParams {
 export interface TaskFilters {
   search: string
   projectId: Id | null
+  skillId: Id | null
   statuses: string[]
   priorities: string[]
   types: string[]

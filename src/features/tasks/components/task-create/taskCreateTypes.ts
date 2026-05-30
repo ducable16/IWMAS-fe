@@ -1,4 +1,4 @@
-import type { Id } from '@/types'
+import type { Id, TaskSkillRequirementRequest } from '@/types'
 
 export interface TaskCreateForm {
   title: string
@@ -11,6 +11,7 @@ export interface TaskCreateForm {
   startDate: string
   dueDate: string
   estimatedHours: string
+  skillRequirements: TaskSkillRequirementRequest[]
 }
 
 export interface Suggestion {
@@ -32,12 +33,13 @@ export const EMPTY_TASK_CREATE_FORM: TaskCreateForm = {
   description: '',
   status: 'TODO',
   priority: 'MEDIUM',
-  type: 'TASK',
+  type: 'FEATURE',
   projectId: '',
   assigneeId: '',
   startDate: '',
   dueDate: '',
   estimatedHours: '',
+  skillRequirements: [],
 }
 
 export function getTodayDateInputValue() {

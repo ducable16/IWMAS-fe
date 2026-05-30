@@ -44,7 +44,7 @@ function normaliseTask(t: Task): TaskListItem {
     title: t.title || 'Untitled',
     status: t.status ? String(t.status).toUpperCase() : 'TODO',
     priority: t.priority ? String(t.priority).toUpperCase() : 'MEDIUM',
-    type: String(t.type || 'TASK'),
+    type: String(t.type || 'FEATURE'),
     assignee: assigneeName.substring(0, 2).toUpperCase(),
     assigneeFull: assigneeName,
     assigneeEmail: t.assignee?.email || '-',

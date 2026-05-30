@@ -97,7 +97,7 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
             </div>
             <div>
               <h3 className="text-[14px] font-semibold text-text-primary leading-tight">
-                Invite user
+                Add user
               </h3>
               <p className="text-[11.5px] text-text-muted">Add a new user to workspace</p>
             </div>
@@ -183,9 +183,9 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
             onCancel={handleClose}
             isPending={isPending}
             cancelDisabled={isPending}
-            pendingLabel="Inviting..."
-            submitLabel="Invite user"
-            submitButtonId="invite-submit-btn"
+            pendingLabel="Adding..."
+            submitLabel="Add user"
+            submitButtonId="add-user-submit-btn"
             submitClassName="min-w-[100px] justify-center"
           />
         </form>

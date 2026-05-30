@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
+  Award,
   Briefcase,
   CheckSquare,
   ChevronLeft,
@@ -36,10 +37,12 @@ import {
   TasksPanel,
   type MainTab,
 } from '@/features/members/components/user-profile/UserProfilePanels'
+import UserSkillsPanel from '@/features/members/components/user-profile/UserSkillsPanel'
 
 const MAIN_TABS = [
   { id: 'tasks', label: 'Tasks', icon: CheckSquare },
   { id: 'projects', label: 'Projects', icon: LayoutGrid },
+  { id: 'skills', label: 'Skills', icon: Award },
 ] satisfies Array<{ id: MainTab; label: string; icon: LucideIcon }>
 
 export default function UserProfilePage() {
@@ -194,6 +197,7 @@ export default function UserProfilePage() {
 
             {activeTab === 'tasks' && <TasksPanel userId={userId} />}
             {activeTab === 'projects' && <ProjectsPanel userId={userId} />}
+            {activeTab === 'skills' && <UserSkillsPanel userId={userId} />}
           </div>
         </div>
 

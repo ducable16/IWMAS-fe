@@ -19,6 +19,20 @@ interface UpdateCommentVariables {
 const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
 
+const getTaskWriteErrorMessage = (err: unknown, fallback: string) => {
+  const code = (err as ApiError | undefined)?.code
+  if (code === 5007) {
+    return getErrorMessage(
+      err,
+      'Assignee does not meet the required skill level for this task',
+    )
+  }
+  return getErrorMessage(err, fallback)
+}
+
+const taskQueryKey = (id: Id | null | undefined) =>
+  ['tasks', id == null ? id : String(id)] as const
+
 function appendComment(task: Task | undefined, comment: TaskComment): Task | undefined {
   if (!task) return task
   const comments = task.comments || []
@@ -45,7 +59,7 @@ function removeComment(task: Task | undefined, commentId: Id): Task | undefined 
 
 export function useTask(id: Id | null | undefined) {
   return useQuery({
-    queryKey: ['tasks', id],
+    queryKey: taskQueryKey(id),
     queryFn: async () => {
       const res = await taskService.getById(id as Id)
       return res.data
@@ -82,7 +96,7 @@ export function useUpdateTaskStatus(id: Id | null | undefined) {
   return useMutation({
     mutationFn: (data: UpdateTaskStatusRequest) => taskService.updateStatus(id as Id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', id] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(id) })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
@@ -98,11 +112,11 @@ export function useAddTaskComment(taskId: Id | null | undefined) {
     onSuccess: (res) => {
       if (res.data) {
         queryClient.setQueryData<Task | undefined>(
-          ['tasks', taskId],
+          taskQueryKey(taskId),
           (task) => appendComment(task, res.data),
         )
       }
-      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
   })
 }
@@ -115,11 +129,11 @@ export function useUpdateTaskComment(taskId: Id | null | undefined) {
     onSuccess: (res) => {
       if (res.data) {
         queryClient.setQueryData<Task | undefined>(
-          ['tasks', taskId],
+          taskQueryKey(taskId),
           (task) => replaceComment(task, res.data),
         )
       }
-      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to update comment')),
   })
@@ -131,10 +145,10 @@ export function useDeleteTaskComment(taskId: Id | null | undefined) {
     mutationFn: (commentId: Id) => taskService.deleteComment(taskId as Id, commentId),
     onSuccess: (_res, commentId) => {
       queryClient.setQueryData<Task | undefined>(
-        ['tasks', taskId],
+        taskQueryKey(taskId),
         (task) => removeComment(task, commentId),
       )
-      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete comment')),
   })
@@ -145,12 +159,12 @@ export function useUpdateTask(id: Id | null | undefined) {
   return useMutation({
     mutationFn: (data: UpdateTaskRequest) => taskService.update(id as Id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', id] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(id) })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to update task')),
+    onError: (err: unknown) => toast.error(getTaskWriteErrorMessage(err, 'Failed to update task')),
   })
 }
 
@@ -163,7 +177,23 @@ export function useCreateTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to create task')),
+    onError: (err: unknown) => toast.error(getTaskWriteErrorMessage(err, 'Failed to create task')),
+  })
+}
+
+export function useDeleteTask() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: Id) => taskService.remove(id),
+    onSuccess: (_res, id) => {
+      toast.success('Task deleted')
+      queryClient.removeQueries({ queryKey: taskQueryKey(id) })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+      queryClient.invalidateQueries({ queryKey: ['sprint-board'] })
+    },
+    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete task')),
   })
 }
 
@@ -174,7 +204,7 @@ export function useUploadTaskAttachment(taskId: Id | null | undefined) {
     onSuccess: () => {
       toast.success('Attachment uploaded')
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
-      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to upload attachment')),
   })
@@ -187,7 +217,7 @@ export function useDeleteTaskAttachment(taskId: Id | null | undefined) {
     onSuccess: () => {
       toast.success('Attachment deleted')
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
-      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete attachment')),
   })

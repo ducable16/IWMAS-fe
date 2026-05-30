@@ -3,6 +3,7 @@ import clsx from 'clsx'
 import NotificationsSection from '@/features/settings/components/NotificationsSection'
 import ProfileSection from '@/features/settings/components/ProfileSection'
 import SecuritySection from '@/features/settings/components/SecuritySection'
+import SkillCatalogSection from '@/features/settings/components/SkillCatalogSection'
 import WorkspaceSection from '@/features/settings/components/WorkspaceSection'
 import { SETTINGS_SECTIONS } from '@/features/settings/settingsConfig'
 import type { SettingsSectionId } from '@/features/settings/settingsTypes'
@@ -39,6 +40,7 @@ export default function SettingsPage() {
         <div className="flex-1 min-w-0">
           {active === 'profile' && <ProfileSection />}
           {active === 'workspace' && <WorkspaceSection />}
+          {active === 'skills' && <SkillCatalogSection />}
           {active === 'security' && <SecuritySection />}
           {active === 'notifications' && <NotificationsSection />}
         </div>

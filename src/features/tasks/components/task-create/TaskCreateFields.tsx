@@ -7,6 +7,7 @@ import {
   TASK_TYPES,
   TASK_TYPE_LABEL,
 } from '@/constants/enums'
+import TaskSkillRequirementsEditor from '@/features/tasks/components/TaskSkillRequirementsEditor'
 import { useAssigneeSuggestions, useProjectSuggestions } from './useTaskCreateSuggestions'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { TaskCreateForm, SetTaskCreateField } from './taskCreateTypes'
@@ -167,6 +168,11 @@ export default function TaskCreateFields({
           className="input-field w-full resize-none text-[12.5px] leading-relaxed"
         />
       </div>
+
+      <TaskSkillRequirementsEditor
+        value={form.skillRequirements}
+        onChange={(value) => setField('skillRequirements', value)}
+      />
     </>
   )
 }
