@@ -93,7 +93,6 @@ export default function ProjectEditMemberModal({
         userId: member.userId,
         roleInProject: form.roleInProject,
         allocatedEffortPercent: Number(form.allocatedEffortPercent),
-        joinDate: form.joinDate || undefined,
         note: form.note.trim() || undefined,
       },
     }, { onSuccess: onClose })
@@ -132,6 +131,7 @@ export default function ProjectEditMemberModal({
         <DateNoteFields
           joinDate={form.joinDate}
           note={form.note}
+          joinDateReadOnly
           onJoinDateChange={(value) => set('joinDate', value)}
           onNoteChange={(value) => set('note', value)}
         />

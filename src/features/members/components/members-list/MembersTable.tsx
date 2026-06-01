@@ -35,7 +35,7 @@ export default function MembersTable({
   return (
     <div className={clsx('card overflow-hidden transition-opacity duration-200', isStale && 'opacity-70')}>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[860px]">
           <thead>
             <tr className="border-b border-border-subtle bg-bg-subtle/50">
               <SortableHeader

@@ -47,7 +47,7 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
     <button
       onClick={onClick}
       className={clsx(
-        'w-full flex items-start gap-4 p-4 rounded-xl transition-all duration-150',
+        'w-full flex flex-wrap xl:flex-nowrap items-start gap-4 p-4 rounded-xl transition-all duration-150',
         'bg-bg-surface border border-border-subtle',
         'hover:border-border-strong hover:shadow-sm hover:bg-bg-subtle/50',
         'active:scale-[0.995]',
@@ -78,7 +78,7 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
       </div>
 
       {/* Utilization bar(s) */}
-      <div className="flex-1 min-w-[140px] space-y-2">
+      <div className="flex-1 min-w-[240px] space-y-2">
         {projectAlloc ? (
           <>
             {/* Primary: project-specific */}

@@ -28,5 +28,5 @@ export const BLANK_PROJECT_FORM: ProjectFormState = {
   startDate: '',
   endDate: '',
   managerId: '',
-  managerEffortPercent: '0',
+  managerEffortPercent: '',
 }

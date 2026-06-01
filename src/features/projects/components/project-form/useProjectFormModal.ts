@@ -14,7 +14,7 @@ import {
   type ProjectFormState,
 } from './projectFormTypes'
 import type { ChangeEvent, FormEvent } from 'react'
-import type { ApiError, Id } from '@/types'
+import type { ApiError, CreateProjectRequest, Id } from '@/types'
 
 export function useProjectFormModal({ open, project, onClose }: ProjectFormModalProps) {
   const isEdit = !!project
@@ -95,16 +95,16 @@ export function useProjectFormModal({ open, project, onClose }: ProjectFormModal
   const validate = () => {
     const next: ProjectFormErrors = {}
     if (!form.name.trim()) next.name = 'Project name is required.'
-    if (!form.managerId) next.managerId = 'Manager is required.'
+    if (!isEdit && !form.managerId) next.managerId = 'Manager is required.'
     if (!isEdit) {
       const managerEffort = Number(form.managerEffortPercent)
       if (
         form.managerEffortPercent === '' ||
         Number.isNaN(managerEffort) ||
-        managerEffort < 0 ||
+        managerEffort <= 0 ||
         managerEffort > 100
       ) {
-        next.managerEffortPercent = 'Must be between 0 and 100.'
+        next.managerEffortPercent = 'Must be between 1 and 100.'
       }
     }
     return next
@@ -146,12 +146,10 @@ export function useProjectFormModal({ open, project, onClose }: ProjectFormModal
 
     const payload = {
       name: form.name.trim(),
-      code: form.code.trim() || undefined,
       description: form.description.trim() || undefined,
       status: form.status,
       startDate: form.startDate || undefined,
       endDate: form.endDate || undefined,
-      managerId: Number(form.managerId),
     }
 
     if (project) {
@@ -162,8 +160,15 @@ export function useProjectFormModal({ open, project, onClose }: ProjectFormModal
       return
     }
 
+    const createPayload: CreateProjectRequest = {
+      ...payload,
+      code: form.code.trim() || undefined,
+      managerId: Number(form.managerId),
+      managerAllocationPercent: Number(form.managerEffortPercent),
+    }
+
     createProject.mutate(
-      { data: payload, managerEffortPercent: Number(form.managerEffortPercent) || 0 },
+      { data: createPayload },
       { onSuccess: onClose, onError: handleApiError },
     )
   }

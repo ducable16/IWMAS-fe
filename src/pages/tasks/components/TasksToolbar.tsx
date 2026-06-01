@@ -28,11 +28,11 @@ export default function TasksToolbar({
         value={filters.search}
         onChange={(value) => onChange('search', value)}
         placeholder="Search title or description..."
-        className="py-2 min-w-[220px] max-w-[380px] focus-within:border-border-strong focus-within:ring-0 transition-colors"
+        className="py-2 min-w-[240px] max-w-[420px] flex-1 focus-within:border-border-strong focus-within:ring-0 transition-colors"
       />
 
       {viewMode !== 'calendar' && (
-        <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg flex-shrink-0">
+        <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg overflow-x-auto max-w-full">
           <button
             onClick={() => onChange('statuses', [])}
             className={clsx(

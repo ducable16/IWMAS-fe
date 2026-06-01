@@ -23,7 +23,7 @@ export function AssigneeField({
     : members.slice(0, 8)
 
   return (
-    <div className="relative" ref={activeDropdownRef(editingField === 'assignee', dropdownRef)}>
+    <div className="relative min-w-0 max-w-full" ref={activeDropdownRef(editingField === 'assignee', dropdownRef)}>
       <button
         type="button"
         onClick={canEdit
@@ -33,7 +33,7 @@ export function AssigneeField({
             }
           : undefined}
         className={clsx(
-          'flex items-center gap-2 w-full text-left rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
+          'flex min-w-0 items-center gap-2 w-full text-left rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors',
           canEdit ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
         )}
       >
@@ -43,7 +43,7 @@ export function AssigneeField({
             <Link
               to={`/users/${assignee.id}`}
               onClick={(e) => e.stopPropagation()}
-              className="text-[13px] truncate hover:text-accent hover:underline transition-colors"
+              className="min-w-0 flex-1 truncate text-[13px] hover:text-accent hover:underline transition-colors"
             >
               {assignee.fullName}
             </Link>
@@ -54,7 +54,7 @@ export function AssigneeField({
       </button>
 
       {editingField === 'assignee' && (
-        <div className="absolute top-full right-0 mt-1.5 z-50 w-[240px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-1.5">
+        <div className="absolute top-full right-0 mt-1.5 z-50 w-[min(240px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-1.5">
           <input
             autoFocus
             value={memberSearch}

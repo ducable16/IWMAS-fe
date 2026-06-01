@@ -20,15 +20,18 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <div className="flex gap-8">
-        <aside className="w-52 shrink-0">
-          <nav className="space-y-0.5">
+      <div className="flex flex-col lg:flex-row gap-5 lg:gap-8">
+        <aside className="w-full lg:w-52 lg:shrink-0">
+          <nav className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-0.5 lg:overflow-visible lg:pb-0">
             {SETTINGS_SECTIONS.map((section) => (
               <button
                 key={section.id}
                 type="button"
                 onClick={() => setActive(section.id)}
-                className={clsx('sidebar-link w-full', active === section.id && 'active')}
+                className={clsx(
+                  'sidebar-link shrink-0 lg:w-full',
+                  active === section.id && 'active',
+                )}
               >
                 <section.icon className="w-4 h-4" strokeWidth={1.75} />
                 {section.label}

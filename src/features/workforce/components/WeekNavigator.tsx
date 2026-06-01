@@ -95,7 +95,7 @@ export default function WeekNavigator({ onChange, weekStart }: WeekNavigatorProp
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <button
         onClick={() => shiftWeek(-1)}
         className="p-1.5 rounded-lg border border-border-subtle text-text-muted hover:text-text-primary hover:border-border-strong transition-colors"
@@ -104,7 +104,7 @@ export default function WeekNavigator({ onChange, weekStart }: WeekNavigatorProp
         <ChevronLeft className="w-4 h-4" strokeWidth={1.75} />
       </button>
 
-      <span className="text-[13px] font-medium text-text-primary min-w-[240px] text-center select-none">
+      <span className="text-[13px] font-medium text-text-primary min-w-[200px] sm:min-w-[240px] text-center select-none">
         {formatRange(monday, sunday)}
       </span>
 

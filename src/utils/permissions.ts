@@ -16,7 +16,7 @@ const isAuth = (r: MaybeRole): boolean => isAdmin(r) || isHr(r) || isPm(r) || is
 
 export const canManageUsers = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
 export const canChangeUserRole = (r: MaybeRole): boolean => isAdmin(r)
-export const canActivateUser = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
+export const canActivateUser = (r: MaybeRole): boolean => isAdmin(r)
 export const canViewSensitiveUserFields = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
 
 export const canCreateProject = (r: MaybeRole): boolean => isAdmin(r) || isPm(r)

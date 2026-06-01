@@ -1,13 +1,12 @@
 import { ChangeEvent, ReactNode } from 'react'
-import { Calendar } from 'lucide-react'
-import clsx from 'clsx'
+import { Calendar, Lock } from 'lucide-react'
 import {
   toOptions,
   PROJECT_STATUS_LABEL,
 } from '@/constants/enums'
 import { fmtDate } from '@/utils/date'
 import { ProjectStatusBadge } from '@/components/ui/Badge'
-import type { Project, MemberView } from '@/types'
+import type { Project } from '@/types'
 
 const STATUS_OPTIONS = toOptions(PROJECT_STATUS_LABEL)
 
@@ -20,8 +19,6 @@ type ProjectDetailForm = {
   endDate: string
   managerId: string
 }
-
-type ProjectDetailErrors = Partial<Record<keyof ProjectDetailForm, string | null>>
 
 interface InfoRowProps {
   label: string
@@ -60,9 +57,7 @@ interface ProjectOverviewTabProps {
   project: Project
   isEditing: boolean
   form: ProjectDetailForm
-  errors: ProjectDetailErrors
   set: (key: keyof ProjectDetailForm) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
-  managers: MemberView[]
   managerName: string
 }
 
@@ -70,9 +65,7 @@ export function ProjectOverviewTab({
   project,
   isEditing,
   form,
-  errors,
   set,
-  managers,
   managerName,
 }: ProjectOverviewTabProps) {
   return (
@@ -94,17 +87,11 @@ export function ProjectOverviewTab({
               </select>
             </Field>
 
-            <Field label="Manager" required error={errors.managerId}>
-              <select
-                value={form.managerId}
-                onChange={set('managerId')}
-                className={clsx('field', errors.managerId && 'field-error')}
-              >
-                <option value="">Select a manager…</option>
-                {managers.map((u) => (
-                  <option key={u.id} value={u.id}>{u.fullName}</option>
-                ))}
-              </select>
+            <Field label="Manager">
+              <div className="input-readonly flex items-center justify-between gap-2">
+                <span className="truncate">{managerName}</span>
+                <Lock className="w-3 h-3 shrink-0 text-text-muted" strokeWidth={1.75} aria-label="Manager cannot be changed" />
+              </div>
             </Field>
 
             <div className="grid grid-cols-2 gap-3">

@@ -187,7 +187,7 @@ export default function Topbar() {
   }
 
   return (
-    <header className="h-[52px] border-b border-border-subtle bg-bg-canvas/80 backdrop-blur-sm flex items-center px-6 gap-4 sticky top-0 z-20">
+    <header className="h-[52px] border-b border-border-subtle bg-bg-canvas/80 backdrop-blur-sm flex items-center px-4 lg:px-6 gap-3 lg:gap-4 sticky top-0 z-20">
       <div className="flex-1 min-w-0">
         <h1 className="text-[15px] font-semibold text-text-primary tracking-tight truncate">
           {pageTitle}

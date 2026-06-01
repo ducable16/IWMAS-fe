@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import {
   ArrowLeft, Pencil, Trash2, X, Save, Loader2,
-  type LucideIcon, BarChart3, Paperclip
+  type LucideIcon, BarChart3, Lock, Paperclip
 } from 'lucide-react'
 import clsx from 'clsx'
 import {
@@ -70,9 +70,6 @@ export default function ProjectDetailPage() {
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })
   const allUsers   = usersData?.members ?? []
-  const managers   = allUsers.filter(
-    (u) => u.role === 'PROJECT_MANAGER' || u.role === 'ADMIN',
-  )
   const managerName = project?.managerId
     ? (allUsers.find((u) => u.id === project.managerId)?.fullName ?? `#${project.managerId}`)
     : '—'
@@ -116,7 +113,6 @@ export default function ProjectDetailPage() {
   const validate = () => {
     const next: ProjectDetailErrors = {}
     if (!form.name?.trim()) next.name      = 'Project name is required.'
-    if (!form.managerId)    next.managerId = 'Manager is required.'
     return next
   }
 
@@ -126,12 +122,10 @@ export default function ProjectDetailPage() {
     if (Object.keys(errs).length) { setErrors(errs); return }
     const payload = {
       name:        form.name.trim(),
-      code:        form.code.trim()        || undefined,
       description: form.description.trim() || undefined,
       status:      form.status,
       startDate:   form.startDate || undefined,
       endDate:     form.endDate   || undefined,
-      managerId:   Number(form.managerId),
     }
     updateProject.mutate(
       { id: project.id, data: payload },
@@ -229,12 +223,10 @@ export default function ProjectDetailPage() {
                   {errors.name && (
                     <p className="text-[11px] text-danger">{errors.name}</p>
                   )}
-                  <input
-                    value={form.code}
-                    onChange={set('code')}
-                    placeholder="Project code (optional)"
-                    className="w-full bg-transparent text-[12px] text-text-muted font-mono outline-none border-b border-border focus:border-accent pb-0.5 transition-colors"
-                  />
+                  <div className="flex items-center gap-1.5 text-[12px] text-text-muted font-mono">
+                    <span>{form.code || 'No project code'}</span>
+                    <Lock className="w-3 h-3" strokeWidth={1.75} aria-label="Project code cannot be changed" />
+                  </div>
                 </div>
               ) : (
                 <>
@@ -275,14 +267,14 @@ export default function ProjectDetailPage() {
                 <>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="btn-ghost"
+                    className="btn-ghost text-[13px]"
                   >
                     <Pencil className="w-3.5 h-3.5" />
                     Edit
                   </button>
                   <button
                     onClick={handleDelete}
-                    className="text-[13px] font-medium text-danger hover:bg-danger/5 px-3 py-1.5 rounded-lg border border-danger/30 transition-colors inline-flex items-center gap-1.5"
+                    className="btn-ghost text-[13px] text-danger hover:bg-danger/5"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     Delete
@@ -329,9 +321,7 @@ export default function ProjectDetailPage() {
           project={project}
           isEditing={isEditing}
           form={form}
-          errors={errors}
           set={set}
-          managers={managers}
           managerName={managerName}
         />
       )}

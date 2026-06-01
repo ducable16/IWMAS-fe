@@ -53,6 +53,7 @@ export interface CreateProjectRequest {
   startDate?: string | undefined
   endDate?: string | undefined
   managerId: Id
+  managerAllocationPercent: number
 }
 
 export interface UpdateProjectRequest {

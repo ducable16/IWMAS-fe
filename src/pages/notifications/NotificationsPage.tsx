@@ -38,8 +38,8 @@ export default function NotificationsPage() {
   return (
     <div className="max-w-2xl mx-auto py-8 px-4">
       {/* page header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h1 className="text-[18px] font-semibold text-text-primary tracking-tight">Notifications</h1>
           {unreadCount > 0 && (
             <p className="text-[12.5px] text-text-muted mt-0.5">
@@ -51,7 +51,7 @@ export default function NotificationsPage() {
           type="button"
           onClick={() => markAll()}
           disabled={unreadCount === 0 || markingAll}
-          className="btn-secondary flex items-center gap-1.5 text-[12.5px] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn-secondary flex items-center gap-1.5 text-[12.5px] disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
         >
           <CheckCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
           Mark all as read

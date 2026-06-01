@@ -23,6 +23,7 @@ export interface Task {
   comments?: TaskComment[] | undefined
   skillRequirements?: TaskSkillRequirement[] | undefined
   customFields?: Record<string, unknown> | undefined
+  projectName?: string | null | undefined
   createdAt?: string | null
   updatedAt?: string | null
   completedAt?: string | null
@@ -53,6 +54,7 @@ export interface TaskListItem {
   estimate: string
   labels: string[]
   projectId?: Id | undefined
+  projectName?: string | null | undefined
   customFields?: Record<string, unknown> | undefined
   startDate?: string | null | undefined
   createdAt?: string | null | undefined

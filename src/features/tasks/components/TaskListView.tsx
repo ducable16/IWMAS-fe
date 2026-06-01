@@ -48,7 +48,7 @@ export default function TaskListView({
   return (
     <div className={clsx('card overflow-hidden transition-opacity duration-200', isStale && 'opacity-70')}>
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="w-full min-w-[980px]">
           <thead>
             <tr className="border-b border-border-subtle bg-bg-subtle/50">
               <th className="text-left px-4 py-3">
@@ -63,6 +63,9 @@ export default function TaskListView({
               </th>
               <th className="text-left px-4 py-3 text-[11px] font-medium text-text-muted uppercase tracking-wide whitespace-nowrap">
                 Type
+              </th>
+              <th className="text-left px-4 py-3 text-[11px] font-medium text-text-muted uppercase tracking-wide whitespace-nowrap">
+                Project
               </th>
               <th className="text-left px-4 py-3 text-[11px] font-medium text-text-muted uppercase tracking-wide whitespace-nowrap">
                 Status

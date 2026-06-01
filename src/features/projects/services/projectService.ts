@@ -101,7 +101,8 @@ export const projectService = {
 
   /**
    * §3.5 POST /api/projects — ADMIN or PROJECT_MANAGER
-   * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId }} data
+   * Creates the PM's LEAD membership atomically.
+   * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId, managerAllocationPercent }} data
    */
   create: (data: CreateProjectRequest) => api.post<Project>('/projects', data),
 

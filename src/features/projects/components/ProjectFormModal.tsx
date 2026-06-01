@@ -92,7 +92,7 @@ export default function ProjectFormModal({ open, project, onClose }: ProjectForm
             initialDisplay={selectedManager?.fullName || (isPmSelfOnly ? currentUser?.fullName : '')}
             error={errors.managerId}
             noResultsText="No managers found"
-            disabled={isPmSelfOnly}
+            disabled={isEdit || isPmSelfOnly}
             renderOption={(item) => <ManagerSuggestion item={item as ManagerSuggestionItem} />}
           />
 
@@ -112,7 +112,7 @@ export default function ProjectFormModal({ open, project, onClose }: ProjectForm
               </label>
               <input
                 type="number"
-                min="0"
+                min="1"
                 max="100"
                 value={form.managerEffortPercent}
                 onChange={set('managerEffortPercent')}
@@ -171,7 +171,7 @@ export default function ProjectFormModal({ open, project, onClose }: ProjectForm
         <ModalFormActions
           onCancel={onClose}
           isPending={isPending}
-          disabled={!form.name.trim() || !form.managerId}
+          disabled={!form.name.trim() || (!isEdit && !form.managerId)}
           idleIcon={!isEdit && <Plus className="w-3.5 h-3.5" strokeWidth={2} />}
           pendingLabel="Saving..."
           submitLabel={isEdit ? 'Save changes' : 'Create project'}

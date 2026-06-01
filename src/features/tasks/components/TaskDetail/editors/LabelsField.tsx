@@ -34,7 +34,7 @@ export function LabelsField({
   }
 
   return (
-    <div className="relative" ref={activeDropdownRef(editingField === 'labels', dropdownRef)}>
+    <div className="relative min-w-0 max-w-full" ref={activeDropdownRef(editingField === 'labels', dropdownRef)}>
       <button
         type="button"
         onClick={canEdit
@@ -48,7 +48,7 @@ export function LabelsField({
             }
           : undefined}
         className={clsx(
-          'flex flex-wrap gap-1 rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors w-full text-left',
+          'flex min-w-0 max-w-full flex-wrap gap-1 rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors w-full text-left',
           canEdit ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
         )}
       >
@@ -56,7 +56,7 @@ export function LabelsField({
           labels.map((label) => (
             <span
               key={label}
-              className="text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
+              className="max-w-full truncate text-[11px] bg-accent/10 text-accent px-2 py-0.5 rounded-full border border-accent/20"
             >
               #{label}
             </span>
@@ -67,7 +67,7 @@ export function LabelsField({
       </button>
 
       {editingField === 'labels' && labelsDraft !== null && (
-        <div className="absolute bottom-full right-0 mb-1.5 z-50 w-[240px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-2 space-y-2">
+        <div className="absolute bottom-full right-0 mb-1.5 z-50 w-[min(240px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-2 space-y-2">
           {labelsDraft.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {labelsDraft.map((label) => (

@@ -14,14 +14,14 @@ export function TypeField({
   save,
 }: TypeFieldProps) {
   return (
-    <div className="relative" ref={activeDropdownRef(editingField === 'type', dropdownRef)}>
+    <div className="relative min-w-0 max-w-full" ref={activeDropdownRef(editingField === 'type', dropdownRef)}>
       <button
         type="button"
         onClick={canEdit
           ? () => setEditingField(editingField === 'type' ? null : 'type')
           : undefined}
         className={clsx(
-          'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary text-left w-full',
+          'rounded-md px-1.5 py-0.5 -ml-1.5 transition-colors text-[13px] text-text-secondary text-left w-full truncate',
           canEdit ? 'hover:bg-bg-hover cursor-pointer' : 'cursor-default',
         )}
       >
@@ -29,7 +29,7 @@ export function TypeField({
       </button>
 
       {editingField === 'type' && (
-        <div className="absolute top-full right-0 mt-1.5 z-50 w-[180px] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-0.5">
+        <div className="absolute top-full right-0 mt-1.5 z-50 w-[min(180px,calc(100vw-2rem))] max-w-[calc(100vw-2rem)] bg-bg-surface border border-border rounded-lg shadow-card animate-fade-in p-1.5 space-y-0.5">
           {TASK_TYPES.map((option) => (
             <button
               key={option}

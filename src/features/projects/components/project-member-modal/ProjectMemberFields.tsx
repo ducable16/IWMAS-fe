@@ -21,6 +21,7 @@ type RoleEffortFieldsProps = {
 type DateNoteFieldsProps = {
   joinDate: string
   note: string
+  joinDateReadOnly?: boolean
   onJoinDateChange: (value: string) => void
   onNoteChange: (value: string) => void
 }
@@ -80,6 +81,7 @@ export function RoleEffortFields({
 export function DateNoteFields({
   joinDate,
   note,
+  joinDateReadOnly = false,
   onJoinDateChange,
   onNoteChange,
 }: DateNoteFieldsProps) {
@@ -90,7 +92,9 @@ export function DateNoteFields({
           type="date"
           value={joinDate}
           onChange={(e) => onJoinDateChange(e.target.value)}
-          className="input-field w-full text-[13px]"
+          readOnly={joinDateReadOnly}
+          tabIndex={joinDateReadOnly ? -1 : undefined}
+          className={joinDateReadOnly ? 'input-readonly text-[13px]' : 'input-field w-full text-[13px]'}
         />
       </Field>
 

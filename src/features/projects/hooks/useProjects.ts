@@ -36,7 +36,6 @@ interface EffortRemainingParams {
 
 interface CreateProjectVariables {
   data: CreateProjectRequest
-  managerEffortPercent?: number
 }
 
 interface UpdateProjectVariables {
@@ -184,29 +183,16 @@ export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ data }: CreateProjectVariables) => projectService.create(data),
-    onSuccess: async (res, variables) => {
+    onSuccess: () => {
       toast.success('Project created')
-      const data = variables?.data
-      const managerEffortPercent = Number(variables?.managerEffortPercent) || 0
-      const projectId = res?.data?.id
-      if (projectId && data?.managerId) {
-        try {
-          await projectService.addMember(projectId, {
-            userId: data.managerId,
-            roleInProject: 'LEAD',
-            allocatedEffortPercent: managerEffortPercent,
-            joinDate: data.startDate || undefined,
-          })
-        } catch (err) {
-          const code = (err as ApiError | undefined)?.code
-          if (code !== 4004) {
-            toast.error(getErrorMessage(err, 'Failed to add manager as project member'))
-          }
-        }
-      }
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to create project')),
+    onError: (err: unknown) => {
+      const code = (err as ApiError | undefined)?.code
+      if (code === 4005) toast.error("Creating this project would push the manager's peak concurrent allocation above 100%.")
+      else if (code === 4008) toast.error('Manager effort allocation (%) must be between 1 and 100.')
+      else toast.error(getErrorMessage(err, 'Failed to create project'))
+    },
   })
 }
 
@@ -246,7 +232,7 @@ export function useAddProjectMember(projectId: Id | null | undefined) {
     onError: (err: unknown) => {
       const code = (err as ApiError | undefined)?.code
       if (code === 4004) toast.error('This user is already a member of this project.')
-      else if (code === 4005) toast.error("Adding this allocation would push the user's total above 100%.")
+      else if (code === 4005) toast.error("Adding this allocation would push the user's peak concurrent allocation above 100%.")
       else if (code === 4008) toast.error('Effort allocation (%) is required when adding a member.')
       else toast.error(getErrorMessage(err, 'Failed to add member'))
     },
@@ -264,7 +250,7 @@ export function useUpdateProjectMember(projectId: Id | null | undefined) {
     },
     onError: (err: unknown) => {
       const code = (err as ApiError | undefined)?.code
-      if (code === 4005) toast.error("Updated allocation would push the user's total above 100%.")
+      if (code === 4005) toast.error("Updated allocation would push the user's peak concurrent allocation above 100%.")
       else if (code === 4008) toast.error('Effort allocation (%) is required when updating a member.')
       else toast.error(getErrorMessage(err, 'Failed to update member'))
     },

@@ -56,6 +56,7 @@ function normaliseTask(t: Task): TaskListItem {
     estimate: formatEstimate(t.estimatedHours),
     labels: t.labels || [],
     projectId: t.projectId,
+    projectName: t.projectName ?? null,
     customFields: t.customFields || {},
     startDate: t.startDate || null,
     createdAt: t.createdAt || null,

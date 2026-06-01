@@ -98,8 +98,8 @@ export default function MembersPage() {
 
   return (
     <div className="max-w-[1200px] mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <div>
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+        <div className="min-w-0">
           <h2 className="text-subhead text-text-primary">All Users</h2>
           <p className="text-text-secondary text-[14px] mt-1">
             {isLoading
@@ -109,7 +109,7 @@ export default function MembersPage() {
         </div>
         {canAddUser && (
           <button
-            className="btn-primary"
+            className="btn-primary shrink-0"
             onClick={() => setAddUserOpen(true)}
             id="add-user-btn"
           >
@@ -125,6 +125,7 @@ export default function MembersPage() {
           value={params.search}
           onChange={(value) => set('search', value)}
           placeholder="Search by name, email, position..."
+          className="min-w-[240px] flex-1"
         />
 
         <FilterSelect

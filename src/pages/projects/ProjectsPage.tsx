@@ -92,8 +92,8 @@ export default function ProjectsPage() {
       />
 
       <div className="max-w-[1200px] mx-auto">
-        <div className="flex items-center justify-between mb-6">
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <div className="min-w-0">
             <h2 className="text-subhead text-text-primary">
               {isTeamMember ? 'My Projects' : can.isPm ? 'Projects I Manage' : 'Projects'}
             </h2>
@@ -109,7 +109,7 @@ export default function ProjectsPage() {
           </div>
           {canEdit && (
             <button
-              className="btn-primary"
+              className="btn-primary shrink-0"
               onClick={() => { setEditingProject(null); setFormOpen(true) }}
               id="new-project-btn"
             >
@@ -149,7 +149,7 @@ export default function ProjectsPage() {
         {!isLoading && !isError && totalElements > 0 && (
           <div className={clsx('card overflow-hidden transition-opacity duration-200', isStale && 'opacity-70')}>
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[960px]">
                 <thead>
                   <tr className="border-b border-border-subtle bg-bg-subtle/50">
                     <th className="text-left text-[11.5px] font-semibold text-text-muted uppercase tracking-wider py-2.5 px-3 pl-5 w-[100px]">Code</th>

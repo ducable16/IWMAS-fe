@@ -68,6 +68,23 @@ export default function TaskListRow({
         <TaskTypeBadge type={task.type} />
       </td>
 
+      <td className="px-4 py-3 max-w-[180px]">
+        {task.projectId ? (
+          <span
+            title={task.projectName || `Project #${task.projectId}`}
+            onClick={(e) => {
+              e.stopPropagation()
+              onChange('projectId', task.projectId ?? null)
+            }}
+            className="text-[12px] text-text-primary hover:text-accent hover:underline cursor-pointer transition-colors truncate block"
+          >
+            {task.projectName || `#${task.projectId}`}
+          </span>
+        ) : (
+          <span className="text-[12px] text-text-muted">-</span>
+        )}
+      </td>
+
       <td className="px-4 py-3">
         <TaskStatusBadge status={task.status} />
       </td>

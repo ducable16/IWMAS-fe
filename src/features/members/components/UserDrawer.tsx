@@ -28,7 +28,8 @@ const BLANK_FORM: UserDrawerForm = {
 
 export default function UserDrawer({ user, onClose }: UserDrawerProps) {
   const currentUser = useAuthStore((state) => state.user)
-  const isAdmin = canManageUsers(currentUser?.role)
+  const canEditUserProfile = canManageUsers(currentUser?.role)
+  const isAdmin = currentUser?.role === 'ADMIN'
   const canEditRole = canChangeUserRole(currentUser?.role)
   const canEditEmail = currentUser?.role === 'ADMIN'
   const isSelf = currentUser?.id === user?.id
@@ -95,7 +96,8 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
     toggleActive({ id: user.id, active: user.status !== 'ACTIVE' })
   }
 
-  const canEdit = isAdmin && !isSelf
+  const canEdit = canEditUserProfile && !isSelf
+  const canShowDangerZone = isAdmin && !isSelf
 
   return (
     <>
@@ -161,7 +163,7 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
 
           <UserDrawerActivity user={user} />
 
-          {canEdit && (
+          {canShowDangerZone && (
             <>
               <div className="divider" />
               <UserDrawerDangerZone

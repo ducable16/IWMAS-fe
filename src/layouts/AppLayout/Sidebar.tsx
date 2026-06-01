@@ -12,9 +12,11 @@ import {
   ChevronsRight,
   type LucideIcon,
 } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import clsx from 'clsx'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 
 type NavItem = {
   label: string
@@ -42,25 +44,75 @@ const NAV_ITEMS: SidebarEntry[] = [
   { label: 'Settings', icon: Settings, to: '/settings' },
 ]
 
+const COLLAPSED_WIDTH = 60
+const DEFAULT_WIDTH = 232
+const MIN_WIDTH = 200
+const MAX_WIDTH = 360
+
+function clampSidebarWidth(value: number) {
+  return Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, Math.round(value)))
+}
+
 function isDivider(item: SidebarEntry): item is NavDivider {
   return 'divider' in item && item.divider
 }
 
 export default function Sidebar() {
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
+  const sidebarWidth = useUIStore((s) => s.sidebarWidth)
+  const setSidebarWidth = useUIStore((s) => s.setSidebarWidth)
   const toggle = useUIStore((s) => s.toggleSidebar)
   const user = useAuthStore((s) => s.user)
   const location = useLocation()
+  const [resizing, setResizing] = useState(false)
+  const startXRef = useRef(0)
+  const startWidthRef = useRef(DEFAULT_WIDTH)
   const displayName = user?.fullName || user?.email || 'User'
   const userInitial = displayName[0]?.toUpperCase() || 'U'
+  const expandedWidth = clampSidebarWidth(sidebarWidth || DEFAULT_WIDTH)
+
+  useEffect(() => {
+    if (collapsed || !resizing) return
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const delta = event.clientX - startXRef.current
+      setSidebarWidth(clampSidebarWidth(startWidthRef.current + delta))
+    }
+
+    const handlePointerUp = () => {
+      setResizing(false)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+
+    document.body.style.cursor = 'col-resize'
+    document.body.style.userSelect = 'none'
+    window.addEventListener('pointermove', handlePointerMove)
+    window.addEventListener('pointerup', handlePointerUp)
+
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      window.removeEventListener('pointerup', handlePointerUp)
+      document.body.style.cursor = ''
+      document.body.style.userSelect = ''
+    }
+  }, [collapsed, resizing, setSidebarWidth])
+
+  const startResize = useCallback((event: ReactPointerEvent<HTMLDivElement>) => {
+    if (collapsed) return
+    event.preventDefault()
+    startXRef.current = event.clientX
+    startWidthRef.current = expandedWidth
+    setResizing(true)
+  }, [collapsed, expandedWidth])
 
   return (
     <aside
       className={clsx(
-        'relative flex flex-col bg-bg-sidebar border-r border-border-subtle',
-        'transition-[width] duration-200 ease-out',
-        collapsed ? 'w-[60px]' : 'w-[232px]',
+        'relative shrink-0 flex flex-col bg-bg-sidebar border-r border-border-subtle',
+        !resizing && 'transition-[width] duration-200 ease-out',
       )}
+      style={{ width: collapsed ? COLLAPSED_WIDTH : expandedWidth }}
     >
       {/* Logo */}
       <div
@@ -112,19 +164,21 @@ export default function Sidebar() {
           }
 
           const isActive =
-            item.to === '/dashboard'
-              ? location.pathname === '/dashboard'
-              : location.pathname.startsWith(item.to)
+            item.to === '/dashboard' || item.to === '/workforce'
+              ? location.pathname === item.to
+              : location.pathname === item.to || location.pathname.startsWith(item.to + '/')
 
           return (
             <NavLink
               key={item.to}
               to={item.to}
-              className={clsx(
-                'sidebar-link',
-                isActive && 'active',
-                collapsed && 'justify-center px-2',
-              )}
+              className={() =>
+                clsx(
+                  'sidebar-link',
+                  isActive && 'active',
+                  collapsed && 'justify-center px-2',
+                )
+              }
               title={collapsed ? item.label : undefined}
             >
               <item.icon className="w-4 h-4 shrink-0" strokeWidth={1.75} />
@@ -151,6 +205,23 @@ export default function Sidebar() {
             </div>
           </div>
         </div>
+      )}
+
+      {!collapsed && (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize sidebar"
+          title="Drag to resize sidebar"
+          onPointerDown={startResize}
+          onDoubleClick={() => setSidebarWidth(DEFAULT_WIDTH)}
+          className={clsx(
+            'absolute inset-y-0 -right-1 z-20 w-2 cursor-col-resize',
+            'after:absolute after:inset-y-0 after:left-1/2 after:w-px after:-translate-x-1/2 after:bg-transparent',
+            'hover:after:bg-accent/60',
+            resizing && 'after:bg-accent',
+          )}
+        />
       )}
 
     </aside>

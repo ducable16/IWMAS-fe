@@ -65,7 +65,7 @@ export function DetailsSidebar({ task, canEdit, onSave }: DetailsSidebarProps) {
   const isDueOverdue = task.dueDate && task.status !== 'DONE' ? isOverdue(task.dueDate) : false
 
   return (
-    <div className="w-[280px] shrink-0 space-y-4 sticky top-[68px]">
+    <div className="w-full xl:w-[280px] xl:shrink-0 space-y-4 xl:sticky xl:top-[68px]">
       <StatusDropdown current={status} taskId={task.id} canChange={canEdit} />
 
       <div className="card p-4 space-y-0">
@@ -165,11 +165,11 @@ export function DetailsSidebar({ task, canEdit, onSave }: DetailsSidebarProps) {
 
         <DetailRow icon={User} label="Reporter">
           {task.reporter ? (
-            <div className="flex items-center gap-2">
+            <div className="flex min-w-0 items-center gap-2">
               <Avatar name={task.reporter.fullName} avatarUrl={task.reporter.avatarUrl} />
               <Link
                 to={`/users/${task.reporter.id}`}
-                className="text-[13px] hover:text-accent hover:underline transition-colors"
+                className="min-w-0 flex-1 truncate text-[13px] hover:text-accent hover:underline transition-colors"
               >
                 {task.reporter.fullName}
               </Link>

@@ -108,14 +108,14 @@ export default function UserProfilePage() {
         <span className="text-text-primary">{user.fullName}</span>
       </div>
 
-      <div className="flex gap-6 items-start">
+      <div className="flex flex-col xl:flex-row gap-6 items-start">
         <div className="flex-1 min-w-0 space-y-5">
           <div className="card p-5">
-            <div className="flex items-start gap-4">
+            <div className="flex flex-wrap items-start gap-4">
               <Avatar name={user.fullName} avatarUrl={user.avatarUrl} size="xl" />
 
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h1 className="text-[20px] font-bold text-text-primary leading-tight">
                       {user.fullName}
@@ -201,7 +201,7 @@ export default function UserProfilePage() {
           </div>
         </div>
 
-        <div className="w-[240px] shrink-0 space-y-4 sticky top-[68px]">
+        <div className="w-full xl:w-[240px] xl:shrink-0 space-y-4 xl:sticky xl:top-[68px]">
           <div className="card p-4 space-y-2.5">
             <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">
               Stats
