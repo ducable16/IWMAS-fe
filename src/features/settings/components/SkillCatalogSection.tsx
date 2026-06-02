@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { BarChart3, FolderTree, Loader2, Pencil, Plus, Search, Trash2, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useConfirm } from '@/hooks/useConfirm'
 import Field from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
@@ -413,6 +414,7 @@ function CategoryManagement({
   const createCategory = useCreateSkillCategory()
   const updateCategory = useUpdateSkillCategory()
   const deleteCategory = useDeleteSkillCategory()
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const closeModal = () => {
     if (createCategory.isPending || updateCategory.isPending) return
@@ -432,8 +434,12 @@ function CategoryManagement({
     createCategory.mutate(data, { onSuccess: closeModal })
   }
 
-  const handleDelete = (category: SkillCategory) => {
-    const ok = window.confirm(`Delete ${category.name}? Active skills must be moved or deleted first.`)
+  const handleDelete = async (category: SkillCategory) => {
+    const ok = await confirm({
+      title: `Delete "${category.name}"?`,
+      description: 'Active skills in this category must be moved or deleted first.',
+      confirmLabel: 'Delete category',
+    })
     if (!ok) return
     deleteCategory.mutate(category.id)
   }
@@ -508,6 +514,7 @@ function CategoryManagement({
         onClose={closeModal}
         onSubmit={handleSubmit}
       />
+      {confirmDialog}
     </div>
   )
 }
@@ -592,6 +599,7 @@ export default function SkillCatalogSection() {
   const createSkill = useCreateSkill()
   const updateSkill = useUpdateSkill()
   const deleteSkill = useDeleteSkill()
+  const { confirm, dialog: confirmDialog } = useConfirm()
   const selectedSkill = (skills.data || []).find((skill) => skill.id === selectedSkillId) || null
 
   useEffect(() => {
@@ -623,8 +631,12 @@ export default function SkillCatalogSection() {
     createSkill.mutate(data, { onSuccess: closeSkillModal })
   }
 
-  const handleDeleteSkill = (skill: Skill) => {
-    const ok = window.confirm(`Delete ${skill.name} from the skill catalog?`)
+  const handleDeleteSkill = async (skill: Skill) => {
+    const ok = await confirm({
+      title: `Delete "${skill.name}"?`,
+      description: 'This skill will be removed from the catalog.',
+      confirmLabel: 'Delete skill',
+    })
     if (!ok) return
     deleteSkill.mutate(skill.id, {
       onError: (err: unknown) => {
@@ -780,6 +792,7 @@ export default function SkillCatalogSection() {
         onSubmit={handleSubmitSkill}
       />
       <SkillDeleteBlockedModal blocked={blockedDelete} onClose={() => setBlockedDelete(null)} />
+      {confirmDialog}
     </div>
   )
 }

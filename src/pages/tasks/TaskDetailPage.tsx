@@ -2,6 +2,7 @@ import { lazy, Suspense, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Link2, Loader2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
+import { useConfirm } from '@/hooks/useConfirm'
 import AttachmentsSection from '@/features/tasks/components/AttachmentsSection'
 import { ActivitySection } from '@/features/tasks/components/TaskDetail/ActivitySection'
 import { DetailsSidebar } from '@/features/tasks/components/TaskDetail/DetailsSidebar'
@@ -30,6 +31,7 @@ export default function TaskDetailPage() {
   const { mutate: deleteTask, isPending: isDeleting } = useDeleteTask()
   const user = useAuthStore((s) => s.user)
   const can = useCan()
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const isAssignee = !!user && !!task && user.id === task.assignee?.id
   const canEditTask = can.isAdmin || can.isPm || isAssignee
@@ -88,8 +90,12 @@ export default function TaskDetailPage() {
     setEditingTitle(false)
   }
 
-  const handleDeleteTask = () => {
-    const ok = window.confirm(`Delete task "${task.title || task.id}"?`)
+  const handleDeleteTask = async () => {
+    const ok = await confirm({
+      title: `Delete "${task.title || task.id}"?`,
+      description: 'This task and all its data will be permanently removed.',
+      confirmLabel: 'Delete task',
+    })
     if (!ok) return
     deleteTask(task.id, {
       onSuccess: () => navigate('/tasks'),
@@ -236,6 +242,7 @@ export default function TaskDetailPage() {
           onSave={(overrides) => updateTask(buildPayload(overrides))}
         />
       </div>
+      {confirmDialog}
     </div>
   )
 }

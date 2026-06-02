@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { useConfirm } from '@/hooks/useConfirm'
 import {
   ArrowLeft, Pencil, Trash2, X, Save, Loader2,
   type LucideIcon, BarChart3, Lock, Paperclip
@@ -48,6 +49,7 @@ export default function ProjectDetailPage() {
   const { id } = useParams()
   const projectId = Number(id)
   const navigate = useNavigate()
+  const { confirm, dialog: confirmDialog } = useConfirm()
   const can  = useCan()
   const user = useAuthStore((s) => s.user)
 
@@ -148,13 +150,23 @@ export default function ProjectDetailPage() {
     setIsEditing(false)
   }
 
-  const handleDelete = () => {
-    if (!window.confirm(`Delete project "${project?.name}"? This cannot be undone.`)) return
+  const handleDelete = async () => {
+    const ok = await confirm({
+      title: `Delete "${project?.name}"?`,
+      description: 'This will permanently delete the project and all its data. This cannot be undone.',
+      confirmLabel: 'Delete project',
+    })
+    if (!ok) return
     deleteProject(projectId, { onSuccess: () => navigate('/projects') })
   }
 
-  const handleRemoveMember = (member: ProjectMember) => {
-    if (!window.confirm(`Remove ${member.userFullName} from this project?`)) return
+  const handleRemoveMember = async (member: ProjectMember) => {
+    const ok = await confirm({
+      title: `Remove ${member.userFullName}?`,
+      description: 'This member will lose access to the project.',
+      confirmLabel: 'Remove member',
+    })
+    if (!ok) return
     removeMember(member.id, {
       onSuccess: () => toast.success(`${member.userFullName || 'Member'} removed from project`),
     })
@@ -373,6 +385,7 @@ export default function ProjectDetailPage() {
         projectId={projectId}
         onClose={() => setEditingMember(null)}
       />
+      {confirmDialog}
     </div>
   )
 }

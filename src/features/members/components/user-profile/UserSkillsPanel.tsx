@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Pencil, Plus, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
+import { useConfirm } from '@/hooks/useConfirm'
 import Field from '@/components/ui/Field'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
@@ -259,6 +260,7 @@ export default function UserSkillsPanel({ userId }: UserSkillsPanelProps) {
   const [modalMode, setModalMode] = useState<SkillModalMode>('add')
   const [modalOpen, setModalOpen] = useState(false)
   const [editingSkill, setEditingSkill] = useState<EmployeeSkill | null>(null)
+  const { confirm, dialog: confirmDialog } = useConfirm()
 
   const sortedUserSkills = useMemo(
     () => [...userSkills].sort((a, b) => a.skillName.localeCompare(b.skillName)),
@@ -298,8 +300,12 @@ export default function UserSkillsPanel({ userId }: UserSkillsPanelProps) {
     )
   }
 
-  const handleRemove = (skill: EmployeeSkill) => {
-    const ok = window.confirm(`Remove ${skill.skillName} from this user?`)
+  const handleRemove = async (skill: EmployeeSkill) => {
+    const ok = await confirm({
+      title: `Remove "${skill.skillName}"?`,
+      description: 'This skill will be removed from the user profile.',
+      confirmLabel: 'Remove skill',
+    })
     if (!ok) return
     removeSkill.mutate({ userId, employeeSkillId: skill.id })
   }
@@ -357,6 +363,7 @@ export default function UserSkillsPanel({ userId }: UserSkillsPanelProps) {
         onClose={closeModal}
         onSubmit={handleSubmit}
       />
+      {confirmDialog}
     </div>
   )
 }
