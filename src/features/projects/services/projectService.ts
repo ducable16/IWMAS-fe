@@ -32,6 +32,12 @@ interface EffortRemainingParams {
   detail?: boolean | undefined
 }
 
+export interface ProjectMemberSearchParams {
+  q?: string | undefined
+  size?: number | undefined
+  requiredSkills?: string | undefined
+}
+
 function append(qs: URLSearchParams, key: string, value: QueryValue) {
   if (value !== undefined && value !== null && value !== '') qs.append(key, String(value))
 }
@@ -124,10 +130,17 @@ export const projectService = {
    *
    * @param {number} id        — project ID
    * @param {string} q         — keyword matched against fullName, email, position
-   * @param {number} [size=10] — max results (capped at 20 by server)
+   * @param {number} [size=10] — max results (capped at 50 by server)
+   * @param {string} requiredSkills — comma-separated skillId[:minLevel] pairs
    */
-  searchMembers: (id: Id, q = '', size = 10) =>
-    api.get<User[]>(`/projects/${id}/members/search`, { params: { q, size } }),
+  searchMembers: (id: Id, params: ProjectMemberSearchParams = {}) =>
+    api.get<User[]>(`/projects/${id}/members/search`, {
+      params: {
+        q: params.q ?? '',
+        size: params.size ?? 10,
+        requiredSkills: params.requiredSkills,
+      },
+    }),
 
   /**
    * §3.10 POST /api/projects/{id}/members

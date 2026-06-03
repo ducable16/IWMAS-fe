@@ -1,4 +1,4 @@
-import { lazy, Suspense, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Link2, Loader2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
@@ -11,12 +11,25 @@ import TaskSkillRequirementsEditor, {
   toTaskSkillRequirementRequest,
 } from '@/features/tasks/components/TaskSkillRequirementsEditor'
 import { useDeleteTask, useTask, useUpdateTask } from '@/features/tasks/hooks/useTask'
+import { useUserSkills } from '@/features/skills/hooks/useSkills'
+import {
+  getMissingRequiredSkills,
+  getRequiredSkillRequirements,
+  serializeRequiredSkills,
+} from '@/features/tasks/utils/taskSkillRequirements'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useCan } from '@/utils/permissions'
-import type { UpdateTaskRequest } from '@/types'
+import type { TaskSkillRequirementRequest, UpdateTaskRequest } from '@/types'
 
 const DescriptionEditor = lazy(() => import('@/features/tasks/components/DescriptionEditor'))
+
+function areSkillRequirementsEqual(
+  left: TaskSkillRequirementRequest[],
+  right: TaskSkillRequirementRequest[],
+) {
+  return JSON.stringify(left) === JSON.stringify(right)
+}
 
 export default function TaskDetailPage() {
   const { id } = useParams()
@@ -24,6 +37,7 @@ export default function TaskDetailPage() {
   const [activeTab, setActiveTab] = useState('comments')
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState('')
+  const [skillDraft, setSkillDraft] = useState<TaskSkillRequirementRequest[]>([])
   const titleRef = useRef<HTMLTextAreaElement | null>(null)
 
   const { data: task, isLoading, isError, error, refetch } = useTask(id)
@@ -37,6 +51,25 @@ export default function TaskDetailPage() {
   const canEditTask = can.isAdmin || can.isPm || isAssignee
   const canUploadAttachments = can.isAdmin || can.isPm || can.isTm
   const canDeleteAsManager = can.isAdmin || can.isPm
+  const skillRequirements = toTaskSkillRequirementRequest(task?.skillRequirements || [])
+  const isSkillDraftDirty = !areSkillRequirementsEqual(skillDraft, skillRequirements)
+  const requiredSkillDraft = getRequiredSkillRequirements(skillDraft)
+  const shouldValidateSkillDraftAssignee = !!task?.assignee?.id && requiredSkillDraft.length > 0
+  const draftAssigneeSkills = useUserSkills(
+    shouldValidateSkillDraftAssignee ? task?.assignee?.id : null,
+  )
+  const missingRequiredSkillDraft = shouldValidateSkillDraftAssignee
+    ? getMissingRequiredSkills(draftAssigneeSkills.data, skillDraft)
+    : []
+  const isCheckingSkillDraftAssignee = shouldValidateSkillDraftAssignee && draftAssigneeSkills.isLoading
+  const hasSkillDraftMismatch = shouldValidateSkillDraftAssignee
+    && !isCheckingSkillDraftAssignee
+    && missingRequiredSkillDraft.length > 0
+
+  useEffect(() => {
+    if (!task) return
+    setSkillDraft(toTaskSkillRequirementRequest(task.skillRequirements || []))
+  }, [task])
 
   if (isLoading) {
     return (
@@ -80,8 +113,6 @@ export default function TaskDetailPage() {
     ...overrides,
   })
 
-  const skillRequirements = toTaskSkillRequirementRequest(task.skillRequirements || [])
-
   const saveTitle = () => {
     const nextTitle = titleDraft.trim()
     if (nextTitle && nextTitle !== task.title) {
@@ -100,6 +131,11 @@ export default function TaskDetailPage() {
     deleteTask(task.id, {
       onSuccess: () => navigate('/tasks'),
     })
+  }
+
+  const saveSkillRequirements = () => {
+    if (!isSkillDraftDirty || isCheckingSkillDraftAssignee || hasSkillDraftMismatch) return
+    updateTask(buildPayload({ skillRequirements: skillDraft }))
   }
 
   return (
@@ -195,13 +231,46 @@ export default function TaskDetailPage() {
             </Suspense>
           </SectionBlock>
 
-          {(skillRequirements.length > 0 || canEditTask) && (
-            <SectionBlock title="Skill requirements">
+          {(skillDraft.length > 0 || canEditTask) && (
+            <SectionBlock
+              title="Skill requirements"
+              actions={canEditTask && (
+                <>
+                  <button
+                    type="button"
+                    className="btn-ghost text-[12px] px-2 py-1 disabled:opacity-50"
+                    onClick={() => setSkillDraft(skillRequirements)}
+                    disabled={!isSkillDraftDirty || isUpdating || isDeleting}
+                  >
+                    Reset
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-primary text-[12px] px-3 py-1 disabled:opacity-50"
+                    onClick={saveSkillRequirements}
+                    disabled={
+                      !isSkillDraftDirty
+                      || isUpdating
+                      || isDeleting
+                      || isCheckingSkillDraftAssignee
+                      || hasSkillDraftMismatch
+                    }
+                  >
+                    Save
+                  </button>
+                </>
+              )}
+            >
               <TaskSkillRequirementsEditor
-                value={skillRequirements}
-                onChange={(next) => updateTask(buildPayload({ skillRequirements: next }))}
+                value={skillDraft}
+                onChange={setSkillDraft}
                 disabled={!canEditTask || isUpdating || isDeleting}
               />
+              {hasSkillDraftMismatch && (
+                <p className="mt-2 rounded-md border border-danger/30 bg-danger/5 px-3 py-2 text-[12px] text-danger">
+                  Current assignee does not meet the draft required skills. Change assignee, unassign, or adjust requirements before saving.
+                </p>
+              )}
             </SectionBlock>
           )}
 
@@ -239,6 +308,7 @@ export default function TaskDetailPage() {
         <DetailsSidebar
           task={task}
           canEdit={canEditTask}
+          requiredSkills={serializeRequiredSkills(skillDraft)}
           onSave={(overrides) => updateTask(buildPayload(overrides))}
         />
       </div>

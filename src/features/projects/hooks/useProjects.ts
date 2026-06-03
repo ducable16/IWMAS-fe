@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { projectService } from '../services/projectService'
+import { projectService, type ProjectMemberSearchParams } from '../services/projectService'
 import type {
   ApiError,
   CreateProjectRequest,
@@ -137,11 +137,22 @@ export function useProjectDocuments(projectId: Id | null | undefined) {
   })
 }
 
-export function useProjectMemberSearch(projectId: Id | null | undefined, q = '', size = 10, enabled = true) {
+export function useProjectMemberSearch(
+  projectId: Id | null | undefined,
+  params: ProjectMemberSearchParams = {},
+  enabled = true,
+) {
+  const q = params.q ?? ''
+  const size = params.size ?? 10
+  const requiredSkills = params.requiredSkills
   return useQuery<User[]>({
-    queryKey: ['projects', projectId, 'members', 'search', q, size],
+    queryKey: ['projects', projectId, 'members', 'search', q, size, requiredSkills],
     queryFn: async () => {
-      const res = await projectService.searchMembers(projectId as Id, q, size)
+      const res = await projectService.searchMembers(projectId as Id, {
+        q,
+        size,
+        requiredSkills,
+      })
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId && enabled,

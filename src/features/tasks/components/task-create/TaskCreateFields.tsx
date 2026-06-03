@@ -8,7 +8,9 @@ import {
   TASK_TYPE_LABEL,
 } from '@/constants/enums'
 import TaskSkillRequirementsEditor from '@/features/tasks/components/TaskSkillRequirementsEditor'
+import { serializeRequiredSkills } from '@/features/tasks/utils/taskSkillRequirements'
 import { useAssigneeSuggestions, useProjectSuggestions } from './useTaskCreateSuggestions'
+import type { ReactNode } from 'react'
 import type { KeyboardEvent as ReactKeyboardEvent } from 'react'
 import type { TaskCreateForm, SetTaskCreateField } from './taskCreateTypes'
 
@@ -17,6 +19,8 @@ type TaskCreateFieldsProps = {
   setField: SetTaskCreateField
   defaultProjectName?: string | undefined
   onSubmit: () => void
+  assigneeError?: ReactNode
+  assigneeDisabled?: boolean
 }
 
 type SelectFieldProps = {
@@ -53,7 +57,14 @@ export default function TaskCreateFields({
   setField,
   defaultProjectName,
   onSubmit,
+  assigneeError,
+  assigneeDisabled = false,
 }: TaskCreateFieldsProps) {
+  const assigneeSearchParams = {
+    projectId: form.projectId,
+    requiredSkills: serializeRequiredSkills(form.skillRequirements),
+  }
+
   return (
     <>
       <input
@@ -108,7 +119,10 @@ export default function TaskCreateFields({
           value={form.assigneeId}
           onChange={(value) => setField('assigneeId', value)}
           useSearchHook={useAssigneeSuggestions}
-          searchParams={form.projectId}
+          searchParams={assigneeSearchParams}
+          error={assigneeError}
+          disabled={assigneeDisabled}
+          noResultsText="No eligible project members found"
         />
       </div>
 

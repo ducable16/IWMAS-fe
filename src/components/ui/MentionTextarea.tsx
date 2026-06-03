@@ -340,8 +340,7 @@ export default function MentionTextarea({
 
   const { data: suggestions = [], isFetching } = useProjectMemberSearch(
     projectId,
-    mentionQuery,
-    10,
+    { q: mentionQuery, size: 10 },
     mentionActive && !!projectId,
   )
 

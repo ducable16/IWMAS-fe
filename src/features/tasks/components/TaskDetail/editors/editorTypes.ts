@@ -1,6 +1,6 @@
 import type { RefObject } from 'react'
 import type { EditableField } from '../taskDetail.types'
-import type { MemberView, Task, UpdateTaskRequest } from '@/types'
+import type { Task, UpdateTaskRequest, UserPublicView } from '@/types'
 
 export type DropdownRef = RefObject<HTMLDivElement | null>
 
@@ -17,7 +17,7 @@ export type EditorBaseProps = {
 
 export type AssigneeFieldProps = EditorBaseProps & {
   assignee: Task['assignee']
-  members: MemberView[]
+  members: UserPublicView[]
   memberSearch: string
   setMemberSearch: (value: string) => void
   save: (overrides: UpdateTaskRequest) => void

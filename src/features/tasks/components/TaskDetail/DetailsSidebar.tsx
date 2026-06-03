@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import clsx from 'clsx'
-import { useMembers } from '@/features/members/hooks/useMembers'
+import { useProjectMemberSearch } from '@/features/projects/hooks/useProjects'
+import { serializeRequiredSkills } from '@/features/tasks/utils/taskSkillRequirements'
 import { StatusDropdown } from './StatusDropdown'
 import { DetailRow } from './DetailRow'
 import { Avatar } from './Avatar'
@@ -22,10 +23,16 @@ import type { Task, UpdateTaskRequest } from '@/types'
 type DetailsSidebarProps = {
   task: Task
   canEdit: boolean
+  requiredSkills?: string | undefined
   onSave: (overrides: UpdateTaskRequest) => void
 }
 
-export function DetailsSidebar({ task, canEdit, onSave }: DetailsSidebarProps) {
+export function DetailsSidebar({
+  task,
+  canEdit,
+  requiredSkills: requiredSkillsOverride,
+  onSave,
+}: DetailsSidebarProps) {
   const [editingField, setEditingField] = useState<EditableField | null>(null)
   const [memberSearch, setMemberSearch] = useState('')
   const [labelsDraft, setLabelsDraft] = useState<string[] | null>(null)
@@ -33,8 +40,16 @@ export function DetailsSidebar({ task, canEdit, onSave }: DetailsSidebarProps) {
   const [collapsed, setCollapsed] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
-  const { data: membersData } = useMembers({ size: 100 })
-  const members = membersData?.members ?? []
+  const requiredSkills = requiredSkillsOverride ?? serializeRequiredSkills(task.skillRequirements || [])
+  const { data: members = [] } = useProjectMemberSearch(
+    task.projectId,
+    {
+      q: memberSearch,
+      size: 10,
+      requiredSkills,
+    },
+    canEdit && editingField === 'assignee',
+  )
 
   useEffect(() => {
     if (!editingField || !['assignee', 'priority', 'type', 'labels'].includes(editingField)) return

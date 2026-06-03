@@ -3,6 +3,11 @@ import { Plus } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
 import { useCreateTask } from '@/features/tasks/hooks/useTask'
+import { useUserSkills } from '@/features/skills/hooks/useSkills'
+import {
+  getMissingRequiredSkills,
+  getRequiredSkillRequirements,
+} from '@/features/tasks/utils/taskSkillRequirements'
 import TaskCreateFields from './task-create/TaskCreateFields'
 import {
   EMPTY_TASK_CREATE_FORM,
@@ -30,6 +35,19 @@ export default function TaskCreateModal({
 }: TaskCreateModalProps) {
   const [form, setForm] = useState<TaskCreateForm>(EMPTY_TASK_CREATE_FORM)
   const { mutate: createTask, isPending } = useCreateTask()
+  const requiredSkillRequirements = getRequiredSkillRequirements(form.skillRequirements)
+  const shouldValidateAssignee = !!form.assigneeId && requiredSkillRequirements.length > 0
+  const assigneeSkills = useUserSkills(shouldValidateAssignee ? form.assigneeId : null)
+  const missingRequiredSkills = shouldValidateAssignee
+    ? getMissingRequiredSkills(assigneeSkills.data, form.skillRequirements)
+    : []
+  const isCheckingAssigneeSkills = shouldValidateAssignee && assigneeSkills.isLoading
+  const hasAssigneeSkillMismatch = shouldValidateAssignee
+    && !isCheckingAssigneeSkills
+    && missingRequiredSkills.length > 0
+  const assigneeError = hasAssigneeSkillMismatch
+    ? 'Selected assignee does not meet all required skills.'
+    : undefined
 
   useEffect(() => {
     if (open) {
@@ -43,11 +61,20 @@ export default function TaskCreateModal({
   }, [open, defaultStatus, defaultProjectId])
 
   const setField: SetTaskCreateField = (key, value) =>
-    setForm((prev) => ({ ...prev, [key]: value }))
+    setForm((prev) => {
+      if (key === 'projectId') {
+        return {
+          ...prev,
+          projectId: value as TaskCreateForm['projectId'],
+          assigneeId: value === prev.projectId ? prev.assigneeId : '',
+        }
+      }
+      return { ...prev, [key]: value }
+    })
 
   const handleSubmit = (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
-    if (!form.title.trim() || isPending) return
+    if (!form.title.trim() || isPending || isCheckingAssigneeSkills || hasAssigneeSkillMismatch) return
     const estimatedHours = Number.parseFloat(form.estimatedHours)
 
     createTask(
@@ -78,13 +105,15 @@ export default function TaskCreateModal({
             setField={setField}
             defaultProjectName={defaultProjectName}
             onSubmit={() => handleSubmit()}
+            assigneeError={assigneeError}
+            assigneeDisabled={!form.projectId}
           />
         </form>
       </Modal.Body>
       <ModalFormActions
         onCancel={onClose}
         isPending={isPending}
-        disabled={!form.title.trim()}
+        disabled={!form.title.trim() || isCheckingAssigneeSkills || hasAssigneeSkillMismatch}
         idleIcon={<Plus className="w-3.5 h-3.5" strokeWidth={2} />}
         submitLabel="Create task"
         submitType="button"

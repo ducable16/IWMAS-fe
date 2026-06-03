@@ -16,11 +16,7 @@ export function AssigneeField({
   dropdownRef,
   save,
 }: AssigneeFieldProps) {
-  const filteredMembers = memberSearch
-    ? members.filter((member) =>
-        member.fullName.toLowerCase().includes(memberSearch.toLowerCase()),
-      )
-    : members.slice(0, 8)
+  const assigneeName = assignee?.fullName || assignee?.email || 'Unknown'
 
   return (
     <div className="relative min-w-0 max-w-full" ref={activeDropdownRef(editingField === 'assignee', dropdownRef)}>
@@ -39,13 +35,13 @@ export function AssigneeField({
       >
         {assignee ? (
           <>
-            <Avatar name={assignee.fullName} avatarUrl={assignee.avatarUrl} size="xs" />
+            <Avatar name={assigneeName} avatarUrl={assignee.avatarUrl} size="xs" />
             <Link
               to={`/users/${assignee.id}`}
               onClick={(e) => e.stopPropagation()}
               className="min-w-0 flex-1 truncate text-[13px] hover:text-accent hover:underline transition-colors"
             >
-              {assignee.fullName}
+              {assigneeName}
             </Link>
           </>
         ) : (
@@ -79,28 +75,31 @@ export function AssigneeField({
             >
               Unassigned
             </button>
-            {filteredMembers.map((member) => (
-              <button
-                key={member.id}
-                type="button"
-                onClick={() => {
-                  save({ assigneeId: member.id })
-                  setMemberSearch('')
-                }}
-                className={clsx(
-                  'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-[12px] hover:bg-bg-hover transition-colors text-left',
-                  member.id === assignee?.id
-                    ? 'bg-accent/10 text-accent font-medium'
-                    : 'text-text-secondary',
-                )}
-              >
-                <Avatar name={member.fullName} avatarUrl={member.avatarUrl} size="xs" />
-                <span className="truncate flex-1">{member.fullName}</span>
-                {member.id === assignee?.id && (
-                  <Check className="w-3.5 h-3.5 shrink-0 text-accent" strokeWidth={2.5} />
-                )}
-              </button>
-            ))}
+            {members.map((member) => {
+              const memberName = member.fullName || member.email || 'Unknown'
+              return (
+                <button
+                  key={member.id}
+                  type="button"
+                  onClick={() => {
+                    save({ assigneeId: member.id })
+                    setMemberSearch('')
+                  }}
+                  className={clsx(
+                    'flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-[12px] hover:bg-bg-hover transition-colors text-left',
+                    member.id === assignee?.id
+                      ? 'bg-accent/10 text-accent font-medium'
+                      : 'text-text-secondary',
+                  )}
+                >
+                  <Avatar name={memberName} avatarUrl={member.avatarUrl} size="xs" />
+                  <span className="truncate flex-1">{memberName}</span>
+                  {member.id === assignee?.id && (
+                    <Check className="w-3.5 h-3.5 shrink-0 text-accent" strokeWidth={2.5} />
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}
