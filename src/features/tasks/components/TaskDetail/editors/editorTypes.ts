@@ -51,6 +51,14 @@ export type EstimateFieldProps = {
   save: (overrides: UpdateTaskRequest) => void
 }
 
+export type SprintFieldProps = {
+  value: string | null | undefined
+  canEdit: boolean
+  editingField: EditableField | null
+  setEditingField: (field: EditableField | null) => void
+  save: (overrides: UpdateTaskRequest) => void
+}
+
 export type LabelsFieldProps = EditorBaseProps & {
   labels: string[]
   labelsDraft: string[] | null

@@ -1,9 +1,8 @@
-import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Id, TaskComment } from '@/types'
 
 export type AvatarSize = 'xs' | 'sm' | 'md'
-export type EditableField = 'assignee' | 'priority' | 'type' | 'startDate' | 'dueDate' | 'estimate' | 'labels'
+export type EditableField = 'assignee' | 'priority' | 'type' | 'startDate' | 'dueDate' | 'estimate' | 'sprint' | 'labels'
 export interface AvatarProps {
   name?: string | null | undefined
   avatarUrl?: string | null | undefined
@@ -11,7 +10,6 @@ export interface AvatarProps {
 }
 
 export interface DetailRowProps {
-  icon?: LucideIcon
   label: ReactNode
   children: ReactNode
 }
