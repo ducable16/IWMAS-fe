@@ -36,13 +36,23 @@ export default function UtilizationBar({
   }
 
   const pct = Math.max(0, utilizationPercent)
-  const isOverloaded = workloadLevel === 'OVERLOADED'
+  const level = String(workloadLevel || 'AVAILABLE')
+  const isCritical = level === 'OVERDUE' || level === 'WILL_SLIP' || pct > 100
   const barWidth = Math.min(pct, 100) // visual bar capped at 100% width
 
   const barColor =
-    workloadLevel === 'OVERLOADED'   ? 'bg-danger'  :
-    workloadLevel === 'HEALTHY_BUSY' ? 'bg-warning'  :
-                                       'bg-success'
+    level === 'OVERDUE'   ? 'bg-danger' :
+    level === 'WILL_SLIP' ? 'bg-orange-500' :
+    level === 'TIGHT'     ? 'bg-warning' :
+    level === 'AVAILABLE' ? 'bg-info' :
+                            'bg-success'
+
+  const textColor =
+    level === 'OVERDUE'   ? 'text-danger' :
+    level === 'WILL_SLIP' ? 'text-orange-600' :
+    level === 'TIGHT'     ? 'text-warning' :
+    level === 'AVAILABLE' ? 'text-info' :
+                            'text-success'
 
   return (
     <div className={clsx('w-full', compact ? 'min-w-[100px]' : 'min-w-[140px]')}>
@@ -51,22 +61,20 @@ export default function UtilizationBar({
         <div className={clsx(
           'flex-1 h-2 rounded-full overflow-hidden',
           'bg-bg-subtle border border-border-subtle',
-          isOverloaded && 'ring-1 ring-danger/30',
+          isCritical && 'ring-1 ring-danger/30',
         )}>
           <div
             className={clsx(
               'h-full rounded-full transition-all duration-500 ease-out',
               barColor,
-              isOverloaded && 'utilization-overflow',
+              pct > 100 && 'utilization-overflow',
             )}
             style={{ width: `${barWidth}%` }}
           />
         </div>
         <span className={clsx(
           'text-[12px] font-bold tabular-nums shrink-0',
-          isOverloaded ? 'text-danger' :
-          workloadLevel === 'HEALTHY_BUSY' ? 'text-warning' :
-          'text-success',
+          textColor,
         )}>
           {pct.toFixed(0)}%
         </span>

@@ -10,13 +10,14 @@ type TaskSkillRequirementsEditorProps = {
   disabled?: boolean
 }
 
-const DEFAULT_LEVEL = 'INTERMEDIATE'
+const DEFAULT_LEVEL = 'BEGINNER'
 
 function skillKey(id: Id | null | undefined) {
   return id == null ? '' : String(id)
 }
 
 function getSkillLabel(skill: Skill | undefined, fallbackId: Id) {
+  if (!skillKey(fallbackId)) return ''
   if (!skill) return `Skill #${fallbackId}`
   return `${skill.name} - ${skill.categoryName || 'Uncategorized'}`
 }
@@ -36,11 +37,13 @@ export function toTaskSkillRequirementRequest(
     isRequired?: boolean | null | undefined
   }> = [],
 ): TaskSkillRequirementRequest[] {
-  return requirements.map((item) => ({
-    skillId: item.skillId,
-    minimumLevel: item.minimumLevel || DEFAULT_LEVEL,
-    isRequired: item.isRequired ?? true,
-  }))
+  return requirements
+    .filter((item) => !!skillKey(item.skillId))
+    .map((item) => ({
+      skillId: item.skillId,
+      minimumLevel: item.minimumLevel || DEFAULT_LEVEL,
+      isRequired: item.isRequired ?? false,
+    }))
 }
 
 function SkillSearchSelect({
@@ -50,6 +53,7 @@ function SkillSearchSelect({
   usedSkillIds,
   disabled,
   isLoading,
+  autoFocus = false,
   onChange,
 }: {
   value: Id
@@ -58,11 +62,14 @@ function SkillSearchSelect({
   usedSkillIds: Set<string>
   disabled: boolean
   isLoading: boolean
+  autoFocus?: boolean
   onChange: (skill: Skill) => void
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
   const rootRef = useRef<HTMLDivElement | null>(null)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const skipNextFocusOpenRef = useRef(false)
   const selectedSkillKey = skillKey(value)
   const selectedLabel = getSkillLabel(currentSkill, value)
 
@@ -81,6 +88,13 @@ function SkillSearchSelect({
     return () => document.removeEventListener('mousedown', handlePointerDown)
   }, [])
 
+  useEffect(() => {
+    if (!autoFocus || disabled || isLoading) return
+    setQuery('')
+    skipNextFocusOpenRef.current = true
+    inputRef.current?.focus()
+  }, [autoFocus, disabled, isLoading])
+
   const options = useMemo(
     () =>
       skills.filter((skill) => {
@@ -95,12 +109,17 @@ function SkillSearchSelect({
     <div ref={rootRef} className="relative">
       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" strokeWidth={1.75} />
       <input
+        ref={inputRef}
         value={open ? query : selectedLabel}
         onChange={(event) => {
           setQuery(event.target.value)
           if (!open) setOpen(true)
         }}
         onFocus={() => {
+          if (skipNextFocusOpenRef.current) {
+            skipNextFocusOpenRef.current = false
+            return
+          }
           setOpen(true)
           setQuery('')
         }}
@@ -183,14 +202,12 @@ export default function TaskSkillRequirementsEditor({
   )
 
   const addRequirement = () => {
-    const nextSkill = skills.find((skill) => !usedSkillIds.has(skillKey(skill.id)))
-    if (!nextSkill) return
     onChange([
       ...value,
       {
-        skillId: nextSkill.id,
+        skillId: '',
         minimumLevel: DEFAULT_LEVEL,
-        isRequired: true,
+        isRequired: false,
       },
     ])
   }
@@ -207,6 +224,7 @@ export default function TaskSkillRequirementsEditor({
   }
 
   const canAdd = !disabled && skills.some((skill) => !usedSkillIds.has(skillKey(skill.id)))
+    && value.every((item) => !!skillKey(item.skillId))
 
   return (
     <div className="rounded-lg border border-border-subtle bg-bg-subtle/30 p-3 space-y-3">
@@ -258,6 +276,7 @@ export default function TaskSkillRequirementsEditor({
                 usedSkillIds={usedSkillIds}
                 disabled={disabled}
                 isLoading={skillsQuery.isLoading}
+                autoFocus={!currentSkillKey}
                 onChange={(skill) => updateRequirement(index, { skillId: skill.id })}
               />
 
@@ -278,7 +297,7 @@ export default function TaskSkillRequirementsEditor({
               <label className="flex h-[36px] items-center gap-2 rounded-md border border-border-subtle px-2 text-[12px] text-text-secondary">
                 <input
                   type="checkbox"
-                  checked={requirement.isRequired ?? true}
+                  checked={requirement.isRequired ?? false}
                   onChange={(event) => updateRequirement(index, { isRequired: event.target.checked })}
                   disabled={disabled}
                   className="h-3.5 w-3.5"

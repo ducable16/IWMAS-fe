@@ -30,7 +30,7 @@ export interface TaskWorkloadItem {
   dueDate: string | null
   /** Outstanding effort fed to the simulation; null when unestimated */
   remainingHours: number | null
-  /** Member's saved order within the lane; null → EDD fallback */
+  /** Member's saved order within the lane; null → ATC fallback */
   executionSeq: number | null
   /** Simulated dates; null when the task cannot be scheduled (no lane capacity) */
   projectedStartDate: string | null
@@ -87,8 +87,8 @@ export interface MemberWorkloadResponse {
 export interface ProjectScheduleResponse {
   projectId: Id
   projectName: string
-  allocatedEffortPercent: number
-  dailyCapacityHours: number
+  allocatedEffortPercent: number | null
+  dailyCapacityHours: number | null
   workloadLevel: WorkloadLevel | string
   nearTermPercent: number
   overallPercent: number

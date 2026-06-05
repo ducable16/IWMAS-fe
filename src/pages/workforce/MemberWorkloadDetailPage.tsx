@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ProjectAllocationsTable from '@/features/workforce/components/member-workload-detail/ProjectAllocationsTable'
 import WorkloadTaskSections from '@/features/workforce/components/member-workload-detail/WorkloadTaskSections'
+import TaskArrangementPanel from '@/features/workforce/components/TaskArrangementPanel'
 import UtilizationBar from '@/features/workforce/components/UtilizationBar'
 import WeekNavigator, { getCurrentWeekRange } from '@/features/workforce/components/WeekNavigator'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
@@ -15,22 +16,34 @@ import type { Id, WorkloadMember } from '@/types'
 
 type WeekChangeHandler = (weekStart: string, weekEnd: string) => void
 
+const parseQueryId = (value: string | null): Id | null => {
+  if (!value) return null
+  const numeric = Number(value)
+  return Number.isNaN(numeric) ? value : numeric
+}
+
 function WorkloadDetailContent({
   data,
   weekStart,
   weekEnd,
   onWeekChange,
   isSelf,
+  selectedProjectId,
+  onProjectChange,
 }: {
   data: WorkloadMember
   weekStart: string
   weekEnd: string
   onWeekChange: WeekChangeHandler
   isSelf: boolean
+  selectedProjectId: Id | null
+  onProjectChange: (projectId: Id) => void
 }) {
   const [showAllTasks, setShowAllTasks] = useState(false)
   const tasks = data.tasks ?? []
   const overdueTasks = tasks.filter((task) => task.overdue)
+  const allocations = data.projectAllocations ?? []
+  const activeProjectId = selectedProjectId ?? allocations[0]?.projectId ?? null
 
   return (
     <>
@@ -109,7 +122,18 @@ function WorkloadDetailContent({
         </div>
       </div>
 
-      <ProjectAllocationsTable allocations={data.projectAllocations ?? null} />
+      <ProjectAllocationsTable
+        allocations={allocations}
+        activeProjectId={activeProjectId}
+        onSelectProject={onProjectChange}
+      />
+      <TaskArrangementPanel
+        userId={data.userId}
+        isSelf={isSelf}
+        allocations={allocations}
+        selectedProjectId={activeProjectId}
+        onProjectChange={onProjectChange}
+      />
       <WorkloadTaskSections tasks={tasks} showAllTasks={showAllTasks} variant="page" />
 
       <p className="text-[12px] text-text-muted text-center pb-4">
@@ -124,10 +148,14 @@ function SelfWorkloadView({
   weekStart,
   weekEnd,
   onWeekChange,
+  selectedProjectId,
+  onProjectChange,
 }: {
   weekStart: string
   weekEnd: string
   onWeekChange: WeekChangeHandler
+  selectedProjectId: Id | null
+  onProjectChange: (projectId: Id) => void
 }) {
   const { data, isLoading, isError, error, refetch } = useMyWorkload()
 
@@ -141,6 +169,8 @@ function SelfWorkloadView({
       weekStart={weekStart}
       weekEnd={weekEnd}
       onWeekChange={onWeekChange}
+      selectedProjectId={selectedProjectId}
+      onProjectChange={onProjectChange}
       isSelf
     />
   )
@@ -151,11 +181,15 @@ function OtherUserWorkloadView({
   weekStart,
   weekEnd,
   onWeekChange,
+  selectedProjectId,
+  onProjectChange,
 }: {
   userId: Id
   weekStart: string
   weekEnd: string
   onWeekChange: WeekChangeHandler
+  selectedProjectId: Id | null
+  onProjectChange: (projectId: Id) => void
 }) {
   const { data, isLoading, isError, error, refetch } = useUserWorkloadDetail(
     userId,
@@ -171,6 +205,8 @@ function OtherUserWorkloadView({
       weekStart={weekStart}
       weekEnd={weekEnd}
       onWeekChange={onWeekChange}
+      selectedProjectId={selectedProjectId}
+      onProjectChange={onProjectChange}
       isSelf={false}
     />
   )
@@ -193,6 +229,9 @@ export default function MemberWorkloadDetailPage() {
   )
   const [weekEnd, setWeekEnd] = useState(
     () => searchParams.get('weekEnd') || getCurrentWeekRange().weekEnd,
+  )
+  const [selectedProjectId, setSelectedProjectId] = useState<Id | null>(
+    () => parseQueryId(searchParams.get('projectId')),
   )
 
   const handleWeekChange = useCallback((ws: string, we: string) => {
@@ -226,12 +265,16 @@ export default function MemberWorkloadDetailPage() {
           weekStart={weekStart}
           weekEnd={weekEnd}
           onWeekChange={handleWeekChange}
+          selectedProjectId={selectedProjectId}
+          onProjectChange={setSelectedProjectId}
         />
       ) : (
         <SelfWorkloadView
           weekStart={weekStart}
           weekEnd={weekEnd}
           onWeekChange={handleWeekChange}
+          selectedProjectId={selectedProjectId}
+          onProjectChange={setSelectedProjectId}
         />
       )}
     </div>

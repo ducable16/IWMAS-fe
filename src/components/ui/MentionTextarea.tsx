@@ -292,11 +292,7 @@ function MentionPopup({
                       <span className="block text-[11px] text-text-muted truncate">{s.email}</span>
                     )}
                   </span>
-                  {isActive && (
-                    <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-accent/15 text-accent font-mono border border-accent/20 shrink-0">
-                      Enter
-                    </kbd>
-                  )}
+                  {isActive}
                 </button>
               </li>
             )

@@ -57,6 +57,7 @@ function normaliseTask(t: Task): TaskListItem {
     labels: t.labels || [],
     projectId: t.projectId,
     projectName: t.projectName ?? null,
+    projectCode: t.projectCode ?? null,
     customFields: t.customFields || {},
     startDate: t.startDate || null,
     createdAt: t.createdAt || null,

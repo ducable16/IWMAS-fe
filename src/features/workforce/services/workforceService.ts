@@ -1,7 +1,10 @@
 import api from '@/lib/axios'
 import type {
+  ArrangementQueryParams,
+  ArrangeResponse,
   Id,
   MemberWorkloadResponse,
+  NextTaskResponse,
   ProjectScheduleResponse,
   SchedulePreviewRequest,
   WorkloadSnapshotResponse,
@@ -75,14 +78,14 @@ export const workloadService = {
   /**
    * §9.10 GET /api/workload/me/schedule?projectId={projectId}
    * Returns the member's lane simulated under their saved executionSeq
-   * (or EDD when no order has been saved).
+   * (or ATC when no order has been saved).
    */
   getMySchedule: (projectId: Id) =>
     api.get<ProjectScheduleResponse>('/workload/me/schedule', { params: { projectId } }),
 
   /**
    * §9.11 GET /api/workload/me/schedule/suggest?projectId={projectId}
-   * Returns the lane simulated under the EDD-optimal order — a preview, not persisted.
+   * Returns the lane simulated under the ATC suggested order — a preview, not persisted.
    * Response always has savedOrder: false.
    */
   suggestSchedule: (projectId: Id) =>
@@ -103,4 +106,22 @@ export const workloadService = {
    */
   saveSchedule: (data: SchedulePreviewRequest) =>
     api.put<ProjectScheduleResponse>('/workload/me/schedule', data),
+}
+
+export const arrangementService = {
+  /** §16.1 GET /api/arrangement/lanes/{projectId}/{assigneeId} */
+  arrangeLane: (projectId: Id, assigneeId: Id, params?: ArrangementQueryParams) =>
+    api.get<ArrangeResponse>(`/arrangement/lanes/${projectId}/${assigneeId}`, { params }),
+
+  /** §16.2 GET /api/arrangement/lanes/{projectId}/{assigneeId}/next */
+  getLaneNextTask: (projectId: Id, assigneeId: Id, params?: Pick<ArrangementQueryParams, 'k'>) =>
+    api.get<NextTaskResponse>(`/arrangement/lanes/${projectId}/${assigneeId}/next`, { params }),
+
+  /** §16.3 GET /api/arrangement/me/lanes/{projectId} */
+  arrangeMyLane: (projectId: Id, params?: ArrangementQueryParams) =>
+    api.get<ArrangeResponse>(`/arrangement/me/lanes/${projectId}`, { params }),
+
+  /** §16.4 GET /api/arrangement/me/lanes/{projectId}/next */
+  getMyNextTask: (projectId: Id, params?: Pick<ArrangementQueryParams, 'k'>) =>
+    api.get<NextTaskResponse>(`/arrangement/me/lanes/${projectId}/next`, { params }),
 }

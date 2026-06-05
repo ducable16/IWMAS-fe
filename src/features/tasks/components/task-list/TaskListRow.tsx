@@ -26,6 +26,10 @@ export default function TaskListRow({
     color: 'text-text-secondary',
   }
   const overdue = task.due && task.status !== 'DONE' ? isOverdue(task.due) : false
+  const projectLabel = task.projectCode || task.projectName || (task.projectId ? `#${task.projectId}` : '-')
+  const projectTitle = task.projectName
+    ? `${task.projectName}${task.projectCode ? ` (${task.projectCode})` : ''}`
+    : task.projectCode || (task.projectId ? `Project #${task.projectId}` : 'Project')
 
   return (
     <tr
@@ -71,14 +75,14 @@ export default function TaskListRow({
       <td className="px-4 py-3 max-w-[180px]">
         {task.projectId ? (
           <span
-            title={task.projectName || `Project #${task.projectId}`}
+            title={projectTitle}
             onClick={(e) => {
               e.stopPropagation()
               onChange('projectId', task.projectId ?? null)
             }}
             className="text-[12px] text-text-primary hover:text-accent hover:underline cursor-pointer transition-colors truncate block"
           >
-            {task.projectName || `#${task.projectId}`}
+            {projectLabel}
           </span>
         ) : (
           <span className="text-[12px] text-text-muted">-</span>

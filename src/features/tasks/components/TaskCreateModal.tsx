@@ -7,6 +7,7 @@ import { useUserSkills } from '@/features/skills/hooks/useSkills'
 import {
   getMissingRequiredSkills,
   getRequiredSkillRequirements,
+  normalizeTaskSkillRequirements,
 } from '@/features/tasks/utils/taskSkillRequirements'
 import TaskCreateFields from './task-create/TaskCreateFields'
 import {
@@ -89,7 +90,7 @@ export default function TaskCreateModal({
         startDate: form.startDate || null,
         dueDate: form.dueDate || null,
         estimatedHours: Number.isFinite(estimatedHours) && estimatedHours >= 0 ? estimatedHours : null,
-        skillRequirements: form.skillRequirements,
+        skillRequirements: normalizeTaskSkillRequirements(form.skillRequirements),
       },
       { onSuccess: onClose },
     )

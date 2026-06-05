@@ -1,7 +1,8 @@
 import { FolderOpen } from 'lucide-react'
+import clsx from 'clsx'
 import UtilizationBar from '../UtilizationBar'
 import WorkloadLevelBadge from '../WorkloadLevelBadge'
-import type { ProjectWorkloadAllocation } from '@/types'
+import type { Id, ProjectWorkloadAllocation } from '@/types'
 
 type Allocation = ProjectWorkloadAllocation & {
   allocatedEffortPercent?: number | null
@@ -13,9 +14,17 @@ type Allocation = ProjectWorkloadAllocation & {
 
 interface ProjectAllocationsTableProps {
   allocations?: Allocation[] | null
+  activeProjectId?: Id | null
+  onSelectProject?: (projectId: Id) => void
 }
 
-export default function ProjectAllocationsTable({ allocations }: ProjectAllocationsTableProps) {
+const keyOf = (id: Id) => String(id)
+
+export default function ProjectAllocationsTable({
+  allocations,
+  activeProjectId = null,
+  onSelectProject,
+}: ProjectAllocationsTableProps) {
   if (!allocations?.length) return null
 
   return (
@@ -27,52 +36,75 @@ export default function ProjectAllocationsTable({ allocations }: ProjectAllocati
         </h3>
       </div>
       <div className="space-y-3">
-        {allocations.map((allocation) => (
-          <div
-            key={allocation.projectId}
-            className="flex items-center gap-4 py-2.5 px-3 rounded-xl bg-bg-subtle hover:bg-bg-hover transition-colors"
-          >
-            <div className="min-w-0 w-[180px] shrink-0">
-              <p className="text-[13px] font-semibold text-text-primary truncate">
-                {allocation.projectName}
-              </p>
-              {allocation.allocatedEffortPercent != null && (
-                <p className="text-[11px] text-text-muted mt-0.5">
-                  Allocated: <span className="font-medium">{allocation.allocatedEffortPercent}%</span>
+        {allocations.map((allocation) => {
+          const active = activeProjectId != null && keyOf(allocation.projectId) === keyOf(activeProjectId)
+          const content = (
+            <>
+              <div className="min-w-0 w-[180px] shrink-0">
+                <p className="text-[13px] font-semibold text-text-primary truncate">
+                  {allocation.projectName}
                 </p>
-              )}
-            </div>
-            <div className="shrink-0">
-              <WorkloadLevelBadge level={allocation.workloadLevel} />
-            </div>
-            <div className="flex-1 min-w-[120px]">
-              <UtilizationBar
-                utilizationPercent={allocation.nearTermPercent}
-                workloadLevel={allocation.workloadLevel}
-                compact
-              />
-            </div>
-            <div className="shrink-0 text-right">
-              <p className="text-[12px] text-text-secondary tabular-nums">
-                {allocation.loadInWindowHours != null ? (
-                  <>
-                    <span className="font-semibold">
-                      {allocation.loadInWindowHours.toFixed(1)}
-                    </span>
-                    {' h load'}
-                  </>
-                ) : (
-                  '-'
+                {allocation.allocatedEffortPercent != null && (
+                  <p className="text-[11px] text-text-muted mt-0.5">
+                    Allocated: <span className="font-medium">{allocation.allocatedEffortPercent}%</span>
+                  </p>
                 )}
-              </p>
-              {allocation.dailyCapacityHours != null && (
-                <p className="text-[11px] text-text-muted">
-                  {allocation.dailyCapacityHours.toFixed(1)} h/day cap
+              </div>
+              <div className="shrink-0">
+                <WorkloadLevelBadge level={allocation.workloadLevel} />
+              </div>
+              <div className="flex-1 min-w-[120px]">
+                <UtilizationBar
+                  utilizationPercent={allocation.nearTermPercent}
+                  workloadLevel={allocation.workloadLevel}
+                  compact
+                />
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-[12px] text-text-secondary tabular-nums">
+                  {allocation.loadInWindowHours != null ? (
+                    <>
+                      <span className="font-semibold">
+                        {allocation.loadInWindowHours.toFixed(1)}
+                      </span>
+                      {' h load'}
+                    </>
+                  ) : (
+                    '-'
+                  )}
                 </p>
-              )}
+                {allocation.dailyCapacityHours != null && (
+                  <p className="text-[11px] text-text-muted">
+                    {allocation.dailyCapacityHours.toFixed(1)} h/day cap
+                  </p>
+                )}
+              </div>
+            </>
+          )
+
+          const className = clsx(
+            'flex w-full items-center gap-4 rounded-xl border py-2.5 px-3 text-left transition-colors',
+            active
+              ? 'border-accent/35 bg-accent/[0.06]'
+              : 'border-transparent bg-bg-subtle hover:bg-bg-hover',
+            onSelectProject && 'cursor-pointer',
+          )
+
+          return onSelectProject ? (
+            <button
+              key={allocation.projectId}
+              type="button"
+              onClick={() => onSelectProject(allocation.projectId)}
+              className={className}
+            >
+              {content}
+            </button>
+          ) : (
+            <div key={allocation.projectId} className={className}>
+              {content}
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

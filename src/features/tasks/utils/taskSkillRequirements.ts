@@ -1,7 +1,7 @@
 import { SKILL_LEVELS } from '@/constants/enums'
 import type { EmployeeSkill, Id, TaskSkillRequirementRequest } from '@/types'
 
-const DEFAULT_MINIMUM_LEVEL = 'INTERMEDIATE'
+const DEFAULT_MINIMUM_LEVEL = 'BEGINNER'
 
 type SkillRequirementLike = {
   skillId: Id
@@ -26,11 +26,23 @@ export function getRequiredSkillRequirements(
   requirements: SkillRequirementLike[] | null | undefined,
 ): TaskSkillRequirementRequest[] {
   return (requirements ?? [])
-    .filter((item) => item.skillId != null && item.isRequired !== false)
+    .filter((item) => !!skillKey(item.skillId) && item.isRequired !== false)
     .map((item) => ({
       skillId: item.skillId,
       minimumLevel: normalizeLevel(item.minimumLevel),
       isRequired: true,
+    }))
+}
+
+export function normalizeTaskSkillRequirements(
+  requirements: SkillRequirementLike[] | null | undefined,
+): TaskSkillRequirementRequest[] {
+  return (requirements ?? [])
+    .filter((item) => !!skillKey(item.skillId))
+    .map((item) => ({
+      skillId: item.skillId,
+      minimumLevel: normalizeLevel(item.minimumLevel),
+      isRequired: item.isRequired ?? false,
     }))
 }
 

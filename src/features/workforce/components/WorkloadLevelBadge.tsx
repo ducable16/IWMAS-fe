@@ -8,7 +8,7 @@ type WorkloadLevelBadgeProps = {
 
 /**
  * Pill/chip showing WorkloadLevel string with appropriate color.
- * OVERLOADED gets a subtle pulse animation on the dot.
+ * Overdue/slipping levels get a subtle pulse animation on the dot.
  */
 export default function WorkloadLevelBadge({ level }: WorkloadLevelBadgeProps) {
   const meta = level
@@ -26,7 +26,7 @@ export default function WorkloadLevelBadge({ level }: WorkloadLevelBadgeProps) {
         className={clsx(
           'w-1.5 h-1.5 rounded-full shrink-0',
           meta.dot,
-          level === 'OVERLOADED' && 'animate-pulse',
+          (level === 'OVERDUE' || level === 'WILL_SLIP') && 'animate-pulse',
         )}
       />
       {meta.label}

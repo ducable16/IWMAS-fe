@@ -18,8 +18,8 @@ type MemberWorkloadDetailModalProps = {
 export default function MemberWorkloadDetailModal({
   userId,
   userFullName,
-  weekStart,
-  weekEnd,
+  weekStart: _weekStart,
+  weekEnd: _weekEnd,
   open,
   onClose,
 }: MemberWorkloadDetailModalProps) {

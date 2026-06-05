@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Link2, Loader2, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Trash2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useConfirm } from '@/hooks/useConfirm'
 import AttachmentsSection from '@/features/tasks/components/AttachmentsSection'
@@ -15,6 +15,7 @@ import { useUserSkills } from '@/features/skills/hooks/useSkills'
 import {
   getMissingRequiredSkills,
   getRequiredSkillRequirements,
+  normalizeTaskSkillRequirements,
   serializeRequiredSkills,
 } from '@/features/tasks/utils/taskSkillRequirements'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
@@ -53,6 +54,7 @@ export default function TaskDetailPage() {
   const canDeleteAsManager = can.isAdmin || can.isPm
   const skillRequirements = toTaskSkillRequirementRequest(task?.skillRequirements || [])
   const isSkillDraftDirty = !areSkillRequirementsEqual(skillDraft, skillRequirements)
+  const hasIncompleteSkillDraft = skillDraft.some((item) => !String(item.skillId ?? '').trim())
   const requiredSkillDraft = getRequiredSkillRequirements(skillDraft)
   const shouldValidateSkillDraftAssignee = !!task?.assignee?.id && requiredSkillDraft.length > 0
   const draftAssigneeSkills = useUserSkills(
@@ -134,8 +136,13 @@ export default function TaskDetailPage() {
   }
 
   const saveSkillRequirements = () => {
-    if (!isSkillDraftDirty || isCheckingSkillDraftAssignee || hasSkillDraftMismatch) return
-    updateTask(buildPayload({ skillRequirements: skillDraft }))
+    if (
+      !isSkillDraftDirty
+      || hasIncompleteSkillDraft
+      || isCheckingSkillDraftAssignee
+      || hasSkillDraftMismatch
+    ) return
+    updateTask(buildPayload({ skillRequirements: normalizeTaskSkillRequirements(skillDraft) }))
   }
 
   return (
@@ -252,6 +259,7 @@ export default function TaskDetailPage() {
                       !isSkillDraftDirty
                       || isUpdating
                       || isDeleting
+                      || hasIncompleteSkillDraft
                       || isCheckingSkillDraftAssignee
                       || hasSkillDraftMismatch
                     }
@@ -271,6 +279,11 @@ export default function TaskDetailPage() {
                   Current assignee does not meet the draft required skills. Change assignee, unassign, or adjust requirements before saving.
                 </p>
               )}
+              {hasIncompleteSkillDraft && (
+                <p className="mt-2 rounded-md border border-border-subtle bg-bg-subtle px-3 py-2 text-[12px] text-text-muted">
+                  Select a skill before saving this requirement.
+                </p>
+              )}
             </SectionBlock>
           )}
 
@@ -280,21 +293,6 @@ export default function TaskDetailPage() {
             canDeleteAsManager={canDeleteAsManager}
             currentUserId={user?.id}
           />
-
-          <SectionBlock
-            title="Linked items"
-            actions={
-              <button
-                type="button"
-                className="flex items-center gap-1 text-[12px] text-text-muted hover:text-text-primary transition-colors px-2 py-1 rounded-md hover:bg-bg-hover"
-              >
-                <Link2 className="w-3.5 h-3.5" strokeWidth={1.75} />
-                Link
-              </button>
-            }
-          >
-            <p className="text-[13px] text-text-muted italic py-1">No linked items.</p>
-          </SectionBlock>
 
           <ActivitySection
             activeTab={activeTab}

@@ -24,6 +24,7 @@ export interface Task {
   skillRequirements?: TaskSkillRequirement[] | undefined
   customFields?: Record<string, unknown> | undefined
   projectName?: string | null | undefined
+  projectCode?: string | null | undefined
   createdAt?: string | null
   updatedAt?: string | null
   completedAt?: string | null
@@ -55,6 +56,7 @@ export interface TaskListItem {
   labels: string[]
   projectId?: Id | undefined
   projectName?: string | null | undefined
+  projectCode?: string | null | undefined
   customFields?: Record<string, unknown> | undefined
   startDate?: string | null | undefined
   createdAt?: string | null | undefined

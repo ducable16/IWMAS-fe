@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { workloadService } from '../services/workforceService'
+import { arrangementService, workloadService } from '../services/workforceService'
 import type {
+  ArrangementQueryParams,
+  ArrangeResponse,
   BurnoutRisk,
   Id,
   MemberWorkloadResponse,
+  NextTaskResponse,
   ProjectScheduleResponse,
   SchedulePreviewRequest,
   WorkloadSnapshotResponse,
@@ -160,13 +163,91 @@ export function useSaveSchedule() {
       return res.data as ProjectScheduleResponse
     },
     onSuccess: (_, variables) => {
-      // Invalidate the saved schedule query so it re-fetches with savedOrder: true
       queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'me', variables.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'suggest', variables.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'me', 'realtime'] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'project', variables.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['arrangement'] })
     },
   })
 }
 
 // ── Legacy stubs (kept for backward compat — data not yet available from API) ──
+
+// Task arrangement (§16)
+
+export function useArrangeLane(
+  projectId: Id | null | undefined,
+  assigneeId: Id | null | undefined,
+  params?: ArrangementQueryParams,
+  enabled = true,
+) {
+  return useQuery<ArrangeResponse | null>({
+    queryKey: ['arrangement', 'lane', projectId, assigneeId, params],
+    queryFn: async () => {
+      const res = await arrangementService.arrangeLane(projectId as Id, assigneeId as Id, params)
+      return res.data ?? null
+    },
+    enabled: !!projectId && !!assigneeId && enabled,
+    staleTime: 30_000,
+  })
+}
+
+export function useLaneNextTask(
+  projectId: Id | null | undefined,
+  assigneeId: Id | null | undefined,
+  k?: number,
+  enabled = true,
+) {
+  return useQuery<NextTaskResponse | null>({
+    queryKey: ['arrangement', 'lane', projectId, assigneeId, 'next', k],
+    queryFn: async () => {
+      const res = await arrangementService.getLaneNextTask(
+        projectId as Id,
+        assigneeId as Id,
+        k == null ? undefined : { k },
+      )
+      return res.data ?? null
+    },
+    enabled: !!projectId && !!assigneeId && enabled,
+    staleTime: 30_000,
+  })
+}
+
+export function useArrangeMyLane(
+  projectId: Id | null | undefined,
+  params?: ArrangementQueryParams,
+  enabled = true,
+) {
+  return useQuery<ArrangeResponse | null>({
+    queryKey: ['arrangement', 'me', projectId, params],
+    queryFn: async () => {
+      const res = await arrangementService.arrangeMyLane(projectId as Id, params)
+      return res.data ?? null
+    },
+    enabled: !!projectId && enabled,
+    staleTime: 30_000,
+  })
+}
+
+export function useMyNextTask(
+  projectId: Id | null | undefined,
+  k?: number,
+  enabled = true,
+) {
+  return useQuery<NextTaskResponse | null>({
+    queryKey: ['arrangement', 'me', projectId, 'next', k],
+    queryFn: async () => {
+      const res = await arrangementService.getMyNextTask(
+        projectId as Id,
+        k == null ? undefined : { k },
+      )
+      return res.data ?? null
+    },
+    enabled: !!projectId && enabled,
+    staleTime: 30_000,
+  })
+}
 
 interface VelocityPoint {
   sprint: string

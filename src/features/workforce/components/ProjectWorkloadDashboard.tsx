@@ -34,6 +34,7 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
     const params = new URLSearchParams()
     if (weekStart) params.set('weekStart', weekStart)
     if (weekEnd)   params.set('weekEnd',   weekEnd)
+    if (projectId) params.set('projectId', String(projectId))
     navigate(`/workforce/members/${member.userId}?${params.toString()}`)
   }
 
