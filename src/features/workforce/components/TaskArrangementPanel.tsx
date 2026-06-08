@@ -58,6 +58,7 @@ type TaskArrangementPanelProps = {
 type SortableArrangeRowProps = {
   id: string
   task: ArrangeTaskItem
+  displayPosition: number
   previewTask?: TaskWorkloadItem | undefined
   isEditable: boolean
 }
@@ -77,7 +78,13 @@ function idsEqual(a: string[], b: string[]) {
   return a.length === b.length && a.every((id, index) => id === b[index])
 }
 
-function SortableArrangeRow({ id, task, previewTask, isEditable }: SortableArrangeRowProps) {
+function SortableArrangeRow({
+  id,
+  task,
+  displayPosition,
+  previewTask,
+  isEditable,
+}: SortableArrangeRowProps) {
   const {
     attributes,
     listeners,
@@ -117,7 +124,7 @@ function SortableArrangeRow({ id, task, previewTask, isEditable }: SortableArran
       </button>
 
       <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-border-subtle bg-bg-subtle text-[12px] font-bold tabular-nums text-text-secondary">
-        {task.position + 1}
+        {displayPosition}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -140,9 +147,11 @@ function SortableArrangeRow({ id, task, previewTask, isEditable }: SortableArran
         </div>
 
         <div className="mt-2 grid gap-2 text-[11.5px] text-text-muted sm:grid-cols-4">
-          <span className="tabular-nums">Score {task.priorityIndex.toFixed(3)}</span>
           <span className={clsx('tabular-nums', task.slackHours < 0 && 'font-semibold text-warning')}>
             Slack {formatHours(task.slackHours)}
+          </span>
+          <span className={clsx('tabular-nums', task.projectedTardinessHours > 0 && 'font-semibold text-danger')}>
+            Late {formatHours(task.projectedTardinessHours)}
           </span>
           <span className="tabular-nums">Start {fmtDay(projectedStart)}</span>
           <span className={clsx('tabular-nums', willSlip && 'font-semibold text-danger')}>
@@ -190,7 +199,10 @@ export default function TaskArrangementPanel({
   const arrangementQuery = isSelf ? myArrangement : laneArrangement
   const nextQuery = isSelf ? myNextTask : laneNextTask
   const arrangement = arrangementQuery.data
-  const tasks = arrangement?.tasks ?? EMPTY_ARRANGE_TASKS
+  const tasks = useMemo(
+    () => [...(arrangement?.tasks ?? EMPTY_ARRANGE_TASKS)].sort((a, b) => a.position - b.position),
+    [arrangement?.tasks],
+  )
   const initialOrder = useMemo(() => tasks.map((task) => keyOf(task.taskId)), [tasks])
   const taskByKey = useMemo(
     () => new Map(tasks.map((task) => [keyOf(task.taskId), task])),
@@ -279,9 +291,11 @@ export default function TaskArrangementPanel({
             {activeAllocation && (
               <p className="mt-0.5 text-[12px] text-text-muted">
                 {activeAllocation.projectName}
-                {activeAllocation.dailyCapacityHours != null
-                  ? ` · ${activeAllocation.dailyCapacityHours.toFixed(1)}h/day`
-                  : ''}
+                {arrangement?.dailyCapacityHours != null
+                  ? ` · ${arrangement.dailyCapacityHours.toFixed(1)}h/day`
+                  : activeAllocation.dailyCapacityHours != null
+                    ? ` · ${activeAllocation.dailyCapacityHours.toFixed(1)}h/day`
+                    : ''}
               </p>
             )}
           </div>
@@ -318,6 +332,19 @@ export default function TaskArrangementPanel({
       {!arrangementQuery.isLoading && !arrangementQuery.isError && (
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-border-subtle bg-bg-subtle/35 p-3">
+            {arrangement && (
+              <div className="mb-3 flex flex-wrap gap-2 text-[11.5px] text-text-muted">
+                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
+                  ATC k={arrangement.k.toFixed(1)}
+                </span>
+                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
+                  Allocation {arrangement.allocatedEffortPercent ?? '-'}%
+                </span>
+                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
+                  Capacity {formatHours(arrangement.dailyCapacityHours)}/day
+                </span>
+              </div>
+            )}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-accent" strokeWidth={1.75} />
@@ -375,11 +402,12 @@ export default function TaskArrangementPanel({
               >
                 <SortableContext items={order} strategy={verticalListSortingStrategy}>
                   <div className="space-y-2">
-                    {orderedTasks.map((task) => (
+                    {orderedTasks.map((task, index) => (
                       <SortableArrangeRow
                         key={keyOf(task.taskId)}
                         id={keyOf(task.taskId)}
                         task={task}
+                        displayPosition={index + 1}
                         previewTask={previewByKey.get(keyOf(task.taskId))}
                         isEditable={canEditOrder}
                       />

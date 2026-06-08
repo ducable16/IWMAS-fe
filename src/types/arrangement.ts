@@ -13,7 +13,6 @@ export interface ArrangeTaskItem {
   title: string
   position: number
   priority: string
-  priorityIndex: number
   slackHours: number
   projectedStart: string | null
   projectedFinish: string | null
@@ -40,6 +39,5 @@ export interface NextTaskResponse {
   taskId: Id | null
   title: string | null
   priority: string | null
-  priorityIndex: number | null
   reason: string | null
 }

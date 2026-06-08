@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import type { Id, TaskComment } from '@/types'
 
 export type AvatarSize = 'xs' | 'sm' | 'md'
-export type EditableField = 'assignee' | 'priority' | 'type' | 'startDate' | 'dueDate' | 'estimate' | 'sprint' | 'labels'
+export type EditableField = 'assignee' | 'priority' | 'type' | 'startDate' | 'dueDate' | 'estimate'
 export interface AvatarProps {
   name?: string | null | undefined
   avatarUrl?: string | null | undefined

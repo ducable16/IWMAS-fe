@@ -5,7 +5,7 @@ import {
   TYPE_META,
 } from '@/features/tasks/components/TaskFilterDrawer'
 import type { ActiveFilterChip } from '@/components/ui/ActiveFilterChips'
-import type { MemberView, Project, QueryValue, TaskFilterChange, TaskFilters } from '@/types'
+import type { MemberView, Project, TaskFilterChange, TaskFilters } from '@/types'
 
 type ActiveTaskFiltersProps = {
   filters: TaskFilters
@@ -87,14 +87,6 @@ export default function ActiveTaskFilters({
     })
   }
 
-  if (filters.sprint) {
-    chips.push({
-      key: 'sprint',
-      label: `Sprint: ${filters.sprint}`,
-      clear: () => onChange('sprint', null),
-    })
-  }
-
   if (filters.dueDateFrom || filters.dueDateTo) {
     chips.push({
       key: 'due',
@@ -105,26 +97,6 @@ export default function ActiveTaskFilters({
       },
     })
   }
-
-  ;(filters.labels || []).forEach((label) =>
-    chips.push({
-      key: `label-${label}`,
-      label: `#${label}`,
-      clear: () => onChange('labels', filters.labels.filter((item) => item !== label)),
-    }),
-  )
-
-  Object.entries(filters.customFields || {}).forEach(([key, value]) =>
-    chips.push({
-      key: `cf-${key}`,
-      label: `${key}=${value}`,
-      clear: () => {
-        const next: Record<string, QueryValue> = { ...filters.customFields }
-        delete next[key]
-        onChange('customFields', next)
-      },
-    }),
-  )
 
   return <ActiveFilterChips chips={chips} onClearAll={onClearAll} />
 }

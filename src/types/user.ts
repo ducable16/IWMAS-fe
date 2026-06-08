@@ -1,4 +1,4 @@
-import type { UserPosition, UserRole } from '@/constants/enums'
+import type { UserRole } from '@/constants/enums'
 import type { Id } from './api'
 
 export interface UserPublicView {
@@ -7,7 +7,7 @@ export interface UserPublicView {
   fullName?: string | undefined
   /** Permanent public URL resolved by the API, or null when no avatar is set. */
   avatarUrl?: string | null | undefined
-  position?: UserPosition | string | null | undefined
+  position?: string | null | undefined
   role?: UserRole | string | null | undefined
 }
 
@@ -25,7 +25,7 @@ export interface MemberView {
   fullName: string
   email: string
   phone: string
-  position: UserPosition | string
+  position: string
   role: UserRole | string
   status: 'ACTIVE' | 'DISABLED' | 'INVITED'
   lastActive: string | null
@@ -70,8 +70,6 @@ export interface ResetPasswordRequest {
 
 export interface UpdateOwnProfileRequest {
   name?: string | undefined
-  phone?: string | undefined
-  position?: UserPosition | string | undefined
 }
 
 export interface ChangePasswordRequest {
@@ -89,14 +87,13 @@ export interface CreateUserRequest {
   password: string
   fullName: string
   phone?: string | undefined
-  position?: UserPosition | string | undefined
+  position?: string | undefined
   role?: UserRole | string | undefined
 }
 
 export interface UpdateUserRequest {
   fullName?: string | undefined
-  email?: string | undefined
   phone?: string | undefined
-  position?: UserPosition | string | undefined
+  position?: string | undefined
   role?: UserRole | string | undefined
 }

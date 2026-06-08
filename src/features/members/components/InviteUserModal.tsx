@@ -5,9 +5,9 @@ import ModalFormActions from '@/components/ui/ModalFormActions'
 import { useInviteUser } from '../hooks/useInviteUser'
 import Field from '@/components/ui/Field'
 import SelectField from '@/components/ui/SelectField'
-import { USER_ROLES, USER_ROLE_LABEL, USER_POSITIONS, USER_POSITION_LABEL } from '@/constants/enums'
+import { USER_ROLES, USER_ROLE_LABEL } from '@/constants/enums'
 import type { ChangeEvent, FormEvent } from 'react'
-import type { UserPosition, UserRole } from '@/constants/enums'
+import type { UserRole } from '@/constants/enums'
 
 const ROLES: UserRole[] = ['TEAM_MEMBER', 'PROJECT_MANAGER', 'HR', 'ADMIN'].filter((role): role is UserRole =>
   USER_ROLES.includes(role as UserRole),
@@ -18,7 +18,7 @@ type InviteUserForm = {
   fullName: string
   password: string
   phone: string
-  position: UserPosition
+  position: string
   role: UserRole
 }
 
@@ -34,7 +34,7 @@ const EMPTY_FORM: InviteUserForm = {
   fullName: '',
   password: '',
   phone: '',
-  position: 'DEVELOPER',
+  position: '',
   role: 'TEAM_MEMBER',
 }
 
@@ -73,7 +73,14 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
       return
     }
 
-    mutate(form, {
+    mutate({
+      email: form.email.trim(),
+      fullName: form.fullName.trim(),
+      password: form.password,
+      role: form.role,
+      ...(form.phone.trim() ? { phone: form.phone.trim() } : {}),
+      ...(form.position.trim() ? { position: form.position.trim() } : {}),
+    }, {
       onSuccess: () => {
         reset()
         onClose()
@@ -154,18 +161,16 @@ export default function InviteUserModal({ open, onClose }: InviteUserModalProps)
               />
             </Field>
 
-            <SelectField
-              label="Position"
-              id="inv-position"
-              value={form.position}
-              onChange={set('position')}
-            >
-              {USER_POSITIONS.map((pos) => (
-                <option key={pos} value={pos}>
-                  {USER_POSITION_LABEL[pos]}
-                </option>
-              ))}
-            </SelectField>
+            <Field label="Position" id="inv-position">
+              <input
+                id="inv-position"
+                value={form.position}
+                onChange={set('position')}
+                placeholder="e.g. Senior Developer"
+                maxLength={100}
+                className="input-field"
+              />
+            </Field>
           </div>
 
           <SelectField

@@ -21,8 +21,6 @@ type PagedParams = MemberQueryParams & {
   statuses?: string[]
   priorities?: string[]
   types?: string[]
-  labels?: string[]
-  sprint?: string
   dueDateFrom?: string
   dueDateTo?: string
   managerId?: Id

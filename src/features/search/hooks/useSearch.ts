@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { searchService } from '../services/searchService'
 import type { AutocompleteResponse, Id } from '@/types'
+export { useDebouncedValue } from '@/utils/hooks'
 
 /**
  * §13.1 Min prefix length and debounce — match backend defaults.
@@ -9,16 +9,6 @@ import type { AutocompleteResponse, Id } from '@/types'
  */
 export const SEARCH_MIN_PREFIX = 2
 export const SEARCH_DEBOUNCE_MS = 220
-
-/** Returns `value` debounced by `delay` ms. */
-export function useDebouncedValue<T>(value: T, delay = SEARCH_DEBOUNCE_MS): T {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
 
 /**
  * §13.1 Autocomplete — typeahead suggestions.

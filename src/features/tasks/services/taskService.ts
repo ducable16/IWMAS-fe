@@ -56,8 +56,8 @@ export const taskService = {
   /**
    * Search & filter tasks — GET /api/tasks
    * Supported params:
-   *   search, projectId, skillId, statuses[], priorities[], types[], labels[],
-   *   sprint, assigneeId, reporterId, dueDateFrom, dueDateTo,
+   *   search, projectId, skillId, statuses[], priorities[], types[],
+   *   assigneeId, reporterId, dueDateFrom, dueDateTo,
    *   sortBy, sortDirection, page, size
    */
   search: (params: TaskSearchParams = {}) => {
@@ -68,7 +68,6 @@ export const taskService = {
     append(qs, 'skillId', params.skillId)
     append(qs, 'assigneeId', params.assigneeId)
     append(qs, 'reporterId', params.reporterId)
-    append(qs, 'sprint', params.sprint)
     append(qs, 'dueDateFrom', params.dueDateFrom)
     append(qs, 'dueDateTo', params.dueDateTo)
     append(qs, 'sortBy', params.sortBy)
@@ -80,12 +79,6 @@ export const taskService = {
     ;(params.statuses || []).forEach((v) => append(qs, 'statuses', v))
     ;(params.priorities || []).forEach((v) => append(qs, 'priorities', v))
     ;(params.types || []).forEach((v) => append(qs, 'types', v))
-    ;(params.labels || []).forEach((v) => append(qs, 'labels', v))
-
-    // Custom fields: forwarded as individual query params per §4.3
-    Object.entries(params.customFields || {}).forEach(([k, v]) => {
-      append(qs, k, v)
-    })
 
     return api.get<PageResponse<Task>>(`/tasks?${qs.toString()}`)
   },

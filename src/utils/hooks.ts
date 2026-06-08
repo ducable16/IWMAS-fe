@@ -12,7 +12,7 @@ import { useState, useEffect } from 'react'
  * @example
  * const debouncedSearch = useDebounce(searchInput, 400)
  */
-export function useDebounce<T>(value: T, delay = 400): T {
+export function useDebouncedValue<T>(value: T, delay = 400): T {
   const [debounced, setDebounced] = useState<T>(value)
   useEffect(() => {
     const id = setTimeout(() => setDebounced(value), delay)
@@ -20,3 +20,5 @@ export function useDebounce<T>(value: T, delay = 400): T {
   }, [value, delay])
   return debounced
 }
+
+export const useDebounce = useDebouncedValue

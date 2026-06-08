@@ -12,7 +12,6 @@ import {
 import TaskCreateFields from './task-create/TaskCreateFields'
 import {
   EMPTY_TASK_CREATE_FORM,
-  getTodayDateInputValue,
   type SetTaskCreateField,
   type TaskCreateForm,
 } from './task-create/taskCreateTypes'
@@ -49,6 +48,8 @@ export default function TaskCreateModal({
   const assigneeError = hasAssigneeSkillMismatch
     ? 'Selected assignee does not meet all required skills.'
     : undefined
+  const hasRequiredDate = !!form.startDate || !!form.dueDate
+  const dateError = hasRequiredDate ? undefined : 'Enter a start date or due date.'
 
   useEffect(() => {
     if (open) {
@@ -56,7 +57,6 @@ export default function TaskCreateModal({
         ...EMPTY_TASK_CREATE_FORM,
         status: defaultStatus || 'TODO',
         projectId: defaultProjectId || '',
-        startDate: getTodayDateInputValue(),
       })
     }
   }, [open, defaultStatus, defaultProjectId])
@@ -75,7 +75,13 @@ export default function TaskCreateModal({
 
   const handleSubmit = (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
-    if (!form.title.trim() || isPending || isCheckingAssigneeSkills || hasAssigneeSkillMismatch) return
+    if (
+      !form.title.trim()
+      || !hasRequiredDate
+      || isPending
+      || isCheckingAssigneeSkills
+      || hasAssigneeSkillMismatch
+    ) return
     const estimatedHours = Number.parseFloat(form.estimatedHours)
 
     createTask(
@@ -87,8 +93,8 @@ export default function TaskCreateModal({
         type: form.type,
         projectId: form.projectId || null,
         assigneeId: form.assigneeId || null,
-        startDate: form.startDate || null,
-        dueDate: form.dueDate || null,
+        ...(form.startDate ? { startDate: form.startDate } : {}),
+        ...(form.dueDate ? { dueDate: form.dueDate } : {}),
         estimatedHours: Number.isFinite(estimatedHours) && estimatedHours >= 0 ? estimatedHours : null,
         skillRequirements: normalizeTaskSkillRequirements(form.skillRequirements),
       },
@@ -107,6 +113,7 @@ export default function TaskCreateModal({
             defaultProjectName={defaultProjectName}
             onSubmit={() => handleSubmit()}
             assigneeError={assigneeError}
+            dateError={dateError}
             assigneeDisabled={!form.projectId}
           />
         </form>
@@ -114,7 +121,12 @@ export default function TaskCreateModal({
       <ModalFormActions
         onCancel={onClose}
         isPending={isPending}
-        disabled={!form.title.trim() || isCheckingAssigneeSkills || hasAssigneeSkillMismatch}
+        disabled={
+          !form.title.trim()
+          || !hasRequiredDate
+          || isCheckingAssigneeSkills
+          || hasAssigneeSkillMismatch
+        }
         idleIcon={<Plus className="w-3.5 h-3.5" strokeWidth={2} />}
         submitLabel="Create task"
         submitType="button"

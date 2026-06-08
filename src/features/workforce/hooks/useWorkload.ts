@@ -128,7 +128,7 @@ export function useMySchedule(projectId: Id | null | undefined) {
   })
 }
 
-// ── §9.11 EDD-optimal schedule suggestion ────────────────────────────────────
+// ── §9.11 ATC schedule suggestion ────────────────────────────────────────────
 
 export function useSuggestSchedule(projectId: Id | null | undefined) {
   return useQuery<ProjectScheduleResponse | null>({
@@ -172,9 +172,7 @@ export function useSaveSchedule() {
   })
 }
 
-// ── Legacy stubs (kept for backward compat — data not yet available from API) ──
-
-// Task arrangement (§16)
+// ── Task arrangement (§16) ───────────────────────────────────────────────────
 
 export function useArrangeLane(
   projectId: Id | null | undefined,

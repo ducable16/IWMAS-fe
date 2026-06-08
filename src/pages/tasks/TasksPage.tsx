@@ -130,6 +130,7 @@ export default function TasksPage() {
         {viewMode === 'list' && (
           <TaskListView
             tasks={tasks}
+            projects={projects}
             filters={filters}
             onChange={set}
             totalElements={totalElements}

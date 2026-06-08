@@ -69,17 +69,9 @@ function TaskCard({ task, onDragStart, onClick }: TaskCardProps) {
         />
       </div>
 
-      {(hasKnownType || task.labels.length > 0) && (
+      {hasKnownType && (
         <div className="flex flex-wrap gap-1 mb-2.5 ml-3.5">
-          {hasKnownType && (
-            <TaskTypeBadge type={task.type} className="text-[9px] py-0 px-1" />
-          )}
-          {task.labels.slice(0, 2).map((label) => (
-            <span key={label} className="badge-neutral">#{label}</span>
-          ))}
-          {task.labels.length > 2 && (
-            <span className="text-[10px] text-text-muted">+{task.labels.length - 2}</span>
-          )}
+          <TaskTypeBadge type={task.type} className="text-[9px] py-0 px-1" />
         </div>
       )}
 
@@ -90,9 +82,6 @@ function TaskCard({ task, onDragStart, onClick }: TaskCardProps) {
               <Clock className="w-3 h-3" strokeWidth={1.75} />
               {task.estimate}
             </span>
-          )}
-          {task.sprint && task.sprint !== '-' && (
-            <span className="truncate max-w-[80px]">{task.sprint}</span>
           )}
         </div>
         <div

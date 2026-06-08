@@ -4,11 +4,11 @@ import { TaskStatusBadge, TaskTypeBadge } from '@/components/ui/Badge'
 import { TASK_PRIORITY_META as PRIORITY_META } from '@/constants/enums'
 import { fmtDay, isOverdue } from '@/utils/date'
 import type { NavigateFunction } from 'react-router-dom'
-import type { TaskFilterChange, TaskFilters, TaskListItem } from '@/types'
+import type { Project, TaskFilterChange, TaskListItem } from '@/types'
 
 type TaskListRowProps = {
   task: TaskListItem
-  filters: TaskFilters
+  project?: Project | undefined
   onChange: TaskFilterChange
   navigate: NavigateFunction
 }
@@ -17,7 +17,7 @@ const PRIORITY_META_BY_KEY = PRIORITY_META as Record<string, { label: string; co
 
 export default function TaskListRow({
   task,
-  filters,
+  project,
   onChange,
   navigate,
 }: TaskListRowProps) {
@@ -26,10 +26,12 @@ export default function TaskListRow({
     color: 'text-text-secondary',
   }
   const overdue = task.due && task.status !== 'DONE' ? isOverdue(task.due) : false
-  const projectLabel = task.projectCode || task.projectName || (task.projectId ? `#${task.projectId}` : '-')
-  const projectTitle = task.projectName
-    ? `${task.projectName}${task.projectCode ? ` (${task.projectCode})` : ''}`
-    : task.projectCode || (task.projectId ? `Project #${task.projectId}` : 'Project')
+  const projectCode = task.projectCode || project?.code || ''
+  const projectName = task.projectName || project?.name || ''
+  const projectLabel = projectCode || projectName || '-'
+  const projectTitle = projectName
+    ? `${projectName}${projectCode ? ` (${projectCode})` : ''}`
+    : projectCode || 'Project'
 
   return (
     <tr
@@ -45,25 +47,6 @@ export default function TaskListRow({
             <p className="text-[13px] text-text-primary group-hover:text-accent transition-colors truncate">
               {task.title}
             </p>
-            {task.labels.length > 0 && (
-              <div className="flex gap-1 mt-1 flex-wrap">
-                {task.labels.map((label) => (
-                  <span
-                    key={label}
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      const already = filters.labels.includes(label)
-                      onChange('labels', already
-                        ? filters.labels.filter((item) => item !== label)
-                        : [...filters.labels, label])
-                    }}
-                    className="text-[10px] px-1.5 py-0.5 rounded-full bg-bg-subtle border border-border-subtle text-text-muted hover:border-accent/40 hover:text-accent cursor-pointer transition-colors"
-                  >
-                    #{label}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </td>

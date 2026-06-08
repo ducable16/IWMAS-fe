@@ -35,19 +35,6 @@ export const USER_ROLE_BADGE = {
   TEAM_MEMBER:     'badge-neutral',
 }
 
-// ── User positions (invite) ─────────────────────────────────────────────────
-export const USER_POSITIONS = ['ADMIN', 'PROJECT_MANAGER', 'HR', 'DEVELOPER', 'BA', 'TESTER'] as const
-export type UserPosition = typeof USER_POSITIONS[number]
-
-export const USER_POSITION_LABEL = {
-  ADMIN:           'Admin',
-  PROJECT_MANAGER: 'Project Manager',
-  HR:              'HR',
-  DEVELOPER:       'Developer',
-  BA:              'BA',
-  TESTER:          'Tester',
-}
-
 // ── Project status ────────────────────────────────────────────────────────────
 export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
 export type ProjectStatus = typeof PROJECT_STATUSES[number]
@@ -211,17 +198,6 @@ export const WORKLOAD_LEVEL_META = {
   AVAILABLE: { label: 'Available', bg: 'bg-info/15',          text: 'text-info',       dot: 'bg-info',          border: 'border-info/25'       },
   BLOCKED:   { label: 'Observer',  bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle'  },
   UNDEFINED: { label: 'N/A',       bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle'  },
-}
-
-// ── AhpCriterion (recommender — leaf criteria §11) ───────────────────────────
-export const AHP_CRITERIA = ['SKILL_COVERAGE', 'SKILL_LEVEL', 'WORKLOAD', 'ON_TIME'] as const
-export type AhpCriterion = typeof AHP_CRITERIA[number]
-
-export const AHP_CRITERION_LABEL = {
-  SKILL_COVERAGE: 'Skill Coverage',
-  SKILL_LEVEL:    'Skill Level',
-  WORKLOAD:       'Workload',
-  ON_TIME:        'On-time Delivery',
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

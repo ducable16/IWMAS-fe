@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
 import { keepPreviousData } from '@tanstack/react-query'
 import { searchService } from '@/features/search/services/searchService'
-import { useDebouncedValue, SEARCH_DEBOUNCE_MS } from '@/features/search/hooks/useSearch'
+import { SEARCH_DEBOUNCE_MS } from '@/features/search/hooks/useSearch'
+import { useDebouncedValue } from '@/utils/hooks'
 import type { AutocompleteResponse, Id } from '@/types'
 
 /**

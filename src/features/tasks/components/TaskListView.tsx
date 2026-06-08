@@ -1,13 +1,15 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { LiveEmpty, LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import SortableHeader from '@/components/ui/SortableHeader'
 import TaskListPagination from './task-list/TaskListPagination'
 import TaskListRow from './task-list/TaskListRow'
-import type { TaskFilterChange, TaskFilters, TaskListItem } from '@/types'
+import type { Project, TaskFilterChange, TaskFilters, TaskListItem } from '@/types'
 
 type TaskListViewProps = {
   tasks: TaskListItem[]
+  projects?: Project[] | undefined
   filters: TaskFilters
   onChange: TaskFilterChange
   totalElements: number
@@ -21,6 +23,7 @@ type TaskListViewProps = {
 
 export default function TaskListView({
   tasks,
+  projects = [],
   filters,
   onChange,
   totalElements,
@@ -32,6 +35,10 @@ export default function TaskListView({
   isStale,
 }: TaskListViewProps) {
   const navigate = useNavigate()
+  const projectsById = useMemo(
+    () => new Map(projects.map((project) => [String(project.id), project])),
+    [projects],
+  )
   const sortBy = (field: string) => {
     if (filters.sortBy === field) {
       onChange('sortDirection', filters.sortDirection === 'DESC' ? 'ASC' : 'DESC')
@@ -104,7 +111,7 @@ export default function TaskListView({
               <TaskListRow
                 key={task.id}
                 task={task}
-                filters={filters}
+                project={task.projectId ? projectsById.get(String(task.projectId)) : undefined}
                 onChange={onChange}
                 navigate={navigate}
               />

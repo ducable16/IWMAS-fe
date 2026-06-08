@@ -63,18 +63,14 @@ export default function ProfileSection() {
     setSaving(true)
     try {
       const res = await userService.updateMe({
-        name: form.name,
-        phone: form.phone,
-        position: form.position,
+        name: form.name.trim(),
       })
       if (res.data) {
         updateUser(res.data)
       } else if (user) {
         updateUser({
           ...user,
-          fullName: form.name,
-          phone: form.phone,
-          position: form.position,
+          fullName: form.name.trim(),
         } as User)
       }
       toast.success('Profile updated')
@@ -177,28 +173,26 @@ export default function ProfileSection() {
           />
         </Field>
 
-        <Field label="Phone" id="prof-phone">
+        <Field label="Phone" id="prof-phone" readOnly>
           <input
             id="prof-phone"
             name="phone"
             type="tel"
             value={form.phone}
-            onChange={set('phone')}
-            placeholder="0901234567"
-            maxLength={20}
-            className="input-field"
+            readOnly
+            disabled
+            className="input-readonly"
           />
         </Field>
 
-        <Field label="Position" id="prof-position">
+        <Field label="Position" id="prof-position" readOnly>
           <input
             id="prof-position"
             name="position"
             value={form.position}
-            onChange={set('position')}
-            placeholder="e.g. Senior Developer"
-            maxLength={100}
-            className="input-field"
+            readOnly
+            disabled
+            className="input-readonly"
           />
         </Field>
 

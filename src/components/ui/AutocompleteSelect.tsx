@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { ChevronDown, Loader2, Search, X } from 'lucide-react'
 import clsx from 'clsx'
 import Field from './Field'
-import { useDebouncedValue } from '@/features/search/hooks/useSearch'
+import { useDebouncedValue } from '@/utils/hooks'
 import type { ReactNode, ChangeEvent, MouseEvent } from 'react'
 import type { Id } from '@/types'
 

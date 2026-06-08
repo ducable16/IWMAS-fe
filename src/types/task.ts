@@ -1,4 +1,4 @@
-import type { Id, QueryValue } from './api'
+import type { Id } from './api'
 import type { TaskPriority, TaskStatus, TaskType } from '@/constants/enums'
 import type { UserPublicView } from './user'
 
@@ -14,15 +14,12 @@ export interface Task {
   reporter?: UserPublicView | null | undefined
   assigneeId?: Id | null | undefined
   reporterId?: Id | null | undefined
-  sprint?: string | null
   dueDate?: string | null
   startDate?: string | null
   estimatedHours?: number | null
   actualHours?: number | null
-  labels?: string[] | undefined
   comments?: TaskComment[] | undefined
   skillRequirements?: TaskSkillRequirement[] | undefined
-  customFields?: Record<string, unknown> | undefined
   projectName?: string | null | undefined
   projectCode?: string | null | undefined
   createdAt?: string | null
@@ -50,14 +47,11 @@ export interface TaskListItem {
   assigneeId?: Id | null | undefined
   reporterFull?: string | undefined
   reporterId?: Id | null | undefined
-  sprint: string
   due: string | null
   estimate: string
-  labels: string[]
   projectId?: Id | undefined
   projectName?: string | null | undefined
   projectCode?: string | null | undefined
-  customFields?: Record<string, unknown> | undefined
   startDate?: string | null | undefined
   createdAt?: string | null | undefined
 }
@@ -69,8 +63,6 @@ export interface TaskSearchParams {
   statuses?: string[] | undefined
   priorities?: string[] | undefined
   types?: string[] | undefined
-  labels?: string[] | undefined
-  sprint?: string | null | undefined
   assigneeId?: Id | null | undefined
   reporterId?: Id | null | undefined
   dueDateFrom?: string | null | undefined
@@ -79,7 +71,6 @@ export interface TaskSearchParams {
   sortDirection?: string | undefined
   page?: number | undefined
   size?: number | undefined
-  customFields?: Record<string, QueryValue> | undefined
 }
 
 export interface TaskFilters {
@@ -91,11 +82,8 @@ export interface TaskFilters {
   types: string[]
   assigneeId: Id | null
   reporterId: Id | null
-  labels: string[]
-  sprint: string | null
   dueDateFrom: string | null
   dueDateTo: string | null
-  customFields: Record<string, QueryValue>
   sortBy: string
   sortDirection: 'ASC' | 'DESC'
   page: number
@@ -150,10 +138,7 @@ export interface CreateTaskRequest {
   startDate?: string | null | undefined
   dueDate?: string | null | undefined
   assigneeId?: Id | null | undefined
-  sprint?: string | null | undefined
-  labels?: string[] | undefined
   skillRequirements?: TaskSkillRequirementRequest[] | undefined
-  customFields?: Record<string, unknown> | undefined
 }
 
 export type UpdateTaskRequest = Partial<CreateTaskRequest>

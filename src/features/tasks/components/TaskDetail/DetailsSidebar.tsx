@@ -12,9 +12,7 @@ import {
   AssigneeField,
   DateField,
   EstimateField,
-  LabelsField,
   PriorityField,
-  SprintField,
   TypeField,
 } from './DetailsSidebarEditors'
 import type { EditableField } from './taskDetail.types'
@@ -35,8 +33,6 @@ export function DetailsSidebar({
 }: DetailsSidebarProps) {
   const [editingField, setEditingField] = useState<EditableField | null>(null)
   const [memberSearch, setMemberSearch] = useState('')
-  const [labelsDraft, setLabelsDraft] = useState<string[] | null>(null)
-  const [labelInput, setLabelInput] = useState('')
   const [collapsed, setCollapsed] = useState(false)
   const dropdownRef = useRef<HTMLDivElement | null>(null)
 
@@ -52,13 +48,11 @@ export function DetailsSidebar({
   )
 
   useEffect(() => {
-    if (!editingField || !['assignee', 'priority', 'type', 'labels'].includes(editingField)) return
+    if (!editingField || !['assignee', 'priority', 'type'].includes(editingField)) return
     const handler = (e: globalThis.MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setEditingField(null)
         setMemberSearch('')
-        setLabelsDraft(null)
-        setLabelInput('')
       }
     }
     document.addEventListener('mousedown', handler)
@@ -70,16 +64,8 @@ export function DetailsSidebar({
     setEditingField(null)
   }
 
-  const saveLabels = () => {
-    if (labelsDraft !== null) onSave({ labels: labelsDraft })
-    setEditingField(null)
-    setLabelsDraft(null)
-    setLabelInput('')
-  }
-
   const status = task.status || 'TODO'
   const priority = task.priority || 'MEDIUM'
-  const labels = task.labels ?? []
   const isDueOverdue = task.dueDate && task.status !== 'DONE' ? isOverdue(task.dueDate) : false
 
   return (
@@ -156,35 +142,10 @@ export function DetailsSidebar({
               />
             </DetailRow>
 
-            <DetailRow label="Labels">
-              <LabelsField
-                labels={labels}
-                labelsDraft={labelsDraft}
-                setLabelsDraft={setLabelsDraft}
-                labelInput={labelInput}
-                setLabelInput={setLabelInput}
-                canEdit={canEdit}
-                editingField={editingField}
-                setEditingField={setEditingField}
-                dropdownRef={dropdownRef}
-                saveLabels={saveLabels}
-              />
-            </DetailRow>
-
             <DetailRow label="Start date">
               <DateField
                 field="startDate"
                 value={task.startDate}
-                canEdit={canEdit}
-                editingField={editingField}
-                setEditingField={setEditingField}
-                save={save}
-              />
-            </DetailRow>
-
-            <DetailRow label="Sprint">
-              <SprintField
-                value={task.sprint}
                 canEdit={canEdit}
                 editingField={editingField}
                 setEditingField={setEditingField}

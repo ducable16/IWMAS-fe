@@ -31,7 +31,6 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
   const canEditUserProfile = canManageUsers(currentUser?.role)
   const isAdmin = currentUser?.role === 'ADMIN'
   const canEditRole = canChangeUserRole(currentUser?.role)
-  const canEditEmail = currentUser?.role === 'ADMIN'
   const isSelf = currentUser?.id === user?.id
 
   const { mutate: updateUser, isPending: isUpdating } = useUpdateMember()
@@ -73,7 +72,6 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
     const payload = {
       ...basePayload,
       ...(canEditRole ? { role: form.role } : {}),
-      ...(canEditEmail ? { email: form.email } : {}),
     }
     updateUser(
       { id: user.id, data: payload },
@@ -131,7 +129,6 @@ export default function UserDrawer({ user, onClose }: UserDrawerProps) {
             form={form}
             isEditing={isEditing}
             canEditRole={canEditRole}
-            canEditEmail={canEditEmail}
             onChange={set}
           />
 

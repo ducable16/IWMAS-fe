@@ -1,4 +1,5 @@
 import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
+import SelectField from '@/components/ui/SelectField'
 import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABEL,
@@ -20,36 +21,8 @@ type TaskCreateFieldsProps = {
   defaultProjectName?: string | undefined
   onSubmit: () => void
   assigneeError?: ReactNode
+  dateError?: ReactNode
   assigneeDisabled?: boolean
-}
-
-type SelectFieldProps = {
-  label: string
-  value: string
-  options: readonly string[]
-  labels: Record<string, string>
-  onChange: (value: string) => void
-}
-
-function SelectField({ label, value, options, labels, onChange }: SelectFieldProps) {
-  return (
-    <div>
-      <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">
-        {label}
-      </label>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="input-select w-full text-[12.5px]"
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
 }
 
 export default function TaskCreateFields({
@@ -58,6 +31,7 @@ export default function TaskCreateFields({
   defaultProjectName,
   onSubmit,
   assigneeError,
+  dateError,
   assigneeDisabled = false,
 }: TaskCreateFieldsProps) {
   const assigneeSearchParams = {
@@ -82,24 +56,39 @@ export default function TaskCreateFields({
         <SelectField
           label="Status"
           value={form.status}
-          options={TASK_STATUSES}
-          labels={TASK_STATUS_LABEL}
-          onChange={(value) => setField('status', value)}
-        />
+          onChange={(e) => setField('status', e.target.value)}
+          className="w-full text-[12.5px]"
+        >
+          {TASK_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {TASK_STATUS_LABEL[status]}
+            </option>
+          ))}
+        </SelectField>
         <SelectField
           label="Priority"
           value={form.priority}
-          options={TASK_PRIORITIES}
-          labels={TASK_PRIORITY_LABEL}
-          onChange={(value) => setField('priority', value)}
-        />
+          onChange={(e) => setField('priority', e.target.value)}
+          className="w-full text-[12.5px]"
+        >
+          {TASK_PRIORITIES.map((priority) => (
+            <option key={priority} value={priority}>
+              {TASK_PRIORITY_LABEL[priority]}
+            </option>
+          ))}
+        </SelectField>
         <SelectField
           label="Type"
           value={form.type}
-          options={TASK_TYPES}
-          labels={TASK_TYPE_LABEL}
-          onChange={(value) => setField('type', value)}
-        />
+          onChange={(e) => setField('type', e.target.value)}
+          className="w-full text-[12.5px]"
+        >
+          {TASK_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {TASK_TYPE_LABEL[type]}
+            </option>
+          ))}
+        </SelectField>
       </div>
 
       <div className="grid grid-cols-2 gap-2">
@@ -135,7 +124,8 @@ export default function TaskCreateFields({
             type="date"
             value={form.startDate}
             onChange={(e) => setField('startDate', e.target.value)}
-            className="input-field w-full text-[12.5px]"
+            aria-invalid={!!dateError}
+            className={dateError ? 'input-field-error w-full text-[12.5px]' : 'input-field w-full text-[12.5px]'}
           />
         </div>
         <div>
@@ -146,7 +136,8 @@ export default function TaskCreateFields({
             type="date"
             value={form.dueDate}
             onChange={(e) => setField('dueDate', e.target.value)}
-            className="input-field w-full text-[12.5px]"
+            aria-invalid={!!dateError}
+            className={dateError ? 'input-field-error w-full text-[12.5px]' : 'input-field w-full text-[12.5px]'}
           />
         </div>
         <div>
@@ -169,6 +160,7 @@ export default function TaskCreateFields({
           </div>
         </div>
       </div>
+      {dateError && <p className="text-[11.5px] text-danger">{dateError}</p>}
 
       <div>
         <label className="block text-[11px] text-text-muted mb-1 font-medium uppercase tracking-wide">

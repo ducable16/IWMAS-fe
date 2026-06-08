@@ -17,7 +17,10 @@ export function DateField({
         type="date"
         autoFocus
         defaultValue={value || ''}
-        onBlur={(e) => save({ [field]: e.target.value || null })}
+        onBlur={(e) => {
+          if (e.target.value) save({ [field]: e.target.value })
+          else setEditingField(null)
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') e.currentTarget.blur()
           if (e.key === 'Escape') setEditingField(null)

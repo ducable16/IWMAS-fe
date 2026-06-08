@@ -84,7 +84,6 @@ export const userService = {
   getUserAssignedTasks: (userId: Id, params: QueryRecord = {}) => {
     const qs = new URLSearchParams()
     append(qs, 'search', params.search as QueryValue)
-    append(qs, 'sprint', params.sprint as QueryValue)
     append(qs, 'dueDateFrom', params.dueDateFrom as QueryValue)
     append(qs, 'dueDateTo', params.dueDateTo as QueryValue)
     append(qs, 'sortBy', (params.sortBy as QueryValue) ?? 'updatedAt')
@@ -94,14 +93,12 @@ export const userService = {
     appendArray(qs, 'statuses', params.statuses as QueryValue[] | undefined)
     appendArray(qs, 'priorities', params.priorities as QueryValue[] | undefined)
     appendArray(qs, 'types', params.types as QueryValue[] | undefined)
-    appendArray(qs, 'labels', params.labels as QueryValue[] | undefined)
     return api.get<PageResponse<Task>>(`/users/${userId}/tasks/assigned?${qs.toString()}`)
   },
 
   getUserReportedTasks: (userId: Id, params: QueryRecord = {}) => {
     const qs = new URLSearchParams()
     append(qs, 'search', params.search as QueryValue)
-    append(qs, 'sprint', params.sprint as QueryValue)
     append(qs, 'dueDateFrom', params.dueDateFrom as QueryValue)
     append(qs, 'dueDateTo', params.dueDateTo as QueryValue)
     append(qs, 'sortBy', (params.sortBy as QueryValue) ?? 'updatedAt')
@@ -111,7 +108,6 @@ export const userService = {
     appendArray(qs, 'statuses', params.statuses as QueryValue[] | undefined)
     appendArray(qs, 'priorities', params.priorities as QueryValue[] | undefined)
     appendArray(qs, 'types', params.types as QueryValue[] | undefined)
-    appendArray(qs, 'labels', params.labels as QueryValue[] | undefined)
     return api.get<PageResponse<Task>>(`/users/${userId}/tasks/reported?${qs.toString()}`)
   },
 }

@@ -50,20 +50,3 @@ export type EstimateFieldProps = {
   setEditingField: (field: EditableField | null) => void
   save: (overrides: UpdateTaskRequest) => void
 }
-
-export type SprintFieldProps = {
-  value: string | null | undefined
-  canEdit: boolean
-  editingField: EditableField | null
-  setEditingField: (field: EditableField | null) => void
-  save: (overrides: UpdateTaskRequest) => void
-}
-
-export type LabelsFieldProps = EditorBaseProps & {
-  labels: string[]
-  labelsDraft: string[] | null
-  setLabelsDraft: (value: string[] | null | ((prev: string[] | null) => string[])) => void
-  labelInput: string
-  setLabelInput: (value: string) => void
-  saveLabels: () => void
-}
