@@ -1,5 +1,5 @@
 import type { Id } from './api'
-import type { TaskPriority, TaskStatus, TaskType } from '@/constants/enums'
+import type { SkillLevel, TaskActivityType, TaskPriority, TaskStatus, TaskType } from '@/constants/enums'
 import type { UserPublicView } from './user'
 
 export interface Task {
@@ -59,7 +59,6 @@ export interface TaskListItem {
 export interface TaskSearchParams {
   search?: string | undefined
   projectId?: Id | null | undefined
-  skillId?: Id | null | undefined
   statuses?: string[] | undefined
   priorities?: string[] | undefined
   types?: string[] | undefined
@@ -76,7 +75,6 @@ export interface TaskSearchParams {
 export interface TaskFilters {
   search: string
   projectId: Id | null
-  skillId: Id | null
   statuses: string[]
   priorities: string[]
   types: string[]
@@ -101,8 +99,21 @@ export interface TaskListResult {
   totalPages: number
 }
 
+export interface TaskBoardColumnResponse {
+  status: TaskStatus | string
+  displayName: string
+  tasks: Task[]
+  count: number
+}
+
+export interface TaskBoardResponse {
+  projectId: Id
+  columns: TaskBoardColumnResponse[]
+}
+
 export interface TaskComment {
   id: Id
+  taskId?: Id | undefined
   content: string
   mentions?: Record<string, UserPublicView> | undefined
   author?: UserPublicView | undefined
@@ -112,9 +123,11 @@ export interface TaskComment {
 
 export interface TaskAttachment {
   id: Id
+  taskId?: Id | undefined
   fileName?: string | undefined
   url?: string | undefined
   contentType?: string | undefined
+  fileSize?: number | undefined
   size?: number | undefined
   uploadedBy?: UserPublicView | Id | undefined
   createdAt?: string | undefined
@@ -122,19 +135,17 @@ export interface TaskAttachment {
 
 export interface TaskSkillRequirementRequest {
   skillId: Id
-  minimumLevel?: string | undefined
+  minimumLevel?: SkillLevel | string | undefined
   isRequired?: boolean | undefined
 }
 
 export interface CreateTaskRequest {
-  projectId?: Id | null | undefined
+  projectId: Id
   title: string
   description?: string | null | undefined
-  status?: TaskStatus | string | undefined
   priority?: TaskPriority | string | undefined
   type?: TaskType | string | undefined
   estimatedHours?: number | null | undefined
-  actualHours?: number | null | undefined
   startDate?: string | null | undefined
   dueDate?: string | null | undefined
   assigneeId?: Id | null | undefined
@@ -145,7 +156,6 @@ export type UpdateTaskRequest = Partial<CreateTaskRequest>
 
 export interface UpdateTaskStatusRequest {
   status: TaskStatus | string
-  note?: string | null | undefined
 }
 
 export interface UpdateTaskDatesRequest {
@@ -178,12 +188,15 @@ export interface TimeLogResponse {
   createdAt?: string
 }
 
-// §4.12 TaskStatusHistory — returned by GET /api/tasks/{id}/history
-export interface TaskStatusHistory {
+// Section 4.12 activity history returned by GET /api/tasks/{id}/history
+export interface TaskActivityEntry {
   id: Id
-  oldStatus: string | null
-  newStatus: string
-  changedBy: Id
+  action: TaskActivityType | string
+  oldValue?: string | null
+  newValue?: string | null
+  oldUser?: UserPublicView | null
+  newUser?: UserPublicView | null
+  actor?: UserPublicView | null
   note?: string | null
-  changedAt: string
+  createdAt: string
 }

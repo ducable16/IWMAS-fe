@@ -94,6 +94,14 @@ export const TASK_STATUS_DETAIL_META = {
   CANCELLED:   { label: 'CANCELLED',   cls: 'bg-rose-300 text-slate-800 font-bold border-transparent tracking-wide'  },
 }
 
+export const TASK_STATUS_TRANSITIONS = {
+  TODO: ['IN_PROGRESS', 'CANCELLED'],
+  IN_PROGRESS: ['IN_REVIEW', 'TODO', 'CANCELLED'],
+  IN_REVIEW: ['DONE', 'IN_PROGRESS', 'TODO', 'CANCELLED'],
+  DONE: ['IN_PROGRESS', 'TODO'],
+  CANCELLED: ['TODO'],
+} satisfies Record<TaskStatus, TaskStatus[]>
+
 // ── Task type ─────────────────────────────────────────────────────────────────
 export const TASK_TYPES = ['FEATURE', 'BUG', 'RESEARCH'] as const
 export type TaskType = typeof TASK_TYPES[number]
@@ -129,6 +137,39 @@ export const TASK_PRIORITY_META = {
 }
 
 // ── Skill level ───────────────────────────────────────────────────────────────
+export const TASK_ACTIVITY_TYPES = [
+  'TASK_CREATED',
+  'STATUS_CHANGED',
+  'PRIORITY_CHANGED',
+  'TYPE_CHANGED',
+  'TITLE_CHANGED',
+  'DESCRIPTION_CHANGED',
+  'ESTIMATE_CHANGED',
+  'ASSIGNEE_CHANGED',
+  'START_DATE_CHANGED',
+  'DUE_DATE_CHANGED',
+  'ATTACHMENT_ADDED',
+  'ATTACHMENT_REMOVED',
+  'TASK_DELETED',
+] as const
+export type TaskActivityType = typeof TASK_ACTIVITY_TYPES[number]
+
+export const TASK_ACTIVITY_LABEL = {
+  TASK_CREATED: 'Task created',
+  STATUS_CHANGED: 'Status changed',
+  PRIORITY_CHANGED: 'Priority changed',
+  TYPE_CHANGED: 'Type changed',
+  TITLE_CHANGED: 'Title changed',
+  DESCRIPTION_CHANGED: 'Description changed',
+  ESTIMATE_CHANGED: 'Estimate changed',
+  ASSIGNEE_CHANGED: 'Assignee changed',
+  START_DATE_CHANGED: 'Start date changed',
+  DUE_DATE_CHANGED: 'Due date changed',
+  ATTACHMENT_ADDED: 'Attachment added',
+  ATTACHMENT_REMOVED: 'Attachment removed',
+  TASK_DELETED: 'Task deleted',
+} satisfies Record<TaskActivityType, string>
+
 export const SKILL_LEVELS = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'EXPERT'] as const
 export type SkillLevel = typeof SKILL_LEVELS[number]
 

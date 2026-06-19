@@ -21,6 +21,12 @@ const getErrorMessage = (err: unknown, fallback: string) =>
 
 const getTaskWriteErrorMessage = (err: unknown, fallback: string) => {
   const code = (err as ApiError | undefined)?.code
+  if (code === 5005) {
+    return getErrorMessage(err, 'Start date must not be after due date')
+  }
+  if (code === 5006) {
+    return getErrorMessage(err, 'Enter a start date or due date')
+  }
   if (code === 5007) {
     return getErrorMessage(
       err,
@@ -97,6 +103,7 @@ export function useUpdateTaskStatus(id: Id | null | undefined) {
     mutationFn: (data: UpdateTaskStatusRequest) => taskService.updateStatus(id as Id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskQueryKey(id) })
+      queryClient.invalidateQueries({ queryKey: ['tasks', id, 'history'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
@@ -160,6 +167,7 @@ export function useUpdateTask(id: Id | null | undefined) {
     mutationFn: (data: UpdateTaskRequest) => taskService.update(id as Id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: taskQueryKey(id) })
+      queryClient.invalidateQueries({ queryKey: ['tasks', id, 'history'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
@@ -172,10 +180,13 @@ export function useCreateTask() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (data: CreateTaskRequest) => taskService.create(data),
-    onSuccess: () => {
+    onSuccess: (res) => {
       toast.success('Task created')
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
+      if (res.data?.projectId) {
+        queryClient.invalidateQueries({ queryKey: ['tasks', 'board', res.data.projectId] })
+      }
     },
     onError: (err: unknown) => toast.error(getTaskWriteErrorMessage(err, 'Failed to create task')),
   })
@@ -204,6 +215,7 @@ export function useUploadTaskAttachment(taskId: Id | null | undefined) {
     onSuccess: () => {
       toast.success('Attachment uploaded')
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'history'] })
       queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to upload attachment')),
@@ -217,6 +229,7 @@ export function useDeleteTaskAttachment(taskId: Id | null | undefined) {
     onSuccess: () => {
       toast.success('Attachment deleted')
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'attachments'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'history'] })
       queryClient.invalidateQueries({ queryKey: taskQueryKey(taskId) })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete attachment')),

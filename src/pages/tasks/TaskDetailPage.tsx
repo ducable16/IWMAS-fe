@@ -100,15 +100,13 @@ export default function TaskDetailPage() {
   const buildPayload = (overrides: UpdateTaskRequest = {}): UpdateTaskRequest => ({
     title: task.title,
     description: task.description || null,
-    status: task.status,
     priority: task.priority,
     type: task.type,
     ...(task.startDate ? { startDate: task.startDate } : {}),
     ...(task.dueDate ? { dueDate: task.dueDate } : {}),
     estimatedHours: task.estimatedHours || null,
-    actualHours: task.actualHours || null,
     assigneeId: task.assignee?.id || null,
-    projectId: task.projectId || null,
+    ...(task.projectId ? { projectId: task.projectId } : {}),
     skillRequirements: toTaskSkillRequirementRequest(task.skillRequirements || []),
     ...overrides,
   })
@@ -162,8 +160,8 @@ export default function TaskDetailPage() {
         <span className="text-text-primary font-mono">{task.id}</span>
       </div>
 
-      <div className="flex flex-col xl:flex-row gap-6 items-start">
-        <div className="flex-1 min-w-0 space-y-5">
+      <div className="flex flex-col xl:flex-row gap-6 items-stretch xl:items-start">
+        <div className="w-full flex-1 min-w-0 space-y-5">
           {editingTitle ? (
             <textarea
               ref={titleRef}

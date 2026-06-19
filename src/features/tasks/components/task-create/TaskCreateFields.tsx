@@ -3,8 +3,6 @@ import SelectField from '@/components/ui/SelectField'
 import {
   TASK_PRIORITIES,
   TASK_PRIORITY_LABEL,
-  TASK_STATUSES,
-  TASK_STATUS_LABEL,
   TASK_TYPES,
   TASK_TYPE_LABEL,
 } from '@/constants/enums'
@@ -20,6 +18,8 @@ type TaskCreateFieldsProps = {
   setField: SetTaskCreateField
   defaultProjectName?: string | undefined
   onSubmit: () => void
+  titleError?: ReactNode
+  projectError?: ReactNode
   assigneeError?: ReactNode
   dateError?: ReactNode
   assigneeDisabled?: boolean
@@ -30,6 +30,8 @@ export default function TaskCreateFields({
   setField,
   defaultProjectName,
   onSubmit,
+  titleError,
+  projectError,
   assigneeError,
   dateError,
   assigneeDisabled = false,
@@ -44,27 +46,18 @@ export default function TaskCreateFields({
       <input
         autoFocus
         value={form.title}
+        maxLength={300}
         onChange={(e) => setField('title', e.target.value)}
         onKeyDown={(e: ReactKeyboardEvent<HTMLInputElement>) => {
           if (e.key === 'Enter' && !e.shiftKey) onSubmit()
         }}
         placeholder="Task title *"
-        className="input-field w-full text-[14px]"
+        aria-invalid={!!titleError}
+        className={titleError ? 'input-field-error w-full text-[14px]' : 'input-field w-full text-[14px]'}
       />
+      {titleError && <p className="text-[11.5px] text-danger">{titleError}</p>}
 
-      <div className="grid grid-cols-3 gap-2">
-        <SelectField
-          label="Status"
-          value={form.status}
-          onChange={(e) => setField('status', e.target.value)}
-          className="w-full text-[12.5px]"
-        >
-          {TASK_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {TASK_STATUS_LABEL[status]}
-            </option>
-          ))}
-        </SelectField>
+      <div className="grid grid-cols-2 gap-2">
         <SelectField
           label="Priority"
           value={form.priority}
@@ -95,11 +88,13 @@ export default function TaskCreateFields({
         <AutocompleteSelect
           id="projectId"
           label="Project"
+          required
           placeholder="Search projects..."
           value={form.projectId}
           onChange={(value) => setField('projectId', value)}
           useSearchHook={useProjectSuggestions}
           initialDisplay={defaultProjectName || ''}
+          error={projectError}
         />
         <AutocompleteSelect
           id="assigneeId"

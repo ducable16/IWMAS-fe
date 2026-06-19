@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Download, Loader2, Trash2 } from 'lucide-react'
 import { fmtDateTime } from '@/utils/date'
 import FileTypeIcon from './FileTypeIcon'
-import { isImageFile } from './attachmentUtils'
+import { formatAttachmentSize, getAttachmentSize, isImageFile } from './attachmentUtils'
 import type { Id, TaskAttachment } from '@/types'
 
 type AttachmentCardProps = {
@@ -22,6 +22,7 @@ export default function AttachmentCard({
 }: AttachmentCardProps) {
   const [hovered, setHovered] = useState(false)
   const isImage = isImageFile(item)
+  const size = formatAttachmentSize(getAttachmentSize(item))
 
   const handleClick = () => {
     if (isImage) onClickImage(item)
@@ -56,7 +57,7 @@ export default function AttachmentCard({
           {item.fileName || 'Unnamed'}
         </p>
         <p className="text-[10px] text-text-muted mt-0.5 leading-tight">
-          {fmtDateTime(item.createdAt)}
+          {[size, fmtDateTime(item.createdAt)].filter(Boolean).join(' - ')}
         </p>
       </div>
 

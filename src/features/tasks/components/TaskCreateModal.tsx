@@ -21,15 +21,15 @@ import type { Id } from '@/types'
 interface TaskCreateModalProps {
   open: boolean
   onClose: () => void
-  defaultStatus?: string
   defaultProjectId?: Id | null
   defaultProjectName?: string
 }
 
+const MAX_TITLE_LENGTH = 300
+
 export default function TaskCreateModal({
   open,
   onClose,
-  defaultStatus,
   defaultProjectId,
   defaultProjectName,
 }: TaskCreateModalProps) {
@@ -48,18 +48,29 @@ export default function TaskCreateModal({
   const assigneeError = hasAssigneeSkillMismatch
     ? 'Selected assignee does not meet all required skills.'
     : undefined
+  const title = form.title.trim()
+  const hasValidTitle = title.length > 0 && title.length <= MAX_TITLE_LENGTH
+  const titleError = title.length > MAX_TITLE_LENGTH
+    ? `Task title must be ${MAX_TITLE_LENGTH} characters or fewer.`
+    : undefined
+  const hasProject = !!form.projectId
+  const projectError = hasProject ? undefined : 'Select a project.'
   const hasRequiredDate = !!form.startDate || !!form.dueDate
-  const dateError = hasRequiredDate ? undefined : 'Enter a start date or due date.'
+  const hasInvalidDateRange = !!form.startDate && !!form.dueDate && form.startDate > form.dueDate
+  const dateError = !hasRequiredDate
+    ? 'Enter a start date or due date.'
+    : hasInvalidDateRange
+      ? 'Start date must not be after due date.'
+      : undefined
 
   useEffect(() => {
     if (open) {
       setForm({
         ...EMPTY_TASK_CREATE_FORM,
-        status: defaultStatus || 'TODO',
         projectId: defaultProjectId || '',
       })
     }
-  }, [open, defaultStatus, defaultProjectId])
+  }, [open, defaultProjectId])
 
   const setField: SetTaskCreateField = (key, value) =>
     setForm((prev) => {
@@ -76,8 +87,10 @@ export default function TaskCreateModal({
   const handleSubmit = (e?: FormEvent<HTMLFormElement>) => {
     e?.preventDefault()
     if (
-      !form.title.trim()
+      !hasValidTitle
+      || !hasProject
       || !hasRequiredDate
+      || hasInvalidDateRange
       || isPending
       || isCheckingAssigneeSkills
       || hasAssigneeSkillMismatch
@@ -86,12 +99,11 @@ export default function TaskCreateModal({
 
     createTask(
       {
-        title: form.title.trim(),
+        title,
         description: form.description.trim() || null,
-        status: form.status,
         priority: form.priority,
         type: form.type,
-        projectId: form.projectId || null,
+        projectId: form.projectId,
         assigneeId: form.assigneeId || null,
         ...(form.startDate ? { startDate: form.startDate } : {}),
         ...(form.dueDate ? { dueDate: form.dueDate } : {}),
@@ -112,6 +124,8 @@ export default function TaskCreateModal({
             setField={setField}
             defaultProjectName={defaultProjectName}
             onSubmit={() => handleSubmit()}
+            titleError={titleError}
+            projectError={projectError}
             assigneeError={assigneeError}
             dateError={dateError}
             assigneeDisabled={!form.projectId}
@@ -122,8 +136,10 @@ export default function TaskCreateModal({
         onCancel={onClose}
         isPending={isPending}
         disabled={
-          !form.title.trim()
+          !hasValidTitle
+          || !hasProject
           || !hasRequiredDate
+          || hasInvalidDateRange
           || isCheckingAssigneeSkills
           || hasAssigneeSkillMismatch
         }

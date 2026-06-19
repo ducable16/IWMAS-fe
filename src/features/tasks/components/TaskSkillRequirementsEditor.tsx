@@ -10,7 +10,7 @@ type TaskSkillRequirementsEditorProps = {
   disabled?: boolean
 }
 
-const DEFAULT_LEVEL = 'BEGINNER'
+const DEFAULT_LEVEL = 'INTERMEDIATE'
 
 function skillKey(id: Id | null | undefined) {
   return id == null ? '' : String(id)
@@ -42,7 +42,7 @@ export function toTaskSkillRequirementRequest(
     .map((item) => ({
       skillId: item.skillId,
       minimumLevel: item.minimumLevel || DEFAULT_LEVEL,
-      isRequired: item.isRequired ?? false,
+      isRequired: item.isRequired ?? true,
     }))
 }
 
@@ -207,7 +207,7 @@ export default function TaskSkillRequirementsEditor({
       {
         skillId: '',
         minimumLevel: DEFAULT_LEVEL,
-        isRequired: false,
+        isRequired: true,
       },
     ])
   }
@@ -297,7 +297,7 @@ export default function TaskSkillRequirementsEditor({
               <label className="flex h-[36px] items-center gap-2 rounded-md border border-border-subtle px-2 text-[12px] text-text-secondary">
                 <input
                   type="checkbox"
-                  checked={requirement.isRequired ?? false}
+                  checked={requirement.isRequired ?? true}
                   onChange={(event) => updateRequirement(index, { isRequired: event.target.checked })}
                   disabled={disabled}
                   className="h-3.5 w-3.5"

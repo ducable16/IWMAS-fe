@@ -2,10 +2,12 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
-import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
+import { useTaskBoard } from '@/features/tasks/hooks/useTaskViews'
 import { taskService } from '@/features/tasks/services/taskService'
-import { TASK_STATUSES } from '@/constants/enums'
-import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
+import { formatEstimate } from '@/utils/date'
+import { TASK_STATUS_TRANSITIONS, TASK_STATUSES } from '@/constants/enums'
+import { LiveEmpty, LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
+import TaskCreateModal from './TaskCreateModal'
 import TaskBoardColumn from './task-board/TaskBoardColumn'
 import {
   COLUMN_CONFIG,
@@ -14,7 +16,7 @@ import {
   type GroupedTasks,
   type UpdateStatusVariables,
 } from './task-board/taskBoardTypes'
-import type { ApiError, CreateTaskRequest, Id, TaskFilters, TaskListItem } from '@/types'
+import type { ApiError, Id, Task, TaskFilters, TaskListItem } from '@/types'
 
 type TaskBoardViewProps = {
   filters: TaskFilters
@@ -24,20 +26,34 @@ type TaskBoardViewProps = {
 const getErrorMessage = (err: unknown, fallback: string) =>
   (err as ApiError | undefined)?.message || fallback
 
-const getCreateTaskErrorMessage = (err: unknown) => {
-  const code = (err as ApiError | undefined)?.code
-  if (code === 5007) {
-    return getErrorMessage(
-      err,
-      'Assignee does not meet the required skill level for this task',
-    )
+function normaliseTask(t: Task): TaskListItem {
+  const assigneeName = t.assignee?.fullName || t.assignee?.email || '?'
+  const reporterName = t.reporter?.fullName || t.reporter?.email || '?'
+  return {
+    id: t.id,
+    title: t.title || 'Untitled',
+    status: t.status ? String(t.status).toUpperCase() : 'TODO',
+    priority: t.priority ? String(t.priority).toUpperCase() : 'MEDIUM',
+    type: String(t.type || 'FEATURE'),
+    assignee: assigneeName.substring(0, 2).toUpperCase(),
+    assigneeFull: assigneeName,
+    assigneeEmail: t.assignee?.email || '-',
+    assigneeId: t.assignee?.id ?? null,
+    reporterFull: reporterName,
+    reporterId: t.reporter?.id ?? null,
+    due: t.dueDate || null,
+    estimate: formatEstimate(t.estimatedHours),
+    projectId: t.projectId,
+    projectName: t.projectName ?? null,
+    projectCode: t.projectCode ?? null,
+    startDate: t.startDate || null,
+    createdAt: t.createdAt || null,
   }
-  return getErrorMessage(err, 'Failed to create task')
 }
 
-function computeGrouped(tasks: TaskListItem[]): GroupedTasks {
+function emptyGrouped(): GroupedTasks {
   return TASK_STATUSES.reduce((acc, status) => {
-    acc[status] = tasks.filter((task) => task.status === status)
+    acc[status] = []
     return acc
   }, {} as GroupedTasks)
 }
@@ -47,21 +63,27 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
   const queryClient = useQueryClient()
   const boardRef = useRef<HTMLDivElement | null>(null)
 
-  const params = { ...filters, size: 200, page: 0 }
-  const { data, isLoading, isError, error, refetch } = useSearchTasks(params)
-  const tasks = useMemo(() => data?.tasks ?? [], [data?.tasks])
+  const projectId = filters.projectId
+  const { data, isLoading, isError, error, refetch } = useTaskBoard(projectId)
 
   const [localGrouped, setLocalGrouped] = useState<GroupedTasks | null>(null)
   const [dragging, setDragging] = useState<DraggingTask | null>(null)
   const [dragOver, setDragOver] = useState<BoardStatus | null>(null)
-  const [addingIn, setAddingIn] = useState<BoardStatus | null>(null)
+  const [createOpen, setCreateOpen] = useState(false)
 
   useEffect(() => {
     setLocalGrouped(null)
-  }, [tasks])
+  }, [data])
 
-  const serverGrouped = useMemo(() => computeGrouped(tasks), [tasks])
+  const serverGrouped = useMemo(() => {
+    const grouped = emptyGrouped()
+    for (const column of data?.columns ?? []) {
+      grouped[String(column.status).toUpperCase() as BoardStatus] = (column.tasks || []).map(normaliseTask)
+    }
+    return grouped
+  }, [data])
   const grouped = localGrouped ?? serverGrouped
+  const tasks = useMemo(() => Object.values(grouped).flat(), [grouped])
 
   const statusMutation = useMutation({
     mutationFn: ({ taskId, status }: UpdateStatusVariables) =>
@@ -70,18 +92,12 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
       toast.error(getErrorMessage(err, 'Failed to update status'))
       setLocalGrouped(null)
     },
-    onSuccess: () => {
+    onSuccess: (_res, { taskId }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'board', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'history'] })
     },
-  })
-
-  const createMutation = useMutation({
-    mutationFn: (data: CreateTaskRequest) => taskService.create(data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
-      toast.success('Task created')
-    },
-    onError: (err: unknown) => toast.error(getCreateTaskErrorMessage(err)),
   })
 
   useEffect(() => {
@@ -142,6 +158,12 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
     setDragging(null)
     setDragOver(null)
 
+    const allowed = (TASK_STATUS_TRANSITIONS as Record<string, readonly string[]>)[fromCol] || []
+    if (!allowed.includes(toColKey)) {
+      toast.error('Invalid status transition')
+      return
+    }
+
     const fromTasks = [...(grouped[fromCol] || [])]
     const toTasks = [...(grouped[toColKey] || [])]
     const idx = fromTasks.findIndex((task) => String(task.id) === taskId)
@@ -155,13 +177,8 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
     statusMutation.mutate({ taskId, status: toColKey })
   }
 
-  const handleAddTask = (colKey: BoardStatus, title: string) => {
-    setAddingIn(null)
-    createMutation.mutate({
-      title,
-      status: colKey,
-      ...(filters.projectId ? { projectId: filters.projectId } : {}),
-    })
+  if (!projectId) {
+    return <LiveEmpty label="Select a project to view the board." />
   }
 
   if (isLoading) return <LiveLoading label="Loading board..." />
@@ -173,6 +190,12 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
 
   return (
     <div className="space-y-4">
+      <TaskCreateModal
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        defaultProjectId={projectId}
+      />
+
       {totalTasks > 0 && (
         <div className="flex items-center gap-3">
           <div className="flex-1 h-1 bg-bg-subtle rounded-full overflow-hidden">
@@ -199,10 +222,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
             onDrop={() => handleDrop(col.key)}
             onDragStart={(taskId) => handleDragStart(taskId, col.key)}
             navigate={navigate}
-            isAdding={addingIn === col.key}
-            onStartAdd={() => setAddingIn(col.key)}
-            onCancelAdd={() => setAddingIn(null)}
-            onSubmitAdd={(title) => handleAddTask(col.key, title)}
+            onStartAdd={() => setCreateOpen(true)}
             canCreate={canCreate}
           />
         ))}

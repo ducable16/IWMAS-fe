@@ -5,7 +5,9 @@ import type {
   PageResponse,
   QueryValue,
   Task,
+  TaskActivityEntry,
   TaskAttachment,
+  TaskBoardResponse,
   TaskComment,
   TaskCommentRequest,
   TaskSearchParams,
@@ -33,13 +35,13 @@ export const taskService = {
   updateStatus:  (id: Id, data: UpdateTaskStatusRequest)  => api.patch<Task>(`/tasks/${id}/status`, data),
   updateDates:   (id: Id, data: UpdateTaskDatesRequest)  => api.patch<Task>(`/tasks/${id}/dates`, data),
   remove:        (id: Id)        => api.delete(`/tasks/${id}`),
-  getHistory:    (id: Id)        => api.get(`/tasks/${id}/history`),
+  getHistory:    (id: Id)        => api.get<TaskActivityEntry[]>(`/tasks/${id}/history`),
 
   /**
    * §4.4 GET /api/tasks/board — Kanban grouped by status.
    * Requires projectId query param.
    */
-  getBoard: (projectId: Id) => api.get(`/tasks/board?projectId=${projectId}`),
+  getBoard: (projectId: Id) => api.get<TaskBoardResponse>(`/tasks/board?projectId=${projectId}`),
 
   /**
    * §4.5 GET /api/tasks/calendar — Tasks grouped by dueDate.
@@ -56,7 +58,7 @@ export const taskService = {
   /**
    * Search & filter tasks — GET /api/tasks
    * Supported params:
-   *   search, projectId, skillId, statuses[], priorities[], types[],
+   *   search, projectId, statuses[], priorities[], types[],
    *   assigneeId, reporterId, dueDateFrom, dueDateTo,
    *   sortBy, sortDirection, page, size
    */
@@ -65,7 +67,6 @@ export const taskService = {
 
     append(qs, 'search', params.search)
     append(qs, 'projectId', params.projectId)
-    append(qs, 'skillId', params.skillId)
     append(qs, 'assigneeId', params.assigneeId)
     append(qs, 'reporterId', params.reporterId)
     append(qs, 'dueDateFrom', params.dueDateFrom)

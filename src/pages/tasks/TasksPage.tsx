@@ -1,5 +1,4 @@
-import { useState, useCallback, useDeferredValue, useEffect } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useState, useCallback, useDeferredValue } from 'react'
 import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
@@ -20,30 +19,12 @@ import type { TaskFilterChange, TaskFilters } from '@/types'
 import type { ViewMode } from './tasksPageConfig'
 
 export default function TasksPage() {
-  const [searchParams] = useSearchParams()
-  const skillIdParam = searchParams.get('skillId')
-  const [filters, setFilters] = useState<TaskFilters>(() => ({
-    ...DEFAULT_FILTERS,
-    skillId: skillIdParam || null,
-  }))
+  const [filters, setFilters] = useState<TaskFilters>(DEFAULT_FILTERS)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [createOpen, setCreateOpen] = useState(false)
 
   const deferredFilters = useDeferredValue(filters)
-
-  useEffect(() => {
-    const nextSkillId = skillIdParam || null
-    setFilters((prev) =>
-      prev.skillId === nextSkillId
-        ? prev
-        : {
-            ...prev,
-            skillId: nextSkillId,
-            page: 0,
-          },
-    )
-  }, [skillIdParam])
 
   const { data, isLoading, isError, error, refetch, isFetching } =
     useSearchTasks(deferredFilters, viewMode === 'list')
@@ -84,7 +65,6 @@ export default function TasksPage() {
       <TaskCreateModal
         open={createOpen}
         onClose={() => setCreateOpen(false)}
-        defaultStatus="TODO"
         defaultProjectId={filters.projectId}
         defaultProjectName={projects.find((p) => String(p.id) === String(filters.projectId))?.name || ''}
       />

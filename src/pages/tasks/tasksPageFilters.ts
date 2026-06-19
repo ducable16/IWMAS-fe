@@ -3,7 +3,6 @@ import type { TaskFilters } from '@/types'
 export function getActiveTaskFilterCount(filters: TaskFilters): number {
   return [
     filters.projectId ? 1 : 0,
-    filters.skillId ? 1 : 0,
     (filters.statuses || []).length,
     (filters.priorities || []).length,
     (filters.types || []).length,

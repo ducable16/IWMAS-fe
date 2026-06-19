@@ -24,14 +24,6 @@ export interface HistoryTabProps {
   taskId?: Id | null | undefined
 }
 
-export interface TaskHistoryEntry {
-  id?: Id
-  oldStatus?: string
-  newStatus?: string
-  note?: string | null
-  changedAt?: string | null
-}
-
 export interface CommentItemProps {
   comment: TaskComment
   taskId?: Id | null | undefined

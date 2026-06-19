@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { ChevronDown, Loader2, MoreHorizontal, Plus, Upload } from 'lucide-react'
 import clsx from 'clsx'
+import toast from 'react-hot-toast'
 import { useTaskAttachments, useUploadTaskAttachment, useDeleteTaskAttachment } from '@/features/tasks/hooks/useTask'
 import { LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ImageLightbox from '@/components/ui/ImageLightbox'
@@ -19,6 +20,31 @@ interface AttachmentsSectionProps {
 interface LightboxState {
   src: string
   alt: string
+}
+
+const MAX_ATTACHMENT_SIZE = 20 * 1024 * 1024
+const ATTACHMENT_ACCEPT = [
+  'image/*',
+  'application/pdf',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  'text/plain',
+].join(',')
+
+function isAllowedAttachmentType(file: File) {
+  if (file.type.startsWith('image/')) return true
+  if (file.type === 'application/pdf' || file.type === 'text/plain') return true
+  if (
+    [
+      'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    ].includes(file.type)
+  ) return true
+  return /\.(docx?|xlsx?|pdf|txt)$/i.test(file.name)
 }
 
 export default function AttachmentsSection({
@@ -42,6 +68,16 @@ export default function AttachmentsSection({
   const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      toast.error('Attachment must be 20 MB or smaller')
+      e.target.value = ''
+      return
+    }
+    if (!isAllowedAttachmentType(file)) {
+      toast.error('File type is not allowed')
+      e.target.value = ''
+      return
+    }
     upload(file, { onSettled: () => { e.target.value = '' } })
   }, [upload])
 
@@ -95,6 +131,7 @@ export default function AttachmentsSection({
           <input
             ref={fileInputRef}
             type="file"
+            accept={ATTACHMENT_ACCEPT}
             className="hidden"
             disabled={isUploading}
             onChange={handleFileChange}

@@ -2,7 +2,11 @@ import { useState } from 'react'
 import { ChevronDown, Check, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 import { useUpdateTaskStatus } from '@/features/tasks/hooks/useTask'
-import { TASK_STATUSES, TASK_STATUS_DETAIL_META as STATUS_META } from '@/constants/enums'
+import {
+  TASK_STATUSES,
+  TASK_STATUS_DETAIL_META as STATUS_META,
+  TASK_STATUS_TRANSITIONS,
+} from '@/constants/enums'
 import { TaskStatusBadge } from '@/components/ui/Badge'
 import type { StatusDropdownProps } from './taskDetail.types'
 
@@ -12,6 +16,10 @@ export function StatusDropdown({ current, taskId, canChange = true }: StatusDrop
   const [open, setOpen] = useState(false)
   const { mutate, isPending } = useUpdateTaskStatus(taskId)
   const meta = STATUS_META_BY_KEY[current] || STATUS_META.TODO
+  const allowedStatuses = new Set([
+    current,
+    ...((TASK_STATUS_TRANSITIONS as Record<string, readonly string[]>)[current] || []),
+  ])
 
   return (
     <div className="relative">
@@ -27,10 +35,13 @@ export function StatusDropdown({ current, taskId, canChange = true }: StatusDrop
       </button>
       {open && (
         <div className="absolute top-9 left-0 z-30 bg-bg-surface border border-border rounded-lg py-1 min-w-[160px] shadow-card animate-fade-in">
-          {TASK_STATUSES.map(s => (
+          {TASK_STATUSES.filter((s) => allowedStatuses.has(s)).map(s => (
             <button
               key={s}
-              onClick={() => { mutate({ status: s }); setOpen(false) }}
+              onClick={() => {
+                if (s !== current) mutate({ status: s })
+                setOpen(false)
+              }}
               className={clsx(
                 'flex items-center gap-2 w-full px-3 py-1.5 text-[12.5px] hover:bg-bg-subtle transition-colors',
                 s === current ? 'font-semibold text-text-primary' : 'text-text-secondary',

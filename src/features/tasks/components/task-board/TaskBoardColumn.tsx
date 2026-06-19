@@ -1,5 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
-import { Check, Clock, GripVertical, Plus, X } from 'lucide-react'
+import { Clock, GripVertical, Plus } from 'lucide-react'
 import clsx from 'clsx'
 import { TaskTypeBadge } from '@/components/ui/Badge'
 import { TASK_TYPE_META as TYPE_META } from '@/constants/enums'
@@ -13,11 +12,6 @@ type TaskCardProps = {
   onClick: () => void
 }
 
-type AddTaskFormProps = {
-  onSubmit: (title: string) => void
-  onCancel: () => void
-}
-
 type BoardColumnProps = {
   col: typeof COLUMN_CONFIG[number]
   tasks: TaskListItem[]
@@ -27,10 +21,7 @@ type BoardColumnProps = {
   onDrop: () => void
   onDragStart: (taskId: Id) => void
   navigate: NavigateFunction
-  isAdding: boolean
   onStartAdd: () => void
-  onCancelAdd: () => void
-  onSubmitAdd: (title: string) => void
   canCreate?: boolean
 }
 
@@ -95,55 +86,6 @@ function TaskCard({ task, onDragStart, onClick }: TaskCardProps) {
   )
 }
 
-function AddTaskForm({ onSubmit, onCancel }: AddTaskFormProps) {
-  const [title, setTitle] = useState('')
-  const ref = useRef<HTMLTextAreaElement | null>(null)
-
-  useEffect(() => {
-    ref.current?.focus()
-  }, [])
-
-  const handle = () => {
-    const nextTitle = title.trim()
-    if (!nextTitle) return
-    onSubmit(nextTitle)
-  }
-
-  return (
-    <div className="rounded-xl border border-accent/30 bg-bg-surface p-2.5 space-y-2 shadow-card">
-      <textarea
-        ref={ref}
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault()
-            handle()
-          }
-          if (e.key === 'Escape') onCancel()
-        }}
-        placeholder="What needs to be done?"
-        className="w-full text-[13px] text-text-primary bg-transparent focus:outline-none resize-none placeholder-text-muted leading-relaxed"
-        rows={2}
-      />
-      <div className="flex items-center gap-1.5">
-        <button
-          onClick={handle}
-          disabled={!title.trim()}
-          className="btn-primary text-[12px] py-1 px-2.5 disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
-        >
-          <Check className="w-3 h-3" strokeWidth={2.5} />
-          Add
-        </button>
-        <button onClick={onCancel} className="btn-ghost text-[12px] py-1 px-2 flex items-center gap-1">
-          <X className="w-3 h-3" />
-          Cancel
-        </button>
-      </div>
-    </div>
-  )
-}
-
 export default function TaskBoardColumn({
   col,
   tasks,
@@ -153,10 +95,7 @@ export default function TaskBoardColumn({
   onDrop,
   onDragStart,
   navigate,
-  isAdding,
   onStartAdd,
-  onCancelAdd,
-  onSubmitAdd,
   canCreate = false,
 }: BoardColumnProps) {
   return (
@@ -198,9 +137,7 @@ export default function TaskBoardColumn({
         )}
       </div>
 
-      {canCreate && isAdding ? (
-        <AddTaskForm onSubmit={onSubmitAdd} onCancel={onCancelAdd} />
-      ) : canCreate ? (
+      {canCreate ? (
         <button
           onClick={onStartAdd}
           className="flex items-center gap-2 px-2 py-1.5 text-[12px] text-text-muted hover:text-text-primary transition-colors rounded-md hover:bg-bg-hover"

@@ -3,7 +3,6 @@ import type { Id, TaskSkillRequirementRequest } from '@/types'
 export interface TaskCreateForm {
   title: string
   description: string
-  status: string
   priority: string
   type: string
   projectId: Id | ''
@@ -31,7 +30,6 @@ export type SetTaskCreateField = <K extends keyof TaskCreateForm>(
 export const EMPTY_TASK_CREATE_FORM: TaskCreateForm = {
   title: '',
   description: '',
-  status: 'TODO',
   priority: 'MEDIUM',
   type: 'FEATURE',
   projectId: '',

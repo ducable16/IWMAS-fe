@@ -1,5 +1,4 @@
 import { Check } from 'lucide-react'
-import { Link } from 'react-router-dom'
 import clsx from 'clsx'
 import { Avatar } from '../Avatar'
 import { activeDropdownRef } from './editorTypes'
@@ -36,13 +35,9 @@ export function AssigneeField({
         {assignee ? (
           <>
             <Avatar name={assigneeName} avatarUrl={assignee.avatarUrl} size="xs" />
-            <Link
-              to={`/users/${assignee.id}`}
-              onClick={(e) => e.stopPropagation()}
-              className="min-w-0 flex-1 truncate text-[13px] hover:text-accent hover:underline transition-colors"
-            >
+            <span className="min-w-0 flex-1 truncate text-[13px]">
               {assigneeName}
-            </Link>
+            </span>
           </>
         ) : (
           <span className="text-text-muted text-[13px]">Unassigned</span>

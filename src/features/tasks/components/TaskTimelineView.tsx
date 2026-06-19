@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
 import { taskService } from '@/features/tasks/services/taskService'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
-import type { Id, TaskFilters, TaskListItem } from '@/types'
+import type { ApiError, Id, TaskFilters, TaskListItem } from '@/types'
 
 import {
   ROW_H,
@@ -41,6 +41,13 @@ interface UpdateTaskDatesVariables {
 
 interface TaskTimelineViewProps {
   filters: TaskFilters
+}
+
+const getDateUpdateErrorMessage = (err: unknown) => {
+  const code = (err as ApiError | undefined)?.code
+  if (code === 5005) return (err as ApiError | undefined)?.message || 'Start date must not be after due date'
+  if (code === 5006) return (err as ApiError | undefined)?.message || 'Enter a start date or due date'
+  return (err as ApiError | undefined)?.message || 'Failed to update task dates'
 }
 
 export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
@@ -83,12 +90,15 @@ export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
   const updateDatesMutation = useMutation({
     mutationFn: ({ id, startDate, dueDate }: UpdateTaskDatesVariables) =>
       taskService.updateDates(id, { startDate, dueDate }),
-    onSuccess: () => {
+    onSuccess: (_res, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', 'board', filters.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', id] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', id, 'history'] })
       toast.success('Task dates updated')
     },
-    onError: () => {
-      toast.error('Failed to update task dates')
+    onError: (err: unknown) => {
+      toast.error(getDateUpdateErrorMessage(err))
       setDragOverride(null)
       dragOverrideRef.current = null
     },
