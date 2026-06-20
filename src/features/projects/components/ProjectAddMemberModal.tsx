@@ -7,16 +7,14 @@ import { useAutocompleteExcludeProject } from '@/features/search/hooks/useSearch
 import { useAddProjectMember } from '../hooks/useProjects'
 import {
   DateNoteFields,
-  RoleEffortFields,
+  EffortField,
 } from './project-member-modal/ProjectMemberFields'
 import RemainingEffortPanel from './project-member-modal/RemainingEffortPanel'
 import type { FormEvent } from 'react'
 import type { Id } from '@/types'
-import type { ProjectRole } from '@/constants/enums'
 
 type ProjectMemberForm = {
   userId: Id | ''
-  roleInProject: ProjectRole
   allocatedEffortPercent: string
   joinDate: string
   note: string
@@ -32,7 +30,6 @@ type ProjectAddMemberModalProps = {
 
 const BLANK: ProjectMemberForm = {
   userId: '',
-  roleInProject: 'MEMBER',
   allocatedEffortPercent: '',
   joinDate: new Date().toISOString().slice(0, 10),
   note: '',
@@ -86,7 +83,7 @@ export default function ProjectAddMemberModal({
 
     addMember.mutate({
       userId: Number(form.userId),
-      roleInProject: form.roleInProject,
+      roleInProject: 'MEMBER',
       allocatedEffortPercent: Number(form.allocatedEffortPercent),
       joinDate: form.joinDate || undefined,
       note: form.note.trim() || undefined,
@@ -118,11 +115,9 @@ export default function ProjectAddMemberModal({
           />
         )}
 
-        <RoleEffortFields
-          role={form.roleInProject}
+        <EffortField
           effort={form.allocatedEffortPercent}
           effortError={errors.allocatedEffortPercent}
-          onRoleChange={(role) => set('roleInProject', role as ProjectRole)}
           onEffortChange={(effort) => set('allocatedEffortPercent', effort)}
         />
 

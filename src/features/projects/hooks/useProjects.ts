@@ -6,9 +6,11 @@ import {
   ERR_CREATE_PROJECT,
   ERR_UPDATE_PROJECT,
   ERR_DELETE_PROJECT,
+  ERR_CHANGE_MANAGER,
   ERR_ADD_MEMBER,
   ERR_UPDATE_MEMBER,
   ERR_REMOVE_MEMBER,
+  ERR_MANAGER_UNCHANGED,
   ERR_UPLOAD_DOCUMENT,
   ERR_DELETE_DOCUMENT,
   ERR_MEMBER_ALREADY_EXISTS,
@@ -64,6 +66,14 @@ interface UpdateProjectVariables {
 interface UpdateProjectMemberVariables {
   memberId: Id
   data: ProjectMemberRequest
+}
+
+interface ChangeManagerVariables {
+  id: Id
+  data: {
+    newManagerId: Id
+    managerAllocationPercent: number
+  }
 }
 
 function pageItems<T>(raw: PageResponse<T> | T[] | null | undefined): T[] {
@@ -244,6 +254,27 @@ export function useDeleteProject() {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_PROJECT)),
+  })
+}
+
+export function useChangeProjectManager() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, data }: ChangeManagerVariables) => projectService.changeManager(id, data),
+    onSuccess: (_res, { id }) => {
+      toast.success('Project manager changed')
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', id] })
+      queryClient.invalidateQueries({ queryKey: ['projects', id, 'members'] })
+    },
+    onError: (err: unknown) => {
+      const code = getApiErrorCode(err)
+      if (code === ERROR_CODES.PROJECT_MANAGER_UNCHANGED)    toast.error(ERR_MANAGER_UNCHANGED)
+      else if (code === ERROR_CODES.PROJECT_MEMBER_EXISTS)   toast.error(ERR_MEMBER_ALREADY_EXISTS)
+      else if (code === ERROR_CODES.PROJECT_ALLOC_EXCEED)    toast.error(ERR_ALLOC_EXCEED_UPDATE)
+      else if (code === ERROR_CODES.PROJECT_EFFORT_REQUIRED) toast.error(ERR_ALLOC_REQUIRED_PM)
+      else toast.error(getErrorMessage(err, ERR_CHANGE_MANAGER))
+    },
   })
 }
 

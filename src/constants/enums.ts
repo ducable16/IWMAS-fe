@@ -54,14 +54,13 @@ export const PROJECT_STATUS_META = {
 }
 
 // ── Project role-in-project ───────────────────────────────────────────────────
-// API §11: LEAD | MEMBER | SUPPORTER  (LEAD = PM được tự động gán khi tạo project)
-export const PROJECT_ROLES = ['LEAD', 'MEMBER', 'SUPPORTER'] as const
+// API §11: PROJECT_MANAGER | MEMBER
+export const PROJECT_ROLES = ['PROJECT_MANAGER', 'MEMBER'] as const
 export type ProjectRole = typeof PROJECT_ROLES[number]
 
 export const PROJECT_ROLE_LABEL = {
-  LEAD:      'Lead',
-  MEMBER:    'Member',
-  SUPPORTER: 'Supporter',
+  PROJECT_MANAGER: 'Project Manager',
+  MEMBER:          'Member',
 }
 
 // ── Task status ───────────────────────────────────────────────────────────────

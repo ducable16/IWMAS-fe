@@ -30,6 +30,7 @@ export const ERROR_CODES = {
   ATTACHMENT_NOT_FOUND:         9993,
   DOCUMENT_NOT_FOUND:           9994,
   SEARCH_INVALID_SKILLS:        9504,
+  PROJECT_MANAGER_UNCHANGED: 4010,
 } as const
 
 export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES]

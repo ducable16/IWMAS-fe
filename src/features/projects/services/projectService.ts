@@ -106,6 +106,8 @@ export const projectService = {
   suggestCode: (name: string) => api.get<{ code: string }>('/projects/suggest-code', { params: { name } }),
 
   /**
+
+  /**
    * §3.5 POST /api/projects — ADMIN or PROJECT_MANAGER
    * Creates the PM's LEAD membership atomically.
    * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId, managerAllocationPercent }} data
@@ -115,7 +117,11 @@ export const projectService = {
   /** §3.6 PUT /api/projects/{id} — ADMIN or PROJECT_MANAGER */
   update: (id: Id, data: UpdateProjectRequest) => api.put<Project>(`/projects/${id}`, data),
 
-  /** §3.7 DELETE /api/projects/{id} — ADMIN or PROJECT_MANAGER */
+  /** §3.7 PATCH /api/projects/{id}/manager — PM hand-off */
+  changeManager: (id: Id, data: { newManagerId: Id; managerAllocationPercent: number }) =>
+    api.patch<Project>(`/projects/${id}/manager`, data),
+
+  /** §3.8 DELETE /api/projects/{id} — ADMIN or PROJECT_MANAGER */
   remove: (id: Id) => api.delete(`/projects/${id}`),
 
   // ── Members ────────────────────────────────────────────────

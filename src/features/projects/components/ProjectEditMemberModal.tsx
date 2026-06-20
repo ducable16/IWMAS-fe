@@ -5,15 +5,13 @@ import ModalFormActions from '@/components/ui/ModalFormActions'
 import { useUpdateProjectMember } from '../hooks/useProjects'
 import {
   DateNoteFields,
-  RoleEffortFields,
+  EffortField,
 } from './project-member-modal/ProjectMemberFields'
 import RemainingEffortPanel from './project-member-modal/RemainingEffortPanel'
 import type { FormEvent } from 'react'
 import type { Id, ProjectMember } from '@/types'
-import type { ProjectRole } from '@/constants/enums'
 
 type EditMemberForm = {
-  roleInProject: ProjectRole | string
   allocatedEffortPercent: string | number
   joinDate: string
   note: string
@@ -29,7 +27,6 @@ type ProjectEditMemberModalProps = {
 }
 
 const BLANK: EditMemberForm = {
-  roleInProject: 'MEMBER',
   allocatedEffortPercent: '',
   joinDate: '',
   note: '',
@@ -50,7 +47,6 @@ export default function ProjectEditMemberModal({
   useEffect(() => {
     if (open && member) {
       setForm({
-        roleInProject: member.roleInProject || 'MEMBER',
         allocatedEffortPercent: member.allocatedEffortPercent ?? '',
         joinDate: member.joinDate || '',
         note: member.note || '',
@@ -91,7 +87,7 @@ export default function ProjectEditMemberModal({
       memberId: member.id,
       data: {
         userId: member.userId,
-        roleInProject: form.roleInProject,
+        roleInProject: member.roleInProject,
         allocatedEffortPercent: Number(form.allocatedEffortPercent),
         note: form.note.trim() || undefined,
       },
@@ -120,11 +116,9 @@ export default function ProjectEditMemberModal({
           currentEffort={member.allocatedEffortPercent}
         />
 
-        <RoleEffortFields
-          role={form.roleInProject}
+        <EffortField
           effort={form.allocatedEffortPercent}
           effortError={errors.allocatedEffortPercent}
-          onRoleChange={(role) => set('roleInProject', role)}
           onEffortChange={(effort) => set('allocatedEffortPercent', effort)}
         />
 

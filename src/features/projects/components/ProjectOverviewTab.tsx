@@ -59,6 +59,7 @@ interface ProjectOverviewTabProps {
   form: ProjectDetailForm
   set: (key: keyof ProjectDetailForm) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void
   managerName: string
+  onChangeManager?: (() => void) | undefined
 }
 
 export function ProjectOverviewTab({
@@ -67,6 +68,7 @@ export function ProjectOverviewTab({
   form,
   set,
   managerName,
+  onChangeManager,
 }: ProjectOverviewTabProps) {
   return (
     <div className="grid lg:grid-cols-2 gap-5 mb-6">
@@ -121,12 +123,23 @@ export function ProjectOverviewTab({
             </InfoRow>
 
             <InfoRow label="Manager">
-              <span className="flex items-center gap-2">
-                <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/15 flex items-center justify-center text-[10px] font-semibold text-accent">
-                  {managerName[0]?.toUpperCase() ?? '?'}
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-2">
+                  <span className="w-5 h-5 rounded-full bg-accent/10 border border-accent/15 flex items-center justify-center text-[10px] font-semibold text-accent">
+                    {managerName[0]?.toUpperCase() ?? '?'}
+                  </span>
+                  {managerName}
                 </span>
-                {managerName}
-              </span>
+                {onChangeManager && (
+                  <button
+                    type="button"
+                    onClick={onChangeManager}
+                    className="text-[11px] font-medium text-accent hover:text-accent-hover hover:underline"
+                  >
+                    Change
+                  </button>
+                )}
+              </div>
             </InfoRow>
             <InfoRow label="Start Date">
               <span className="flex items-center gap-1.5">

@@ -15,6 +15,7 @@ import {
 } from '@/features/projects/hooks/useProjects'
 import ProjectAddMemberModal from '@/features/projects/components/ProjectAddMemberModal'
 import ProjectEditMemberModal from '@/features/projects/components/ProjectEditMemberModal'
+import ProjectChangeManagerModal from '@/features/projects/components/ProjectChangeManagerModal'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import {
@@ -79,6 +80,7 @@ export default function ProjectDetailPage() {
   // ── Edit state ──────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false)
   const [addMemberOpen,  setAddMemberOpen]  = useState(false)
+  const [changeManagerOpen, setChangeManagerOpen] = useState(false)
   const [editingMember,  setEditingMember]  = useState<ProjectMember | null>(null)
   const [form,      setForm]      = useState<ProjectDetailForm>({
     name: '',
@@ -335,6 +337,7 @@ export default function ProjectDetailPage() {
           form={form}
           set={set}
           managerName={managerName}
+          onChangeManager={(!isEditing && canManageMembers) ? () => setChangeManagerOpen(true) : undefined}
         />
       )}
 
@@ -385,6 +388,13 @@ export default function ProjectDetailPage() {
         projectId={projectId}
         onClose={() => setEditingMember(null)}
       />
+
+      <ProjectChangeManagerModal
+        open={changeManagerOpen}
+        projectId={projectId}
+        onClose={() => setChangeManagerOpen(false)}
+      />
+
       {confirmDialog}
     </div>
   )

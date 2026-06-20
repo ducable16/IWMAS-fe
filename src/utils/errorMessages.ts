@@ -28,6 +28,7 @@ export const ERR_DELETE_PROJECT  = 'Failed to delete project'
 export const ERR_ADD_MEMBER      = 'Failed to add member'
 export const ERR_UPDATE_MEMBER   = 'Failed to update member'
 export const ERR_REMOVE_MEMBER   = 'Failed to remove member'
+export const ERR_MANAGER_UNCHANGED = 'New manager cannot be the current manager'
 export const ERR_UPLOAD_DOCUMENT = 'Failed to upload document'
 export const ERR_DELETE_DOCUMENT = 'Failed to delete document'
 
@@ -76,6 +77,7 @@ export const ERR_SKILL_HAS_MEMBERS   = 'This skill is assigned to one or more me
 export const ERR_LOG_WORK        = 'Failed to log work'
 export const ERR_UPDATE_TIME_LOG = 'Failed to update time log'
 export const ERR_DELETE_TIME_LOG = 'Failed to delete time log'
+export const ERR_CHANGE_MANAGER  = 'Failed to change project manager'
 
 // ── Notifications ─────────────────────────────────────────────────────────────
 export const ERR_MARK_READ     = 'Failed to mark as read'

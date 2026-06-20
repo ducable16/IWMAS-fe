@@ -10,11 +10,9 @@ type FieldProps = {
   children: ReactNode
 }
 
-type RoleEffortFieldsProps = {
-  role: ProjectRole | string
+type EffortFieldProps = {
   effort: string | number
   effortError?: ReactNode | undefined
-  onRoleChange: (role: ProjectRole | string) => void
   onEffortChange: (effort: string) => void
 }
 
@@ -38,43 +36,25 @@ export function Field({ label, error, required, children }: FieldProps) {
   )
 }
 
-export function RoleEffortFields({
-  role,
+export function EffortField({
   effort,
   effortError,
-  onRoleChange,
   onEffortChange,
-}: RoleEffortFieldsProps) {
+}: EffortFieldProps) {
   return (
-    <div className="grid grid-cols-2 gap-4">
-      <Field label="Role" required>
-        <select
-          value={role}
-          onChange={(e) => onRoleChange(e.target.value)}
-          className="input-select w-full text-[13px]"
-        >
-          {PROJECT_ROLES.map((option) => (
-            <option key={option} value={option}>
-              {PROJECT_ROLE_LABEL[option] || option}
-            </option>
-          ))}
-        </select>
-      </Field>
-
-      <Field label="Effort (%)" required error={effortError}>
-        <input
-          type="number"
-          min="0"
-          max="100"
-          value={effort}
-          onChange={(e) => onEffortChange(e.target.value)}
-          className={clsx(
-            'input-field w-full text-[13px]',
-            effortError && 'border-danger focus:border-danger',
-          )}
-        />
-      </Field>
-    </div>
+    <Field label="Effort (%)" required error={effortError}>
+      <input
+        type="number"
+        min="0"
+        max="100"
+        value={effort}
+        onChange={(e) => onEffortChange(e.target.value)}
+        className={clsx(
+          'input-field w-full text-[13px]',
+          effortError && 'border-danger focus:border-danger',
+        )}
+      />
+    </Field>
   )
 }
 
