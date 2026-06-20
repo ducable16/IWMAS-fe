@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 
-export type SettingsSectionId = 'profile' | 'workspace' | 'skills' | 'security' | 'notifications'
+export type SettingsSectionId = 'profile' | 'skills' | 'security'
 
 export interface SettingsSection {
   id: SettingsSectionId

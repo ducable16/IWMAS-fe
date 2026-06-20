@@ -1,10 +1,8 @@
 import { useState } from 'react'
 import clsx from 'clsx'
-import NotificationsSection from '@/features/settings/components/NotificationsSection'
 import ProfileSection from '@/features/settings/components/ProfileSection'
 import SecuritySection from '@/features/settings/components/SecuritySection'
 import SkillCatalogSection from '@/features/settings/components/SkillCatalogSection'
-import WorkspaceSection from '@/features/settings/components/WorkspaceSection'
 import { SETTINGS_SECTIONS } from '@/features/settings/settingsConfig'
 import type { SettingsSectionId } from '@/features/settings/settingsTypes'
 
@@ -16,7 +14,7 @@ export default function SettingsPage() {
       <div className="mb-8">
         <h2 className="text-subhead text-text-primary">Settings</h2>
         <p className="text-text-secondary text-[14px] mt-1">
-          Manage your account and workspace preferences
+          Manage your account preferences
         </p>
       </div>
 
@@ -42,10 +40,8 @@ export default function SettingsPage() {
 
         <div className="flex-1 min-w-0">
           {active === 'profile' && <ProfileSection />}
-          {active === 'workspace' && <WorkspaceSection />}
           {active === 'skills' && <SkillCatalogSection />}
           {active === 'security' && <SecuritySection />}
-          {active === 'notifications' && <NotificationsSection />}
         </div>
       </div>
     </div>

@@ -7,7 +7,7 @@ import { useAuthStore } from '@/features/auth/store/authStore'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
 import MyTasksWidget from '@/features/dashboard/components/MyTasksWidget'
 import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel'
-import { useAllActiveMembers } from '@/features/members/hooks/useMembers'
+
 import { useMyProjects, useProjects } from '@/features/projects/hooks/useProjects'
 import { projectService } from '@/features/projects/services/projectService'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
@@ -45,17 +45,17 @@ export default function DashboardPage() {
   )
   const activeProjectStatuses: string[] = ['PLANNING', 'IN_PROGRESS']
 
-  const { data: activeMembers = [], isLoading: isActiveMembersLoading } = useAllActiveMembers(isAdmin)
+
 
   const { data: allProjects } = useProjects(
     { statuses: activeProjectStatuses, page: 0, size: 1 },
-    isAdmin || isPm,
+    isPm,
   )
   const { data: myProjects } = useMyProjects(
     { statuses: activeProjectStatuses, page: 0, size: 1 },
-    !isAdmin,
+    !isPm,
   )
-  const activeProjectsCount = isAdmin
+  const activeProjectsCount = isPm
     ? allProjects?.totalElements ?? 0
     : myProjects?.totalElements ?? 0
 
@@ -112,13 +112,7 @@ export default function DashboardPage() {
     })
   }
 
-  const teamMembers: DashboardMember[] = isAdmin
-    ? activeMembers.map((member) => ({
-      id: member.id,
-      fullName: member.fullName || 'Unknown',
-      position: member.position || '',
-    }))
-    : Array.from(pmMemberMap.values())
+  const teamMembers: DashboardMember[] = Array.from(pmMemberMap.values())
 
 
   if (isMember) {
@@ -170,12 +164,12 @@ export default function DashboardPage() {
         />
       </div>
 
-      {(isAdmin || isPm) && (
+      {isPm && (
         <TeamWorkloadPanel
           title="Team workload & tasks"
           members={teamMembers}
-          isLoading={isAdmin ? isActiveMembersLoading : isMembersLoading}
-          emptyLabel={isPm ? 'No members in your managed projects.' : 'No team workload data.'}
+          isLoading={isMembersLoading}
+          emptyLabel="No members in your managed projects."
         />
       )}
 

@@ -36,7 +36,7 @@ export default function ProjectsPage() {
   const can = useCan()
   const canEdit = can.createProject
   const user = useAuthStore((s) => s.user)
-  const isTeamMember = user?.role === 'TEAM_MEMBER'
+  const usesAllProjects = can.isPm
 
   const [params, setParams] = useState(DEFAULT_PROJECT_FILTERS)
   const [drawerOpen, setDrawerOpen] = useState(false)
@@ -45,9 +45,9 @@ export default function ProjectsPage() {
 
   const deferredParams = useDeferredValue(params)
 
-  const allQ = useProjects(deferredParams, !isTeamMember)
-  const myQ = useMyProjects(deferredParams, isTeamMember)
-  const { data, isLoading, isError, error, refetch, isFetching } = isTeamMember ? myQ : allQ
+  const allQ = useProjects(deferredParams, usesAllProjects)
+  const myQ = useMyProjects(deferredParams, !usesAllProjects)
+  const { data, isLoading, isError, error, refetch, isFetching } = usesAllProjects ? allQ : myQ
 
   const { data: usersData } = useMembers({ size: 100 })
   const allUsers = usersData?.members ?? []
@@ -95,16 +95,14 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="min-w-0">
             <h2 className="text-subhead text-text-primary">
-              {isTeamMember ? 'My Projects' : can.isPm ? 'Projects I Manage' : 'Projects'}
+              {usesAllProjects ? 'Projects I Manage' : 'My Projects'}
             </h2>
             <p className="text-text-secondary text-[14px] mt-1">
               {isLoading
                 ? 'Loading...'
-                : isTeamMember
-                ? `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} you're a member of`
-                : can.isPm
+                : usesAllProjects
                 ? `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} you manage`
-                : `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} in workspace`}
+                : `${totalElements.toLocaleString()} project${totalElements !== 1 ? 's' : ''} you're a member of`}
             </p>
           </div>
           {canEdit && (

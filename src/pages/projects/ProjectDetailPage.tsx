@@ -66,9 +66,9 @@ export default function ProjectDetailPage() {
 
   // §3.5 / §3.8-3.10: ADMIN always; PM only when they are the project manager.
   const isOwnProject     = !!project && project.managerId === user?.id
-  const canEdit          = can.isAdmin || (can.isPm && isOwnProject)
-  const canManageMembers = can.isAdmin || (can.isPm && isOwnProject)
-  const canUploadDocuments = can.isAdmin || can.isPm || can.isTm
+  const canEdit          = can.isPm && isOwnProject
+  const canManageMembers = can.isPm && isOwnProject
+  const canUploadDocuments = true // Any participant can upload
 
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })
@@ -306,7 +306,7 @@ export default function ProjectDetailPage() {
           { id: 'overview', label: 'Overview' },
           { id: 'members',  label: 'Members', count: members.length },
           { id: 'documents', label: 'Documents', count: documents.length, icon: Paperclip },
-          ...((canEdit || can.isAdmin) ? [{ id: 'workload', label: 'Workload', icon: BarChart3 }] : []),
+          ...(canEdit ? [{ id: 'workload', label: 'Workload', icon: BarChart3 }] : []),
         ] as Array<{ id: ProjectDetailTab; label: string; count?: number; icon?: LucideIcon }>).map((tab) => (
           <button
             key={tab.id}
@@ -370,7 +370,7 @@ export default function ProjectDetailPage() {
       )}
 
       {/* ── Tab: Workload ── */}
-      {activeTab === 'workload' && (canEdit || can.isAdmin) && (
+      {activeTab === 'workload' && canEdit && (
         <div className="card p-5">
           <ProjectWorkloadDashboard projectId={projectId} />
         </div>

@@ -63,7 +63,7 @@ export function ProjectDocumentsTab({
       ) : (
         <div className="divide-y divide-border-subtle">
           {documents.map((doc) => {
-            const canDeleteDoc = isAdmin || isOwnProject || doc.uploadedBy === user?.id
+            const canDeleteDoc = isOwnProject || doc.uploadedBy === user?.id
             return (
               <div key={doc.id} className="px-5 py-3 flex items-center gap-3">
                 <Paperclip className="w-4 h-4 text-text-muted shrink-0" strokeWidth={1.75} />

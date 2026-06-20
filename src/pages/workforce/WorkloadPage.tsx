@@ -28,9 +28,10 @@ function ProjectAutocomplete({ onSelect }: ProjectAutocompleteProps) {
 
   // Search projects via API — use appropriate hook by role
   const searchParams = { search: deferredQuery, size: 8, sortBy: 'name', sortDirection: 'ASC' }
-  const adminQ  = useProjects(searchParams, can.isAdmin && open)
-  const myQ     = useMyProjects(searchParams, !can.isAdmin && open)
-  const { data, isFetching } = can.isAdmin ? adminQ : myQ
+  const usesAllProjects = can.isPm
+  const allQ  = useProjects(searchParams, usesAllProjects && open)
+  const myQ     = useMyProjects(searchParams, !usesAllProjects && open)
+  const { data, isFetching } = usesAllProjects ? allQ : myQ
   const suggestions = data?.projects ?? []
 
   // Close dropdown on outside click
@@ -135,13 +136,9 @@ export default function WorkloadPage() {
     setView('workload')
   }, [selectedProject?.id])
 
-  // TEAM_MEMBER cannot view team workload (§9.7 requires ADMIN/PM).
-  // Redirect them directly to their own workload detail (§9.9).
-  if (can.isHr) {
-    return <Navigate to="/dashboard" replace />
-  }
-
-  if (can.isTm && currentUser?.id) {
+  // Only PM and HR can view team workload.
+  // Others (Admin, TM) redirect to their own workload detail.
+  if (!can.viewAllWorkload && currentUser?.id) {
     return <Navigate to={`/workforce/members/${currentUser.id}`} replace />
   }
 
