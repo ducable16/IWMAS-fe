@@ -1,10 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { timeLogService, type TimeLogRangeParams } from '../services/timeLogService'
-import type { ApiError, Id, TimeLogRequest } from '@/types'
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_LOG_WORK, ERR_UPDATE_TIME_LOG, ERR_DELETE_TIME_LOG } from '@/utils/errorMessages'
+import type { Id, TimeLogRequest } from '@/types'
 
 function invalidateTimeLogDependents(queryClient: ReturnType<typeof useQueryClient>, taskId?: Id | null) {
   queryClient.invalidateQueries({ queryKey: ['time-logs'] })
@@ -46,7 +45,7 @@ export function useCreateTimeLog(taskId?: Id | null | undefined) {
       toast.success('Work logged')
       invalidateTimeLogDependents(queryClient, taskId ?? variables.taskId)
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to log work')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_LOG_WORK)),
   })
 }
 
@@ -58,7 +57,7 @@ export function useUpdateTimeLog(taskId?: Id | null | undefined) {
       toast.success('Time log updated')
       invalidateTimeLogDependents(queryClient, taskId ?? variables.data.taskId)
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to update time log')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_UPDATE_TIME_LOG)),
   })
 }
 
@@ -70,6 +69,6 @@ export function useDeleteTimeLog(taskId?: Id | null | undefined) {
       toast.success('Time log deleted')
       invalidateTimeLogDependents(queryClient, taskId)
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete time log')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_TIME_LOG)),
   })
 }

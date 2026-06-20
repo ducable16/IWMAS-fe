@@ -32,6 +32,7 @@ interface AutocompleteSelectProps<TSearchParams = unknown> {
   useSearchHook: (query: string, searchParams?: TSearchParams) => SearchResult
   searchParams?: TSearchParams
   noResultsText?: string | undefined
+  showNoResultsOnOpen?: boolean | undefined
   initialDisplay?: string | undefined
   renderOption?: ((item: Suggestion) => ReactNode) | undefined
   disabled?: boolean
@@ -48,6 +49,7 @@ export default function AutocompleteSelect<TSearchParams = unknown>({
   useSearchHook,
   searchParams,
   noResultsText = 'No results found',
+  showNoResultsOnOpen = false,
   initialDisplay = '',
   renderOption,
   disabled = false,
@@ -100,7 +102,10 @@ export default function AutocompleteSelect<TSearchParams = unknown>({
     if (value) onChange('')
   }
 
-  const showSuggestions = !disabled && isOpen && (debouncedInput.length >= 2 || suggestions.length > 0)
+  const hasSearchQuery = debouncedInput.trim().length >= 2
+  const showSuggestions = !disabled
+    && isOpen
+    && (showNoResultsOnOpen || hasSearchQuery || suggestions.length > 0)
 
   return (
     <Field label={label} id={id} required={required} error={error}>
@@ -148,7 +153,7 @@ export default function AutocompleteSelect<TSearchParams = unknown>({
               </div>
             )}
 
-            {!isFetching && suggestions.length === 0 && debouncedInput.length >= 2 && (
+            {!isFetching && suggestions.length === 0 && (showNoResultsOnOpen || hasSearchQuery) && (
               <div className="px-3 py-2 text-[12px] text-text-muted">
                 {noResultsText}
               </div>
@@ -171,7 +176,7 @@ export default function AutocompleteSelect<TSearchParams = unknown>({
               </ul>
             )}
 
-            {!isFetching && debouncedInput.length < 2 && suggestions.length === 0 && (
+            {!isFetching && !showNoResultsOnOpen && !hasSearchQuery && suggestions.length === 0 && (
               <div className="px-3 py-2 text-[12px] text-text-muted">
                 Type at least 2 characters to search...
               </div>

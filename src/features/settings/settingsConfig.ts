@@ -9,25 +9,11 @@ export const SETTINGS_SECTIONS: SettingsSection[] = [
   { id: 'notifications', label: 'Notifications', icon: Bell },
 ]
 
-export const TIMEZONES = [
-  'UTC+7 (Ho Chi Minh City)',
-  'UTC+0 (London)',
-  'UTC-5 (New York)',
-  'UTC+8 (Singapore)',
-  'UTC+9 (Tokyo)',
-]
-
 export const DEFAULT_NOTIFICATIONS: NotificationPreference[] = [
   {
     id: 'burnout',
     label: 'Burnout alerts',
     desc: 'When a member exceeds workload threshold',
-    enabled: true,
-  },
-  {
-    id: 'sprint_risk',
-    label: 'Sprint risk warnings',
-    desc: 'When AI detects sprint deadline risk',
     enabled: true,
   },
   {

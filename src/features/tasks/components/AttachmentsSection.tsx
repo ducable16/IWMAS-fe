@@ -7,6 +7,7 @@ import { LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ImageLightbox from '@/components/ui/ImageLightbox'
 import AttachmentCard from './attachments/AttachmentCard'
 import { getAttachmentUploaderId } from './attachments/attachmentUtils'
+import { ERR_ATTACHMENT_TOO_LARGE, ERR_FILE_TYPE_NOT_ALLOWED } from '@/utils/errorMessages'
 import type { ChangeEvent } from 'react'
 import type { Id, TaskAttachment } from '@/types'
 
@@ -69,12 +70,12 @@ export default function AttachmentsSection({
     const file = e.target.files?.[0]
     if (!file) return
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      toast.error('Attachment must be 20 MB or smaller')
+      toast.error(ERR_ATTACHMENT_TOO_LARGE)
       e.target.value = ''
       return
     }
     if (!isAllowedAttachmentType(file)) {
-      toast.error('File type is not allowed')
+      toast.error(ERR_FILE_TYPE_NOT_ALLOWED)
       e.target.value = ''
       return
     }

@@ -2,7 +2,7 @@ import { memo, useCallback, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import clsx from 'clsx'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
-import UtilizationBar from '@/features/workforce/components/UtilizationBar'
+import WorkloadBar from '@/features/workforce/components/WorkloadBar'
 import { useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
 import WorkloadTaskList from './WorkloadTaskList'
 import type { Id } from '@/types'
@@ -67,11 +67,9 @@ const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: Member
 
           <div className="mt-2">
             {hasLoaded ? (
-              <UtilizationBar
-                utilizationPercent={data.nearTermPercent}
+              <WorkloadBar
+                workloadPercent={data.workloadPercent}
                 workloadLevel={data.workloadLevel}
-                weeklyRemainingHours={null}
-                weeklyCapacityHours={null}
                 compact
               />
             ) : (

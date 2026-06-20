@@ -107,6 +107,7 @@ export default function TaskCreateFields({
           error={assigneeError}
           disabled={assigneeDisabled}
           noResultsText="No eligible project members found"
+          showNoResultsOnOpen
         />
       </div>
 

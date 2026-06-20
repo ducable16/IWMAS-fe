@@ -1,8 +1,26 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { projectService, type ProjectMemberSearchParams } from '../services/projectService'
+import { getErrorMessage, getApiErrorCode } from '@/utils/apiError'
+import {
+  ERR_CREATE_PROJECT,
+  ERR_UPDATE_PROJECT,
+  ERR_DELETE_PROJECT,
+  ERR_ADD_MEMBER,
+  ERR_UPDATE_MEMBER,
+  ERR_REMOVE_MEMBER,
+  ERR_UPLOAD_DOCUMENT,
+  ERR_DELETE_DOCUMENT,
+  ERR_MEMBER_ALREADY_EXISTS,
+  ERR_ALLOC_EXCEED_CREATE,
+  ERR_ALLOC_EXCEED_ADD,
+  ERR_ALLOC_EXCEED_UPDATE,
+  ERR_ALLOC_REQUIRED_PM,
+  ERR_ALLOC_REQUIRED_ADD,
+  ERR_ALLOC_REQUIRED_UPDATE,
+} from '@/utils/errorMessages'
+import { ERROR_CODES } from '@/constants/errorCodes'
 import type {
-  ApiError,
   CreateProjectRequest,
   Id,
   PageResponse,
@@ -47,9 +65,6 @@ interface UpdateProjectMemberVariables {
   memberId: Id
   data: ProjectMemberRequest
 }
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
 
 function pageItems<T>(raw: PageResponse<T> | T[] | null | undefined): T[] {
   if (Array.isArray(raw)) return raw
@@ -199,10 +214,10 @@ export function useCreateProject() {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (err: unknown) => {
-      const code = (err as ApiError | undefined)?.code
-      if (code === 4005) toast.error("Creating this project would push the manager's peak concurrent allocation above 100%.")
-      else if (code === 4008) toast.error('Manager effort allocation (%) must be between 1 and 100.')
-      else toast.error(getErrorMessage(err, 'Failed to create project'))
+      const code = getApiErrorCode(err)
+      if (code === ERROR_CODES.PROJECT_ALLOC_EXCEED)   toast.error(ERR_ALLOC_EXCEED_CREATE)
+      else if (code === ERROR_CODES.PROJECT_EFFORT_REQUIRED) toast.error(ERR_ALLOC_REQUIRED_PM)
+      else toast.error(getErrorMessage(err, ERR_CREATE_PROJECT))
     },
   })
 }
@@ -216,7 +231,7 @@ export function useUpdateProject() {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.invalidateQueries({ queryKey: ['projects', id] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to update project')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_UPDATE_PROJECT)),
   })
 }
 
@@ -228,7 +243,7 @@ export function useDeleteProject() {
       toast.success('Project deleted')
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete project')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_PROJECT)),
   })
 }
 
@@ -241,11 +256,11 @@ export function useAddProjectMember(projectId: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err: unknown) => {
-      const code = (err as ApiError | undefined)?.code
-      if (code === 4004) toast.error('This user is already a member of this project.')
-      else if (code === 4005) toast.error("Adding this allocation would push the user's peak concurrent allocation above 100%.")
-      else if (code === 4008) toast.error('Effort allocation (%) is required when adding a member.')
-      else toast.error(getErrorMessage(err, 'Failed to add member'))
+      const code = getApiErrorCode(err)
+      if (code === ERROR_CODES.PROJECT_MEMBER_EXISTS)      toast.error(ERR_MEMBER_ALREADY_EXISTS)
+      else if (code === ERROR_CODES.PROJECT_ALLOC_EXCEED)  toast.error(ERR_ALLOC_EXCEED_ADD)
+      else if (code === ERROR_CODES.PROJECT_EFFORT_REQUIRED) toast.error(ERR_ALLOC_REQUIRED_ADD)
+      else toast.error(getErrorMessage(err, ERR_ADD_MEMBER))
     },
   })
 }
@@ -260,10 +275,10 @@ export function useUpdateProjectMember(projectId: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
     onError: (err: unknown) => {
-      const code = (err as ApiError | undefined)?.code
-      if (code === 4005) toast.error("Updated allocation would push the user's peak concurrent allocation above 100%.")
-      else if (code === 4008) toast.error('Effort allocation (%) is required when updating a member.')
-      else toast.error(getErrorMessage(err, 'Failed to update member'))
+      const code = getApiErrorCode(err)
+      if (code === ERROR_CODES.PROJECT_ALLOC_EXCEED)         toast.error(ERR_ALLOC_EXCEED_UPDATE)
+      else if (code === ERROR_CODES.PROJECT_EFFORT_REQUIRED) toast.error(ERR_ALLOC_REQUIRED_UPDATE)
+      else toast.error(getErrorMessage(err, ERR_UPDATE_MEMBER))
     },
   })
 }
@@ -275,7 +290,7 @@ export function useRemoveProjectMember(projectId: Id | null | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to remove member')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_REMOVE_MEMBER)),
   })
 }
 
@@ -288,7 +303,7 @@ export function useUploadProjectDocument(projectId: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to upload document')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_UPLOAD_DOCUMENT)),
   })
 }
 
@@ -301,6 +316,6 @@ export function useDeleteProjectDocument(projectId: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
       queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to delete document')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_DOCUMENT)),
   })
 }

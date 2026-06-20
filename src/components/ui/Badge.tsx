@@ -6,7 +6,6 @@ import {
   PROJECT_STATUS_META,
   TASK_PRIORITY_META,
   USER_STATUS_META,
-  RISK_LEVEL_META,
 } from '@/constants/enums'
 
 interface BadgeMeta {
@@ -38,11 +37,6 @@ interface TaskTypeBadgeProps {
 
 interface TaskPriorityBadgeProps {
   priority: string
-  className?: string | undefined
-}
-
-interface RiskLevelBadgeProps {
-  level: string
   className?: string | undefined
 }
 
@@ -117,14 +111,6 @@ export function TaskPriorityBadge({ priority, className }: TaskPriorityBadgeProp
 export function UserStatusBadge({ status, className }: StatusBadgeProps) {
   const meta = metaFrom(USER_STATUS_META, status, {
     label: status,
-    color: 'bg-bg-subtle text-text-muted',
-  })
-  return <BaseBadge label={meta.label} colorClass={meta.color} className={className} />
-}
-
-export function RiskLevelBadge({ level, className }: RiskLevelBadgeProps) {
-  const meta = metaFrom(RISK_LEVEL_META, level, {
-    label: level,
     color: 'bg-bg-subtle text-text-muted',
   })
   return <BaseBadge label={meta.label} colorClass={meta.color} className={className} />

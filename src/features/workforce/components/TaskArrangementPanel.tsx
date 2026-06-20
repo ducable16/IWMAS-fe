@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import toast from 'react-hot-toast'
 import {
   AlertTriangle,
@@ -35,9 +35,12 @@ import {
   useArrangeLane,
   useArrangeMyLane,
   useLaneNextTask,
+  useMySchedule,
   useMyNextTask,
   usePreviewSchedule,
+  useResetSchedule,
   useSaveSchedule,
+  useSuggestSchedule,
 } from '../hooks/useWorkload'
 import type {
   ArrangeTaskItem,
@@ -46,6 +49,8 @@ import type {
   ProjectScheduleResponse,
   TaskWorkloadItem,
 } from '@/types'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_ARRANGEMENT_STALE } from '@/utils/errorMessages'
 
 type TaskArrangementPanelProps = {
   userId: Id
@@ -55,6 +60,8 @@ type TaskArrangementPanelProps = {
   onProjectChange: (projectId: Id) => void
 }
 
+type ScheduleView = 'plan' | 'suggested'
+
 type SortableArrangeRowProps = {
   id: string
   task: ArrangeTaskItem
@@ -63,8 +70,13 @@ type SortableArrangeRowProps = {
   isEditable: boolean
 }
 
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as { message?: string } | null | undefined)?.message || fallback
+const getErrorCode = (err: unknown) => {
+  const error = err as {
+    code?: string | number
+    response?: { data?: { code?: string | number } }
+  } | null | undefined
+  return String(error?.response?.data?.code ?? error?.code ?? '')
+}
 
 const EMPTY_ARRANGE_TASKS: ArrangeTaskItem[] = []
 
@@ -180,12 +192,16 @@ export default function TaskArrangementPanel({
   const canEditOrder = isSelf
   const [order, setOrder] = useState<string[]>([])
   const [preview, setPreview] = useState<ProjectScheduleResponse | null>(null)
+  const [previewedOrder, setPreviewedOrder] = useState<string[]>([])
+  const [scheduleView, setScheduleView] = useState<ScheduleView>('plan')
 
   const activeProjectId = selectedProjectId ?? allocations[0]?.projectId ?? null
   const activeAllocation = allocations.find((item) => keyOf(item.projectId) === keyOf(activeProjectId ?? ''))
 
   const myArrangement = useArrangeMyLane(activeProjectId, undefined, isSelf)
   const laneArrangement = useArrangeLane(activeProjectId, userId, undefined, !isSelf)
+  const mySchedule = useMySchedule(activeProjectId, isSelf)
+  const suggestedSchedule = useSuggestSchedule(activeProjectId, isSelf)
   const myNextTask = useMyNextTask(activeProjectId, undefined, isSelf)
   const laneNextTask = useLaneNextTask(
     activeProjectId,
@@ -195,6 +211,7 @@ export default function TaskArrangementPanel({
   )
   const previewSchedule = usePreviewSchedule()
   const saveSchedule = useSaveSchedule()
+  const resetSchedule = useResetSchedule()
 
   const arrangementQuery = isSelf ? myArrangement : laneArrangement
   const nextQuery = isSelf ? myNextTask : laneNextTask
@@ -208,12 +225,35 @@ export default function TaskArrangementPanel({
     () => new Map(tasks.map((task) => [keyOf(task.taskId), task])),
     [tasks],
   )
-  const orderedTasks = order.map((id) => taskByKey.get(id)).filter(Boolean) as ArrangeTaskItem[]
-  const previewByKey = useMemo(
-    () => new Map((preview?.tasks ?? []).map((task) => [keyOf(task.taskId), task])),
-    [preview],
+
+  const orderFromSchedule = useCallback((schedule: ProjectScheduleResponse | null | undefined) => {
+    const scheduled = (schedule?.tasks ?? [])
+      .map((task) => keyOf(task.taskId))
+      .filter((id) => taskByKey.has(id))
+    const included = new Set(scheduled)
+    return [...scheduled, ...initialOrder.filter((id) => !included.has(id))]
+  }, [initialOrder, taskByKey])
+
+  const savedOrder = useMemo(
+    () => orderFromSchedule(mySchedule.data),
+    [mySchedule.data, orderFromSchedule],
   )
-  const hasOrderChanges = canEditOrder && !idsEqual(order, initialOrder)
+  const suggestedOrder = useMemo(
+    () => orderFromSchedule(suggestedSchedule.data),
+    [orderFromSchedule, suggestedSchedule.data],
+  )
+  const orderedTasks = order.map((id) => taskByKey.get(id)).filter(Boolean) as ArrangeTaskItem[]
+  const visibleSchedule = preview
+    ?? (scheduleView === 'suggested' ? suggestedSchedule.data : mySchedule.data)
+  const previewByKey = useMemo(
+    () => new Map((visibleSchedule?.tasks ?? []).map((task) => [keyOf(task.taskId), task])),
+    [visibleSchedule],
+  )
+  const hasOrderChanges = canEditOrder && !idsEqual(order, savedOrder)
+  const hasCurrentPreview = !!preview && idsEqual(order, previewedOrder)
+  const isScheduleLoading = isSelf && (mySchedule.isLoading || suggestedSchedule.isLoading)
+  const scheduleError = isSelf ? (mySchedule.error || suggestedSchedule.error) : null
+  const isMutating = previewSchedule.isPending || saveSchedule.isPending || resetSchedule.isPending
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -221,9 +261,17 @@ export default function TaskArrangementPanel({
   )
 
   useEffect(() => {
-    setOrder(initialOrder)
+    if (!isSelf) {
+      setOrder(initialOrder)
+      setScheduleView('suggested')
+    } else if (mySchedule.data && suggestedSchedule.data) {
+      const nextView = mySchedule.data.savedOrder ? 'plan' : 'suggested'
+      setScheduleView(nextView)
+      setOrder(nextView === 'plan' ? savedOrder : suggestedOrder)
+    }
     setPreview(null)
-  }, [initialOrder])
+    setPreviewedOrder([])
+  }, [activeProjectId, initialOrder, isSelf, mySchedule.data, savedOrder, suggestedOrder, suggestedSchedule.data])
 
   if (!allocations.length) {
     return <LiveEmpty label="No project lanes available for task arrangement." />
@@ -239,12 +287,32 @@ export default function TaskArrangementPanel({
       return arrayMove(current, oldIndex, newIndex)
     })
     setPreview(null)
+    setPreviewedOrder([])
   }
 
   const orderedTaskIds = () =>
     order
       .map((id) => taskByKey.get(id)?.taskId)
       .filter((id): id is Id => id !== undefined && id !== null)
+
+  const refreshScheduleData = () => {
+    void Promise.all([
+      myArrangement.refetch(),
+      mySchedule.refetch(),
+      suggestedSchedule.refetch(),
+    ])
+  }
+
+  const handleScheduleError = (err: unknown, fallback: string) => {
+    if (getErrorCode(err) === '1012') {
+      setPreview(null)
+      setPreviewedOrder([])
+      refreshScheduleData()
+      toast.error(ERR_ARRANGEMENT_STALE)
+      return
+    }
+    toast.error(getErrorMessage(err, fallback))
+  }
 
   const handlePreview = () => {
     if (!activeProjectId) return
@@ -253,9 +321,10 @@ export default function TaskArrangementPanel({
       {
         onSuccess: (data) => {
           setPreview(data)
+          setPreviewedOrder([...order])
           toast.success('Schedule preview updated')
         },
-        onError: (err) => toast.error(getErrorMessage(err, 'Failed to preview schedule')),
+        onError: (err) => handleScheduleError(err, 'Failed to preview schedule'),
       },
     )
   }
@@ -267,16 +336,55 @@ export default function TaskArrangementPanel({
       {
         onSuccess: (data) => {
           setPreview(data)
+          setPreviewedOrder([...order])
+          setScheduleView('plan')
           toast.success('Task order saved')
         },
-        onError: (err) => toast.error(getErrorMessage(err, 'Failed to save task order')),
+        onError: (err) => handleScheduleError(err, 'Failed to save task order'),
       },
     )
   }
 
   const handleReset = () => {
-    setOrder(initialOrder)
+    setOrder(savedOrder)
     setPreview(null)
+    setPreviewedOrder([])
+  }
+
+  const showPlan = () => {
+    setScheduleView('plan')
+    setOrder(savedOrder)
+    setPreview(null)
+    setPreviewedOrder([])
+  }
+
+  const showSuggestion = () => {
+    setScheduleView('suggested')
+    setOrder(suggestedOrder)
+    setPreview(null)
+    setPreviewedOrder([])
+  }
+
+  const useSuggestion = () => {
+    setScheduleView('plan')
+    setOrder(suggestedOrder)
+    setPreview(suggestedSchedule.data ?? null)
+    setPreviewedOrder(suggestedOrder)
+  }
+
+  const followAutomatically = () => {
+    if (!activeProjectId) return
+    resetSchedule.mutate(activeProjectId, {
+      onSuccess: (data) => {
+        const nextOrder = orderFromSchedule(data)
+        setScheduleView('suggested')
+        setOrder(nextOrder)
+        setPreview(data)
+        setPreviewedOrder(nextOrder)
+        toast.success('Automatic task ordering restored')
+      },
+      onError: (err) => handleScheduleError(err, 'Failed to restore automatic ordering'),
+    })
   }
 
   return (
@@ -324,12 +432,71 @@ export default function TaskArrangementPanel({
         })}
       </div>
 
-      {arrangementQuery.isLoading && <LiveLoading label="Loading task arrangement..." />}
-      {arrangementQuery.isError && (
-        <LiveError error={arrangementQuery.error} onRetry={arrangementQuery.refetch} />
+      {isSelf && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="inline-flex rounded-lg border border-border-subtle bg-bg-subtle p-0.5">
+            <button
+              type="button"
+              onClick={showPlan}
+              className={clsx(
+                'rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
+                scheduleView === 'plan'
+                  ? 'bg-bg-surface text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              My plan
+            </button>
+            <button
+              type="button"
+              onClick={showSuggestion}
+              className={clsx(
+                'rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors',
+                scheduleView === 'suggested'
+                  ? 'bg-bg-surface text-text-primary shadow-sm'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              Suggested
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11.5px] text-text-muted">
+              {mySchedule.data?.savedOrder ? 'Saved custom order' : 'Following automatically'}
+            </span>
+            {mySchedule.data?.savedOrder && (
+              <button
+                type="button"
+                onClick={followAutomatically}
+                disabled={isMutating}
+                className="btn-secondary inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
+                {resetSchedule.isPending ? 'Restoring...' : 'Follow automatically'}
+              </button>
+            )}
+          </div>
+        </div>
       )}
 
-      {!arrangementQuery.isLoading && !arrangementQuery.isError && (
+      {(arrangementQuery.isLoading || isScheduleLoading) && (
+        <LiveLoading label="Loading task arrangement..." />
+      )}
+      {(arrangementQuery.isError || scheduleError) && (
+        <LiveError
+          error={arrangementQuery.error || scheduleError}
+          onRetry={() => {
+            void arrangementQuery.refetch()
+            if (isSelf) {
+              void mySchedule.refetch()
+              void suggestedSchedule.refetch()
+            }
+          }}
+        />
+      )}
+
+      {!arrangementQuery.isLoading && !isScheduleLoading && !arrangementQuery.isError && !scheduleError && (
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-border-subtle bg-bg-subtle/35 p-3">
             {arrangement && (
@@ -376,17 +543,14 @@ export default function TaskArrangementPanel({
             )}
           </div>
 
-          {preview && (
+          {visibleSchedule && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/20 bg-accent/[0.04] px-3 py-2">
-              <WorkloadLevelBadge level={preview.workloadLevel} />
+              <WorkloadLevelBadge level={visibleSchedule.workloadLevel} />
               <span className="text-[12px] text-text-secondary">
-                Near-term <span className="font-semibold tabular-nums">{preview.nearTermPercent.toFixed(0)}%</span>
+                Workload <span className="font-semibold tabular-nums">{visibleSchedule.workloadPercent.toFixed(0)}%</span>
               </span>
               <span className="text-[12px] text-text-secondary">
-                Overall <span className="font-semibold tabular-nums">{preview.overallPercent.toFixed(0)}%</span>
-              </span>
-              <span className="text-[12px] text-text-secondary">
-                Predicted late <span className="font-semibold tabular-nums">{preview.predictedLateTaskCount}</span>
+                Predicted late <span className="font-semibold tabular-nums">{visibleSchedule.predictedLateTaskCount}</span>
               </span>
             </div>
           )}
@@ -409,14 +573,14 @@ export default function TaskArrangementPanel({
                         task={task}
                         displayPosition={index + 1}
                         previewTask={previewByKey.get(keyOf(task.taskId))}
-                        isEditable={canEditOrder}
+                        isEditable={canEditOrder && scheduleView === 'plan'}
                       />
                     ))}
                   </div>
                 </SortableContext>
               </DndContext>
 
-              {canEditOrder && (
+              {canEditOrder && scheduleView === 'plan' && (
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
                   <p className="inline-flex items-center gap-1.5 text-[12px] text-text-muted">
                     <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.75} />
@@ -426,16 +590,16 @@ export default function TaskArrangementPanel({
                     <button
                       type="button"
                       onClick={handleReset}
-                      disabled={!hasOrderChanges || previewSchedule.isPending || saveSchedule.isPending}
+                      disabled={!hasOrderChanges || isMutating}
                       className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <RotateCcw className="h-3.5 w-3.5" strokeWidth={1.75} />
-                      Reset
+                      Discard changes
                     </button>
                     <button
                       type="button"
                       onClick={handlePreview}
-                      disabled={!hasOrderChanges || previewSchedule.isPending || saveSchedule.isPending}
+                      disabled={!hasOrderChanges || isMutating}
                       className="btn-secondary inline-flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {previewSchedule.isPending ? 'Previewing...' : 'Preview'}
@@ -443,13 +607,30 @@ export default function TaskArrangementPanel({
                     <button
                       type="button"
                       onClick={handleSave}
-                      disabled={!hasOrderChanges || previewSchedule.isPending || saveSchedule.isPending}
+                      disabled={!hasOrderChanges || !hasCurrentPreview || isMutating}
                       className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <Save className="h-3.5 w-3.5" strokeWidth={1.75} />
                       {saveSchedule.isPending ? 'Saving...' : 'Save order'}
                     </button>
                   </div>
+                </div>
+              )}
+
+              {canEditOrder && scheduleView === 'suggested' && (
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
+                  <p className="text-[12px] text-text-muted">
+                    Review the suggested order, then use it as the starting point for your plan.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={useSuggestion}
+                    disabled={isMutating || idsEqual(savedOrder, suggestedOrder)}
+                    className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-[12.5px] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
+                    {idsEqual(savedOrder, suggestedOrder) ? 'Suggestion in use' : 'Use suggestion'}
+                  </button>
                 </div>
               )}
             </>

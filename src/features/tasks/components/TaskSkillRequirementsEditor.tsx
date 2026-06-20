@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Loader2, Plus, Search, Trash2 } from 'lucide-react'
 import { SKILL_LEVEL_LABEL, SKILL_LEVELS } from '@/constants/enums'
 import { useSkills } from '@/features/skills/hooks/useSkills'
@@ -11,6 +12,17 @@ type TaskSkillRequirementsEditorProps = {
 }
 
 const DEFAULT_LEVEL = 'INTERMEDIATE'
+const SKILL_MENU_GAP = 4
+const SKILL_MENU_MAX_HEIGHT = 240
+const VIEWPORT_PADDING = 8
+
+type SkillMenuPosition = {
+  left: number
+  top?: number
+  bottom?: number
+  width: number
+  maxHeight: number
+}
 
 function skillKey(id: Id | null | undefined) {
   return id == null ? '' : String(id)
@@ -67,8 +79,10 @@ function SkillSearchSelect({
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
+  const [menuPosition, setMenuPosition] = useState<SkillMenuPosition | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const menuRef = useRef<HTMLDivElement | null>(null)
   const skipNextFocusOpenRef = useRef(false)
   const selectedSkillKey = skillKey(value)
   const selectedLabel = getSkillLabel(currentSkill, value)
@@ -79,7 +93,8 @@ function SkillSearchSelect({
 
   useEffect(() => {
     const handlePointerDown = (event: globalThis.MouseEvent) => {
-      if (!rootRef.current?.contains(event.target as Node)) {
+      const target = event.target as Node
+      if (!rootRef.current?.contains(target) && !menuRef.current?.contains(target)) {
         setOpen(false)
       }
     }
@@ -94,6 +109,45 @@ function SkillSearchSelect({
     skipNextFocusOpenRef.current = true
     inputRef.current?.focus()
   }, [autoFocus, disabled, isLoading])
+
+  useLayoutEffect(() => {
+    if (!open) {
+      setMenuPosition(null)
+      return
+    }
+
+    const updateMenuPosition = () => {
+      const input = inputRef.current
+      if (!input) return
+
+      const rect = input.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom - SKILL_MENU_GAP - VIEWPORT_PADDING
+      const spaceAbove = rect.top - SKILL_MENU_GAP - VIEWPORT_PADDING
+      const openUp = spaceBelow < SKILL_MENU_MAX_HEIGHT && spaceAbove > spaceBelow
+      const availableHeight = Math.max(80, openUp ? spaceAbove : spaceBelow)
+
+      setMenuPosition({
+        left: Math.max(VIEWPORT_PADDING, Math.min(rect.left, window.innerWidth - rect.width - VIEWPORT_PADDING)),
+        width: rect.width,
+        maxHeight: Math.min(SKILL_MENU_MAX_HEIGHT, availableHeight),
+        ...(openUp
+          ? { bottom: window.innerHeight - rect.top + SKILL_MENU_GAP }
+          : { top: rect.bottom + SKILL_MENU_GAP }),
+      })
+    }
+
+    updateMenuPosition()
+    window.addEventListener('resize', updateMenuPosition)
+    window.addEventListener('scroll', updateMenuPosition, true)
+    const resizeObserver = new ResizeObserver(updateMenuPosition)
+    if (inputRef.current) resizeObserver.observe(inputRef.current)
+
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition)
+      window.removeEventListener('scroll', updateMenuPosition, true)
+      resizeObserver.disconnect()
+    }
+  }, [open])
 
   const options = useMemo(
     () =>
@@ -141,8 +195,20 @@ function SkillSearchSelect({
         autoComplete="off"
       />
 
-      {open && !disabled && (
-        <div className="absolute z-[80] left-0 right-0 top-full mt-1 max-h-60 overflow-y-auto rounded-lg border border-border bg-bg-surface shadow-popover">
+      {open && !disabled && menuPosition && createPortal(
+        <div
+          ref={menuRef}
+          style={{
+            position: 'fixed',
+            left: menuPosition.left,
+            top: menuPosition.top,
+            bottom: menuPosition.bottom,
+            width: menuPosition.width,
+            maxHeight: menuPosition.maxHeight,
+            zIndex: 1000,
+          }}
+          className="overflow-y-auto rounded-lg border border-border bg-bg-surface shadow-popover"
+        >
           {isLoading && (
             <div className="flex items-center gap-2 px-3 py-2 text-[12px] text-text-muted">
               <Loader2 className="w-3 h-3 animate-spin" />
@@ -177,7 +243,8 @@ function SkillSearchSelect({
               </button>
             )
           })}
-        </div>
+        </div>,
+        document.body,
       )}
     </div>
   )

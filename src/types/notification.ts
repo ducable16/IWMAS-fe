@@ -4,7 +4,7 @@ import type { Id } from './api'
 export interface Notification {
   id: Id
   /** §8 NotificationType: TASK_ASSIGNED | TASK_STATUS_CHANGED | TASK_OVERDUE |
-   *  DEADLINE_REMINDER | COMMENT_MENTION | PROJECT_ADDED | OVERLOAD_WARNING | BURNOUT_ALERT */
+   *  DEADLINE_REMINDER | COMMENT_MENTION | PROJECT_ADDED | OVERLOAD_WARNING */
   type?: string
   title?: string
   content?: string

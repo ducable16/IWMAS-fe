@@ -1,11 +1,11 @@
 import { AlertTriangle } from 'lucide-react'
 import clsx from 'clsx'
 import WorkloadTaskRow from './WorkloadTaskRow'
-import type { WorkloadTask } from '@/types'
+import type { TaskWorkloadItem } from '@/types'
 import type { WorkloadDetailVariant } from './memberWorkloadDetailTypes'
 
 interface WorkloadTaskSectionsProps {
-  tasks: WorkloadTask[]
+  tasks: TaskWorkloadItem[]
   showAllTasks: boolean
   variant: WorkloadDetailVariant
 }
@@ -13,6 +13,20 @@ interface WorkloadTaskSectionsProps {
 const pageListClass = 'card divide-y divide-border-subtle overflow-hidden'
 const modalListClass =
   'rounded-xl border border-border-subtle bg-bg-subtle/30 divide-y divide-border-subtle overflow-hidden'
+
+function isDueThisWeek(dueDate: string | null) {
+  if (!dueDate) return false
+  const due = new Date(`${dueDate}T00:00:00`)
+  if (Number.isNaN(due.getTime())) return false
+
+  const today = new Date()
+  const day = today.getDay() || 7
+  const monday = new Date(today.getFullYear(), today.getMonth(), today.getDate() - day + 1)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  sunday.setHours(23, 59, 59, 999)
+  return due >= monday && due <= sunday
+}
 
 function EmptyTaskList({ variant, label }: { variant: WorkloadDetailVariant; label: string }) {
   if (variant === 'page') {
@@ -36,7 +50,7 @@ export default function WorkloadTaskSections({
   variant,
 }: WorkloadTaskSectionsProps) {
   const overdueTasks = tasks.filter((task) => task.overdue)
-  const dueThisWeek = tasks.filter((task) => !task.overdue)
+  const dueThisWeek = tasks.filter((task) => !task.overdue && isDueThisWeek(task.dueDate))
   const isPage = variant === 'page'
 
   return (
@@ -65,7 +79,7 @@ export default function WorkloadTaskSections({
           >
             {overdueTasks.map((task) => (
               <WorkloadTaskRow
-                key={String(task.taskId ?? task.id)}
+                key={String(task.taskId)}
                 task={task}
                 variant={variant}
               />
@@ -87,7 +101,7 @@ export default function WorkloadTaskSections({
           <div className={isPage ? pageListClass : modalListClass}>
             {dueThisWeek.map((task) => (
               <WorkloadTaskRow
-                key={String(task.taskId ?? task.id)}
+                key={String(task.taskId)}
                 task={task}
                 variant={variant}
               />
@@ -112,7 +126,7 @@ export default function WorkloadTaskSections({
             <div className={isPage ? pageListClass : modalListClass}>
               {tasks.map((task) => (
                 <WorkloadTaskRow
-                  key={`all-${String(task.taskId ?? task.id)}`}
+                  key={`all-${String(task.taskId)}`}
                   task={task}
                   variant={variant}
                 />

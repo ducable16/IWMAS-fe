@@ -3,12 +3,11 @@ import { Camera, Loader2 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Avatar } from '@/components/ui/Avatar'
 import Field from '@/components/ui/Field'
-import SelectField from '@/components/ui/SelectField'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useUploadAvatar } from '@/features/members/hooks/useMembers'
 import { userService } from '@/features/members/services/memberService'
-import { TIMEZONES } from '../settingsConfig'
-import { getErrorMessage } from '../settingsUtils'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_UPDATE_PROFILE, ERR_FILE_TYPE_NOT_ALLOWED, ERR_AVATAR_TOO_LARGE } from '@/utils/errorMessages'
 import type { ChangeEvent, FormEvent } from 'react'
 import type { User } from '@/types'
 import type { ProfileErrors, ProfileForm } from '../settingsTypes'
@@ -75,7 +74,7 @@ export default function ProfileSection() {
       }
       toast.success('Profile updated')
     } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Failed to update profile'))
+      toast.error(getErrorMessage(err, ERR_UPDATE_PROFILE))
     } finally {
       setSaving(false)
     }
@@ -88,12 +87,12 @@ export default function ProfileSection() {
     if (!file) return
 
     if (!file.type?.startsWith('image/')) {
-      toast.error('File type not allowed')
+      toast.error(ERR_FILE_TYPE_NOT_ALLOWED)
       e.target.value = ''
       return
     }
     if (file.size > 2 * 1024 * 1024) {
-      toast.error('File is too large')
+      toast.error(ERR_AVATAR_TOO_LARGE)
       e.target.value = ''
       return
     }
@@ -199,12 +198,6 @@ export default function ProfileSection() {
         <Field label="Role" readOnly>
           <div className="input-readonly">{user?.role || 'Project Manager'}</div>
         </Field>
-
-        <SelectField label="Timezone" id="prof-timezone">
-          {TIMEZONES.map((tz) => (
-            <option key={tz}>{tz}</option>
-          ))}
-        </SelectField>
       </div>
 
       <div className="pt-2">

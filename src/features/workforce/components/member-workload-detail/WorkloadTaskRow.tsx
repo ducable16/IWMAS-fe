@@ -3,16 +3,16 @@ import { Clock, ExternalLink } from 'lucide-react'
 import clsx from 'clsx'
 import { TaskPriorityBadge, TaskStatusBadge } from '@/components/ui/Badge'
 import { fmtDay } from '@/utils/date'
-import type { WorkloadTask } from '@/types'
+import type { TaskWorkloadItem } from '@/types'
 import type { WorkloadDetailVariant } from './memberWorkloadDetailTypes'
 
 interface WorkloadTaskRowProps {
-  task: WorkloadTask
+  task: TaskWorkloadItem
   variant: WorkloadDetailVariant
 }
 
 export default function WorkloadTaskRow({ task, variant }: WorkloadTaskRowProps) {
-  const taskId = task.taskId ?? task.id
+  const taskId = task.taskId
   const isPage = variant === 'page'
 
   return (

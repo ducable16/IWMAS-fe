@@ -1,19 +1,11 @@
 import { FolderOpen } from 'lucide-react'
 import clsx from 'clsx'
-import UtilizationBar from '../UtilizationBar'
+import WorkloadBar from '../WorkloadBar'
 import WorkloadLevelBadge from '../WorkloadLevelBadge'
-import type { Id, ProjectWorkloadAllocation } from '@/types'
-
-type Allocation = ProjectWorkloadAllocation & {
-  allocatedEffortPercent?: number | null
-  loadInWindowHours?: number | null
-  dailyCapacityHours?: number | null
-  nearTermPercent?: number | null
-  overallPercent?: number | null
-}
+import type { Id, ProjectAllocationItem } from '@/types'
 
 interface ProjectAllocationsTableProps {
-  allocations?: Allocation[] | null
+  allocations?: ProjectAllocationItem[] | null
   activeProjectId?: Id | null
   onSelectProject?: (projectId: Id) => void
 }
@@ -54,27 +46,15 @@ export default function ProjectAllocationsTable({
                 <WorkloadLevelBadge level={allocation.workloadLevel} />
               </div>
               <div className="flex-1 min-w-[120px]">
-                <UtilizationBar
-                  utilizationPercent={allocation.nearTermPercent}
+                <WorkloadBar
+                  workloadPercent={allocation.workloadPercent}
                   workloadLevel={allocation.workloadLevel}
                   compact
                 />
               </div>
               <div className="shrink-0 text-right">
-                <p className="text-[12px] text-text-secondary tabular-nums">
-                  {allocation.loadInWindowHours != null ? (
-                    <>
-                      <span className="font-semibold">
-                        {allocation.loadInWindowHours.toFixed(1)}
-                      </span>
-                      {' h load'}
-                    </>
-                  ) : (
-                    '-'
-                  )}
-                </p>
                 {allocation.dailyCapacityHours != null && (
-                  <p className="text-[11px] text-text-muted">
+                  <p className="text-[11px] text-text-muted tabular-nums">
                     {allocation.dailyCapacityHours.toFixed(1)} h/day cap
                   </p>
                 )}

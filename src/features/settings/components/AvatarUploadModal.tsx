@@ -3,6 +3,7 @@ import { ImagePlus } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
+import { ERR_AVATAR_PREPARE } from '@/utils/errorMessages'
 
 const OUTPUT_SIZE = 512
 const FRAME_SIZE = 320
@@ -167,7 +168,7 @@ export default function AvatarUploadModal({
       const cropped = await createCroppedAvatarFile(file, imageRef.current, zoom, position)
       onSubmit(cropped)
     } catch {
-      toast.error('Could not prepare avatar image')
+      toast.error(ERR_AVATAR_PREPARE)
     }
   }
 

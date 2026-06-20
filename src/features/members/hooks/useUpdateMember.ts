@@ -1,15 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
-import type { ApiError, Id, MemberView, UpdateUserRequest } from '@/types'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_UPDATE_USER } from '@/utils/errorMessages'
+import type { Id, MemberView, UpdateUserRequest } from '@/types'
 
 interface UpdateMemberVariables {
   id: Id
   data: UpdateUserRequest
 }
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
 
 /**
  * PATCH /users/{id} with optimistic cache update.
@@ -42,7 +41,7 @@ export function useUpdateMember() {
       if (context?.previous) {
         queryClient.setQueryData(['members'], context.previous)
       }
-      toast.error(getErrorMessage(err, 'Failed to update user'))
+      toast.error(getErrorMessage(err, ERR_UPDATE_USER))
     },
 
     onSuccess: () => {

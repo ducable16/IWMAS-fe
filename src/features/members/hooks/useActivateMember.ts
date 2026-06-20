@@ -1,15 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
-import type { ApiError, Id, MemberView } from '@/types'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_UPDATE_STATUS } from '@/utils/errorMessages'
+import type { Id, MemberView } from '@/types'
 
 interface ActivateMemberVariables {
   id: Id
   active: boolean
 }
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
 
 /**
  * Activate or deactivate a user (admin only).
@@ -40,7 +39,7 @@ export function useActivateMember() {
       if (context?.previous) {
         queryClient.setQueryData(['members'], context.previous)
       }
-      toast.error(getErrorMessage(err, 'Failed to update status'))
+      toast.error(getErrorMessage(err, ERR_UPDATE_STATUS))
     },
 
     onSuccess: (_data, { active }: ActivateMemberVariables) => {

@@ -188,23 +188,6 @@ export const SKILL_LEVEL_META = {
 }
 
 // ── Risk level (burnout) ──────────────────────────────────────────────────────
-export const RISK_LEVELS = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const
-export type RiskLevel = typeof RISK_LEVELS[number]
-
-export const RISK_LEVEL_LABEL = {
-  LOW:      'Low risk',
-  MEDIUM:   'Medium risk',
-  HIGH:     'High risk',
-  CRITICAL: 'Critical',
-}
-
-export const RISK_LEVEL_META = {
-  LOW:      { label: 'Low Risk',  color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide', dot: 'bg-success' },
-  MEDIUM:   { label: 'Medium',    color: 'bg-amber-300 text-slate-800 font-bold tracking-wide', dot: 'bg-warning' },
-  HIGH:     { label: 'High',      color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
-  CRITICAL: { label: 'Critical',  color: 'bg-rose-400  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
-}
-
 // ── User active/status (derived from `active: boolean`) ───────────────────────
 export const USER_STATUS_META = {
   ACTIVE:   { label: 'Active',   color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide', dot: 'bg-success' },

@@ -3,7 +3,6 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import {
   CheckSquare,
   FolderKanban,
-  Activity,
   AlertTriangle,
   Clock,
   UserPlus,
@@ -26,7 +25,6 @@ const TYPE_META: Record<string, { icon: LucideIcon; color: string }> = {
   COMMENT_MENTION:     { icon: AtSign,         color: 'text-accent' },
   PROJECT_ADDED:       { icon: FolderKanban,   color: 'text-success' },
   OVERLOAD_WARNING:    { icon: TrendingUp,     color: 'text-warning' },
-  BURNOUT_ALERT:       { icon: Activity,       color: 'text-danger' },
 }
 
 type NotificationItemProps = {

@@ -1,56 +1,41 @@
-import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Users, AlertTriangle, UserCheck } from 'lucide-react'
-import WeekNavigator, { getCurrentWeekRange } from './WeekNavigator'
 import MemberWorkloadRow from './MemberWorkloadRow'
 import { useProjectWorkload } from '../hooks/useWorkload'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
-import type { Id, WorkloadMember } from '@/types'
+import type { Id, MemberWorkloadResponse } from '@/types'
 
 type ProjectWorkloadDashboardProps = {
   projectId: Id | null | undefined
 }
 
 /**
- * Main PM view — shows team utilization for a single project.
+ * Main PM view showing real-time workload for one project.
  * Reusable: embedded in both WorkloadPage and ProjectDetailPage.
- * Clicking a row navigates to /workforce/members/:userId?weekStart=...&weekEnd=...
+ * Clicking a row navigates to the member workload detail page.
  */
 export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadDashboardProps) {
   const navigate = useNavigate()
-  const [weekStart, setWeekStart] = useState(() => getCurrentWeekRange().weekStart)
-  const [weekEnd, setWeekEnd]     = useState(() => getCurrentWeekRange().weekEnd)
 
   const { data: members = [], isLoading, isError, error, refetch } = useProjectWorkload(
     projectId,
   )
 
-  const handleWeekChange = useCallback((ws: string, we: string) => {
-    setWeekStart((prev) => (prev === ws ? prev : ws))
-    setWeekEnd((prev) => (prev === we ? prev : we))
-  }, [])
-
-  const handleRowClick = (member: WorkloadMember) => {
+  const handleRowClick = (member: MemberWorkloadResponse) => {
     const params = new URLSearchParams()
-    if (weekStart) params.set('weekStart', weekStart)
-    if (weekEnd)   params.set('weekEnd',   weekEnd)
     if (projectId) params.set('projectId', String(projectId))
-    navigate(`/workforce/members/${member.userId}?${params.toString()}`)
+    const query = params.toString()
+    navigate(`/workforce/members/${member.userId}${query ? `?${query}` : ''}`)
   }
 
   // Summary counts
-  const workloadMembers = members as WorkloadMember[]
+  const workloadMembers = members
   const total      = workloadMembers.length
   const overloaded = workloadMembers.filter((m) => m.workloadLevel === 'OVERDUE' || m.workloadLevel === 'WILL_SLIP').length
   const available  = workloadMembers.filter((m) => m.workloadLevel === 'AVAILABLE' || m.workloadLevel === 'HEALTHY').length
 
   return (
     <div className="space-y-4">
-      {/* Week navigator */}
-      <div className="flex items-center justify-between gap-4 flex-wrap">
-        <WeekNavigator onChange={handleWeekChange} weekStart={weekStart} weekEnd={weekEnd} />
-      </div>
-
       {/* Summary bar */}
       {!isLoading && !isError && total > 0 && (
         <div className="flex items-center gap-5 text-[12.5px]">

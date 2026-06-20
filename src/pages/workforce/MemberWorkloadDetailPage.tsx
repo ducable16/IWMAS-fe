@@ -1,20 +1,17 @@
-import { useCallback, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useState } from 'react'
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
 import clsx from 'clsx'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ProjectAllocationsTable from '@/features/workforce/components/member-workload-detail/ProjectAllocationsTable'
 import WorkloadTaskSections from '@/features/workforce/components/member-workload-detail/WorkloadTaskSections'
 import TaskArrangementPanel from '@/features/workforce/components/TaskArrangementPanel'
-import UtilizationBar from '@/features/workforce/components/UtilizationBar'
-import WeekNavigator, { getCurrentWeekRange } from '@/features/workforce/components/WeekNavigator'
+import WorkloadBar from '@/features/workforce/components/WorkloadBar'
 import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyWorkload, useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
-import type { Id, WorkloadMember } from '@/types'
-
-type WeekChangeHandler = (weekStart: string, weekEnd: string) => void
+import type { Id, MemberWorkloadResponse } from '@/types'
 
 const parseQueryId = (value: string | null): Id | null => {
   if (!value) return null
@@ -24,17 +21,11 @@ const parseQueryId = (value: string | null): Id | null => {
 
 function WorkloadDetailContent({
   data,
-  weekStart,
-  weekEnd,
-  onWeekChange,
   isSelf,
   selectedProjectId,
   onProjectChange,
 }: {
-  data: WorkloadMember
-  weekStart: string
-  weekEnd: string
-  onWeekChange: WeekChangeHandler
+  data: MemberWorkloadResponse
   isSelf: boolean
   selectedProjectId: Id | null
   onProjectChange: (projectId: Id) => void
@@ -51,7 +42,7 @@ function WorkloadDetailContent({
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-[18px] font-bold bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/15 text-accent shrink-0">
-              {(data.userFullName || data.fullName)
+              {data.userFullName
                 ?.split(' ')
                 .map((part) => part[0])
                 .slice(0, 2)
@@ -61,7 +52,7 @@ function WorkloadDetailContent({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-[18px] font-semibold text-text-primary">
-                  {data.userFullName || data.fullName}
+                  {data.userFullName}
                 </h2>
                 {isSelf && (
                   <span className="text-[10.5px] font-semibold text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded-full">
@@ -77,16 +68,12 @@ function WorkloadDetailContent({
               </div>
             </div>
           </div>
-
-          <WeekNavigator onChange={onWeekChange} weekStart={weekStart} weekEnd={weekEnd} />
         </div>
 
         <div className="mt-5 pt-4 border-t border-border-subtle">
-          <UtilizationBar
-            utilizationPercent={data.nearTermPercent}
+          <WorkloadBar
+            workloadPercent={data.workloadPercent}
             workloadLevel={data.workloadLevel}
-            weeklyRemainingHours={null}
-            weeklyCapacityHours={null}
           />
         </div>
 
@@ -115,7 +102,6 @@ function WorkloadDetailContent({
           <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p className="text-[20px] font-bold text-text-primary tabular-nums">
               {data.unestimatedTaskCount > 0 ? data.unestimatedTaskCount : '-'}
-              <span className="text-[13px] font-normal text-text-muted"> h</span>
             </p>
             <p className="text-[11.5px] text-text-muted mt-0.5">Unestimated</p>
           </div>
@@ -138,22 +124,16 @@ function WorkloadDetailContent({
 
       <p className="text-[12px] text-text-muted text-center pb-4">
         <span className="font-semibold text-text-secondary">{data.activeTaskCount}</span>
-        {' active tasks total across all weeks'}
+        {' active tasks total'}
       </p>
     </>
   )
 }
 
 function SelfWorkloadView({
-  weekStart,
-  weekEnd,
-  onWeekChange,
   selectedProjectId,
   onProjectChange,
 }: {
-  weekStart: string
-  weekEnd: string
-  onWeekChange: WeekChangeHandler
   selectedProjectId: Id | null
   onProjectChange: (projectId: Id) => void
 }) {
@@ -165,10 +145,7 @@ function SelfWorkloadView({
 
   return (
     <WorkloadDetailContent
-      data={data as WorkloadMember}
-      weekStart={weekStart}
-      weekEnd={weekEnd}
-      onWeekChange={onWeekChange}
+      data={data}
       selectedProjectId={selectedProjectId}
       onProjectChange={onProjectChange}
       isSelf
@@ -178,16 +155,10 @@ function SelfWorkloadView({
 
 function OtherUserWorkloadView({
   userId,
-  weekStart,
-  weekEnd,
-  onWeekChange,
   selectedProjectId,
   onProjectChange,
 }: {
   userId: Id
-  weekStart: string
-  weekEnd: string
-  onWeekChange: WeekChangeHandler
   selectedProjectId: Id | null
   onProjectChange: (projectId: Id) => void
 }) {
@@ -201,10 +172,7 @@ function OtherUserWorkloadView({
 
   return (
     <WorkloadDetailContent
-      data={data as WorkloadMember}
-      weekStart={weekStart}
-      weekEnd={weekEnd}
-      onWeekChange={onWeekChange}
+      data={data}
       selectedProjectId={selectedProjectId}
       onProjectChange={onProjectChange}
       isSelf={false}
@@ -223,21 +191,11 @@ export default function MemberWorkloadDetailPage() {
   const targetUserId = Number(userId)
   const isSelf = targetUserId === currentUser?.id
   const canViewOther = can.viewAllWorkload && !isSelf
-
-  const [weekStart, setWeekStart] = useState(
-    () => searchParams.get('weekStart') || getCurrentWeekRange().weekStart,
-  )
-  const [weekEnd, setWeekEnd] = useState(
-    () => searchParams.get('weekEnd') || getCurrentWeekRange().weekEnd,
-  )
   const [selectedProjectId, setSelectedProjectId] = useState<Id | null>(
     () => parseQueryId(searchParams.get('projectId')),
   )
 
-  const handleWeekChange = useCallback((ws: string, we: string) => {
-    setWeekStart((prev) => (prev === ws ? prev : ws))
-    setWeekEnd((prev) => (prev === we ? prev : we))
-  }, [])
+  if (can.isHr) return <Navigate to="/dashboard" replace />
 
   return (
     <div className="max-w-[860px] mx-auto space-y-6">
@@ -262,17 +220,11 @@ export default function MemberWorkloadDetailPage() {
       {canViewOther ? (
         <OtherUserWorkloadView
           userId={targetUserId}
-          weekStart={weekStart}
-          weekEnd={weekEnd}
-          onWeekChange={handleWeekChange}
           selectedProjectId={selectedProjectId}
           onProjectChange={setSelectedProjectId}
         />
       ) : (
         <SelfWorkloadView
-          weekStart={weekStart}
-          weekEnd={weekEnd}
-          onWeekChange={handleWeekChange}
           selectedProjectId={selectedProjectId}
           onProjectChange={setSelectedProjectId}
         />

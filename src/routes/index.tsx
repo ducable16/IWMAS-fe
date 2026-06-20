@@ -12,12 +12,10 @@ const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage'))
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage'))
 const ProjectsPage = lazy(() => import('@/pages/projects/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('@/pages/projects/ProjectDetailPage'))
-const SprintBoardPage = lazy(() => import('@/pages/sprints/SprintBoardPage'))
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage'))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage'))
 const MyTimeLogsPage = lazy(() => import('@/pages/time-logs/MyTimeLogsPage'))
 const WorkloadPage = lazy(() => import('@/pages/workforce/WorkloadPage'))
-const SprintRiskPage = lazy(() => import('@/pages/workforce/SprintRiskPage'))
 const MemberWorkloadDetailPage = lazy(() => import('@/pages/workforce/MemberWorkloadDetailPage'))
 const MembersPage = lazy(() => import('@/pages/members/MembersPage'))
 const UserProfilePage = lazy(() => import('@/pages/members/UserProfilePage'))
@@ -48,12 +46,10 @@ export default function AppRouter() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/projects" element={<ProjectsPage />} />
               <Route path="/projects/:id" element={<ProjectDetailPage />} />
-              <Route path="/sprints/:sprintId?" element={<SprintBoardPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/tasks/:id" element={<TaskDetailPage />} />
               <Route path="/time-logs" element={<MyTimeLogsPage />} />
               <Route path="/workforce" element={<WorkloadPage />} />
-              <Route path="/workforce/sprint-risk" element={<SprintRiskPage />} />
               <Route path="/workforce/members/:userId" element={<MemberWorkloadDetailPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/users/:id" element={<UserProfilePage />} />

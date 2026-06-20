@@ -2,7 +2,8 @@ import { useState } from 'react'
 import toast from 'react-hot-toast'
 import Field from '@/components/ui/Field'
 import { userService } from '@/features/members/services/memberService'
-import { getErrorMessage } from '../settingsUtils'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_UPDATE_PASSWORD } from '@/utils/errorMessages'
 import type { ChangeEvent, FormEvent } from 'react'
 import type { SecurityErrors, SecurityForm } from '../settingsTypes'
 
@@ -38,7 +39,7 @@ export default function SecuritySection() {
       setForm({ current: '', next: '', confirm: '' })
       setErrors({})
     } catch (err: unknown) {
-      toast.error(getErrorMessage(err, 'Failed to update password'))
+      toast.error(getErrorMessage(err, ERR_UPDATE_PASSWORD))
     } finally {
       setSaving(false)
     }

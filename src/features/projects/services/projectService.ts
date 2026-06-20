@@ -184,9 +184,6 @@ export const projectService = {
     )
   },
 
-  // Convenience shortcut (used by sprint board)
-  getTasks: (id: Id) => api.get(`/projects/${id}/tasks`),
-
   // Documents
   getDocuments: (projectId: Id) =>
     api.get<ProjectDocument[]>(`/projects/${projectId}/documents`),

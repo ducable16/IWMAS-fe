@@ -3,70 +3,14 @@ import { arrangementService, workloadService } from '../services/workforceServic
 import type {
   ArrangementQueryParams,
   ArrangeResponse,
-  BurnoutRisk,
   Id,
   MemberWorkloadResponse,
   NextTaskResponse,
   ProjectScheduleResponse,
   SchedulePreviewRequest,
-  WorkloadSnapshotResponse,
 } from '@/types'
 
-// ── §9.1 Team workload snapshots ──────────────────────────────────────────────
-
-export function useWorkloadTeam(date?: string, enabled = true) {
-  return useQuery<WorkloadSnapshotResponse[]>({
-    queryKey: ['workload', 'team', date],
-    queryFn: async () => {
-      const res = await workloadService.getTeam(date ? { date } : undefined)
-      return Array.isArray(res.data) ? res.data : []
-    },
-    enabled,
-  })
-}
-
-// ── §9.2–§9.3 Snapshot history ────────────────────────────────────────────────
-
-export function useMyWorkloadHistory() {
-  return useQuery<WorkloadSnapshotResponse[]>({
-    queryKey: ['workload', 'me', 'history'],
-    queryFn: async () => {
-      const res = await workloadService.getMine()
-      return Array.isArray(res.data) ? res.data : []
-    },
-  })
-}
-
-export function useUserWorkloadHistory(userId: Id | null | undefined, enabled = true) {
-  return useQuery<WorkloadSnapshotResponse[]>({
-    queryKey: ['workload', 'user', userId, 'history'],
-    queryFn: async () => {
-      const res = await workloadService.getByUser(userId as Id)
-      return Array.isArray(res.data) ? res.data : []
-    },
-    enabled: !!userId && enabled,
-  })
-}
-
-// ── §9.5–§9.6 Burnout ────────────────────────────────────────────────────────
-
-export function useBurnoutAtRisk() {
-  return useQuery({
-    queryKey: ['workload', 'burnout'],
-    queryFn: async () => {
-      const res = await workloadService.getBurnout()
-      const items = Array.isArray(res.data) ? (res.data as BurnoutRisk[]) : []
-      return items.map((m) => ({
-        id: m.userId || m.id || '',
-        name: m.fullName || m.name || '',
-        score: m.score ?? m.workloadScore ?? 0,
-        riskLevel: m.riskLevel,
-      }))
-    },
-  })
-}
-
-// ── §9.7 Project members real-time workload ───────────────────────────────────
+// ── §9.5 Project members real-time workload ───────────────────────────────────
 
 export function useProjectWorkload(
   projectId: Id | null | undefined,
@@ -82,7 +26,7 @@ export function useProjectWorkload(
   })
 }
 
-// ── §9.8 User real-time workload (with task breakdown) ────────────────────────
+// ── §9.6 User real-time workload (with task breakdown) ────────────────────────
 
 export function useUserWorkloadDetail(
   userId: Id | null | undefined,
@@ -99,7 +43,7 @@ export function useUserWorkloadDetail(
   })
 }
 
-// ── §9.9 My real-time workload ────────────────────────────────────────────────
+// ── §9.7 My real-time workload ────────────────────────────────────────────────
 
 export function useMyWorkload() {
   return useQuery<MemberWorkloadResponse | null>({
@@ -114,35 +58,35 @@ export function useMyWorkload() {
   })
 }
 
-// ── §9.10 My saved schedule for a project ────────────────────────────────────
+// ── §9.8 My saved schedule for a project ─────────────────────────────────────
 
-export function useMySchedule(projectId: Id | null | undefined) {
+export function useMySchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
     queryKey: ['workload', 'schedule', 'me', projectId],
     queryFn: async () => {
       const res = await workloadService.getMySchedule(projectId as Id)
       return res.data ?? null
     },
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     staleTime: 30_000,
   })
 }
 
-// ── §9.11 ATC schedule suggestion ────────────────────────────────────────────
+// ── §9.9 ATC schedule suggestion ─────────────────────────────────────────────
 
-export function useSuggestSchedule(projectId: Id | null | undefined) {
+export function useSuggestSchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
     queryKey: ['workload', 'schedule', 'suggest', projectId],
     queryFn: async () => {
       const res = await workloadService.suggestSchedule(projectId as Id)
       return res.data ?? null
     },
-    enabled: !!projectId,
+    enabled: !!projectId && enabled,
     staleTime: 30_000,
   })
 }
 
-// ── §9.12 Preview custom order (no persist) ───────────────────────────────────
+// ── §9.10 Preview custom order (no persist) ───────────────────────────────────
 
 export function usePreviewSchedule() {
   return useMutation<ProjectScheduleResponse, unknown, SchedulePreviewRequest>({
@@ -153,7 +97,7 @@ export function usePreviewSchedule() {
   })
 }
 
-// ── §9.13 Save schedule ───────────────────────────────────────────────────────
+// ── §9.11 Save schedule ───────────────────────────────────────────────────────
 
 export function useSaveSchedule() {
   const queryClient = useQueryClient()
@@ -167,6 +111,23 @@ export function useSaveSchedule() {
       queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'suggest', variables.projectId] })
       queryClient.invalidateQueries({ queryKey: ['workload', 'me', 'realtime'] })
       queryClient.invalidateQueries({ queryKey: ['workload', 'project', variables.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['arrangement'] })
+    },
+  })
+}
+
+export function useResetSchedule() {
+  const queryClient = useQueryClient()
+  return useMutation<ProjectScheduleResponse, unknown, Id>({
+    mutationFn: async (projectId) => {
+      const res = await workloadService.resetSchedule(projectId)
+      return res.data as ProjectScheduleResponse
+    },
+    onSuccess: (_, projectId) => {
+      queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'me', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'suggest', projectId] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'me', 'realtime'] })
+      queryClient.invalidateQueries({ queryKey: ['workload', 'project', projectId] })
       queryClient.invalidateQueries({ queryKey: ['arrangement'] })
     },
   })
@@ -244,50 +205,5 @@ export function useMyNextTask(
     },
     enabled: !!projectId && enabled,
     staleTime: 30_000,
-  })
-}
-
-interface VelocityPoint {
-  sprint: string
-  planned?: number | undefined
-  actual?: number | undefined
-  forecast?: number | undefined
-}
-
-interface SprintRiskItem {
-  level: 'critical' | 'high' | 'medium' | 'low'
-  title: string
-  desc: string
-  impact: string
-  effort: string
-}
-
-interface WorkloadKpis {
-  avgWorkload: number
-  overloaded: number
-  underutilized: number
-}
-
-/** @deprecated Sprint velocity is not yet supported by the API — always returns []. */
-export function useVelocityData() {
-  return useQuery<VelocityPoint[]>({
-    queryKey: ['workload', 'velocity'],
-    queryFn: async () => [],
-  })
-}
-
-/** @deprecated Sprint risks are not yet supported by the API — always returns []. */
-export function useSprintRisks() {
-  return useQuery<SprintRiskItem[]>({
-    queryKey: ['workload', 'risks'],
-    queryFn: async () => [],
-  })
-}
-
-/** @deprecated Use useWorkloadTeam directly for snapshot data. */
-export function useWorkloadKpis() {
-  return useQuery<WorkloadKpis>({
-    queryKey: ['workload', 'kpis'],
-    queryFn: async () => ({ avgWorkload: 0, overloaded: 0, underutilized: 0 }),
   })
 }

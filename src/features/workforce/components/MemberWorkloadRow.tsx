@@ -1,22 +1,20 @@
 import clsx from 'clsx'
 import { AlertTriangle } from 'lucide-react'
 import WorkloadLevelBadge from './WorkloadLevelBadge'
-import UtilizationBar from './UtilizationBar'
-import type { WorkloadMember } from '@/types'
+import WorkloadBar from './WorkloadBar'
+import type { MemberWorkloadResponse } from '@/types'
 
 type MemberWorkloadRowProps = {
-  member: WorkloadMember
+  member: MemberWorkloadResponse
   onClick?: () => void
 }
 
 /**
  * A single row in the team workload table.
  *
- * When `projectAllocations` is present (endpoint §9.6 — project members),
+ * When `projectAllocations` is present (endpoint 9.5, project members),
  * it contains exactly 1 item — the allocation for the current project.
- * In that case we show a dual-bar:
- *   Primary (top)    → project-specific utilization
- *   Secondary (below) → total utilization across all projects
+ * In that case we show project-specific and aggregate workload bars.
  *
  * When `projectAllocations` is absent (team-wide view §9.4) we show the
  * standard single total bar.
@@ -26,8 +24,7 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
     userFullName = 'Unknown',
     position = '',
     workloadLevel = 'AVAILABLE',
-    nearTermPercent = null,
-    overallPercent = null,
+    workloadPercent = null,
     activeTaskCount = 0,
     overdueTaskCount = 0,
     projectAllocations = null,
@@ -77,7 +74,7 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
         <WorkloadLevelBadge level={projectAlloc ? projectAlloc.workloadLevel : workloadLevel} />
       </div>
 
-      {/* Utilization bar(s) */}
+      {/* Workload bar(s) */}
       <div className="flex-1 min-w-[240px] space-y-2">
         {projectAlloc ? (
           <>
@@ -86,8 +83,8 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
               <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
                 {projectAlloc.projectName}
               </p>
-              <UtilizationBar
-                utilizationPercent={projectAlloc.nearTermPercent}
+              <WorkloadBar
+                workloadPercent={projectAlloc.workloadPercent}
                 workloadLevel={projectAlloc.workloadLevel}
                 compact
               />
@@ -97,16 +94,16 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
               <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
                 Total (all projects)
               </p>
-              <UtilizationBar
-                utilizationPercent={overallPercent}
+              <WorkloadBar
+                workloadPercent={workloadPercent}
                 workloadLevel={workloadLevel}
                 compact
               />
             </div>
           </>
         ) : (
-          <UtilizationBar
-            utilizationPercent={nearTermPercent}
+          <WorkloadBar
+            workloadPercent={workloadPercent}
             workloadLevel={workloadLevel}
             compact
           />

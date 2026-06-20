@@ -16,15 +16,14 @@ import {
   type GroupedTasks,
   type UpdateStatusVariables,
 } from './task-board/taskBoardTypes'
-import type { ApiError, Id, Task, TaskFilters, TaskListItem } from '@/types'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_TASK_UPDATE_STATUS, ERR_INVALID_TRANSITION } from '@/utils/errorMessages'
+import type { Id, Task, TaskFilters, TaskListItem } from '@/types'
 
 type TaskBoardViewProps = {
   filters: TaskFilters
   canCreate?: boolean
 }
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
 
 function normaliseTask(t: Task): TaskListItem {
   const assigneeName = t.assignee?.fullName || t.assignee?.email || '?'
@@ -89,7 +88,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
     mutationFn: ({ taskId, status }: UpdateStatusVariables) =>
       taskService.updateStatus(taskId, { status }),
     onError: (err: unknown) => {
-      toast.error(getErrorMessage(err, 'Failed to update status'))
+      toast.error(getErrorMessage(err, ERR_TASK_UPDATE_STATUS))
       setLocalGrouped(null)
     },
     onSuccess: (_res, { taskId }) => {
@@ -160,7 +159,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
 
     const allowed = (TASK_STATUS_TRANSITIONS as Record<string, readonly string[]>)[fromCol] || []
     if (!allowed.includes(toColKey)) {
-      toast.error('Invalid status transition')
+      toast.error(ERR_INVALID_TRANSITION)
       return
     }
 

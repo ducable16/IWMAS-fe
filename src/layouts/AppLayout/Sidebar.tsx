@@ -6,7 +6,6 @@ import {
   Clock,
   Users,
   Brain,
-  ShieldAlert,
   Settings,
   ChevronsLeft,
   ChevronsRight,
@@ -38,7 +37,6 @@ const NAV_ITEMS: SidebarEntry[] = [
   { label: 'Time Logs', icon: Clock, to: '/time-logs' },
   { divider: true, label: 'Workforce' },
   { label: 'Workload', icon: Brain, to: '/workforce' },
-  { label: 'Sprint Risk', icon: ShieldAlert, to: '/workforce/sprint-risk' },
   { divider: true, label: 'Workspace' },
   { label: 'Members', icon: Users, to: '/members' },
   { label: 'Settings', icon: Settings, to: '/settings' },
@@ -70,6 +68,11 @@ export default function Sidebar() {
   const displayName = user?.fullName || user?.email || 'User'
   const userInitial = displayName[0]?.toUpperCase() || 'U'
   const expandedWidth = clampSidebarWidth(sidebarWidth || DEFAULT_WIDTH)
+  const navItems = user?.role === 'HR'
+    ? NAV_ITEMS.filter((item) => (
+        isDivider(item) ? item.label !== 'Workforce' : item.to !== '/workforce'
+      ))
+    : NAV_ITEMS
 
   useEffect(() => {
     if (collapsed || !resizing) return
@@ -149,7 +152,7 @@ export default function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 px-2 overflow-y-auto">
-        {NAV_ITEMS.map((item, idx) => {
+        {navItems.map((item, idx) => {
           if (isDivider(item)) {
             return collapsed ? (
               <div key={idx} className="my-2 mx-2 border-t border-border-subtle" />

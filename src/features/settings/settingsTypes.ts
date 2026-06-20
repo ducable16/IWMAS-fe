@@ -26,7 +26,7 @@ export interface SecurityForm {
 export type SecurityErrors = Partial<Record<keyof SecurityForm, string | null>>
 
 export interface NotificationPreference {
-  id: 'burnout' | 'sprint_risk' | 'task_assign' | 'daily_digest'
+  id: 'burnout' | 'task_assign' | 'daily_digest'
   label: string
   desc: string
   enabled: boolean

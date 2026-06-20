@@ -1,4 +1,4 @@
-import { TrendingUp, AlertTriangle, Brain, FolderKanban, CheckSquare } from 'lucide-react'
+import { AlertTriangle, Brain, FolderKanban, CheckSquare } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import StatCard from '@/features/dashboard/components/StatCard'
@@ -7,7 +7,7 @@ import { useAuthStore } from '@/features/auth/store/authStore'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
 import MyTasksWidget from '@/features/dashboard/components/MyTasksWidget'
 import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel'
-import { useWorkloadTeam } from '@/features/workforce/hooks/useWorkload'
+import { useAllActiveMembers } from '@/features/members/hooks/useMembers'
 import { useMyProjects, useProjects } from '@/features/projects/hooks/useProjects'
 import { projectService } from '@/features/projects/services/projectService'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
@@ -45,10 +45,7 @@ export default function DashboardPage() {
   )
   const activeProjectStatuses: string[] = ['PLANNING', 'IN_PROGRESS']
 
-  const { data: teamSnapshot, isLoading: isTeamLoading } = useWorkloadTeam(
-    undefined,
-    isAdmin || isPm,
-  )
+  const { data: activeMembers = [], isLoading: isActiveMembersLoading } = useAllActiveMembers(isAdmin)
 
   const { data: allProjects } = useProjects(
     { statuses: activeProjectStatuses, page: 0, size: 1 },
@@ -116,10 +113,10 @@ export default function DashboardPage() {
   }
 
   const teamMembers: DashboardMember[] = isAdmin
-    ? (teamSnapshot || []).map((m) => ({
-      id: m.userId,
-      fullName: m.userFullName || 'Unknown',
-      position: m.workloadLevel || '',
+    ? activeMembers.map((member) => ({
+      id: member.id,
+      fullName: member.fullName || 'Unknown',
+      position: member.position || '',
     }))
     : Array.from(pmMemberMap.values())
 
@@ -177,7 +174,7 @@ export default function DashboardPage() {
         <TeamWorkloadPanel
           title="Team workload & tasks"
           members={teamMembers}
-          isLoading={isAdmin ? isTeamLoading : isMembersLoading}
+          isLoading={isAdmin ? isActiveMembersLoading : isMembersLoading}
           emptyLabel={isPm ? 'No members in your managed projects.' : 'No team workload data.'}
         />
       )}
@@ -193,8 +190,6 @@ export default function DashboardPage() {
             <div className="space-y-0.5 -mx-2">
               {[
                 { icon: Brain, label: 'Run workload analysis', to: '/workforce' },
-                { icon: AlertTriangle, label: 'View sprint risks', to: '/workforce/sprint-risk' },
-                { icon: TrendingUp, label: 'Sprint board', to: '/sprints' },
               ].map((action) => (
                 <Link
                   key={action.to}

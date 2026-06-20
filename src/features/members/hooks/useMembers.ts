@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tansta
 import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import type { ApiError, Id, MemberView, PageResponse, Project, Task, User } from '@/types'
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_UPLOAD_AVATAR } from '@/utils/errorMessages'
+import type { Id, MemberView, PageResponse, Project, Task, User } from '@/types'
 
 interface MemberQueryParams {
   [key: string]: string | number | boolean | string[] | undefined
@@ -30,8 +32,6 @@ type PagedParams = MemberQueryParams & {
   endDateTo?: string
 }
 
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
 
 function pageItems<T>(raw: PageResponse<T> | T[] | null | undefined): T[] {
   if (Array.isArray(raw)) return raw
@@ -54,6 +54,37 @@ export function useMembers(params: MemberQueryParams = {}) {
       }
     },
     placeholderData: (prev) => prev,
+    staleTime: 30_000,
+  })
+}
+
+export function useAllActiveMembers(enabled = true) {
+  return useQuery({
+    queryKey: ['members', 'all-active'],
+    queryFn: async () => {
+      const pageSize = 100
+      const params = {
+        active: true,
+        size: pageSize,
+        sortBy: 'fullName',
+        sortDirection: 'ASC',
+      }
+      const firstResponse = await userService.getAll({ ...params, page: 0 })
+      const firstPage = firstResponse.data
+      const totalPages = Array.isArray(firstPage) ? 1 : Math.max(1, firstPage?.totalPages ?? 1)
+      const remainingResponses = totalPages > 1
+        ? await Promise.all(
+            Array.from({ length: totalPages - 1 }, (_, index) =>
+              userService.getAll({ ...params, page: index + 1 }),
+            ),
+          )
+        : []
+      const users = [firstPage, ...remainingResponses.map((response) => response.data)]
+        .flatMap((page) => pageItems<User>(page))
+      const uniqueUsers = Array.from(new Map(users.map((item) => [String(item.id), item])).values())
+      return uniqueUsers.map(normaliseUser)
+    },
+    enabled,
     staleTime: 30_000,
   })
 }
@@ -168,6 +199,6 @@ export function useUploadAvatar() {
       }
       queryClient.invalidateQueries({ queryKey: ['members'] })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to upload avatar')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_UPLOAD_AVATAR)),
   })
 }

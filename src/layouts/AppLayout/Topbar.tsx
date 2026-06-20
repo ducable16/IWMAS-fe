@@ -13,11 +13,9 @@ import { Avatar } from '@/components/ui/Avatar'
 const ROUTE_LABELS: Record<string, string> = {
   '/dashboard': 'Dashboard',
   '/projects': 'Projects',
-  '/sprints': 'Sprint Board',
   '/tasks': 'Tasks',
   '/time-logs': 'Time Logs',
   '/workforce': 'Workload Analytics',
-  '/workforce/sprint-risk': 'Sprint Risk Forecast',
   '/members': 'Team Members',
   '/notifications': 'Notifications',
   '/search': 'Search',

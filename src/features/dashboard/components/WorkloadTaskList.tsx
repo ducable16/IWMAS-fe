@@ -3,17 +3,10 @@ import { Clock, Loader2 } from 'lucide-react'
 import clsx from 'clsx'
 import { TaskStatusBadge, TaskPriorityBadge } from '@/components/ui/Badge'
 import { fmtDay } from '@/utils/date'
-import type { Id, WorkloadTask } from '@/types'
-
-type DashboardWorkloadTask = WorkloadTask & {
-  taskId?: Id
-  overdue?: boolean
-  status?: string
-  priority?: string
-}
+import type { TaskWorkloadItem } from '@/types'
 
 type WorkloadTaskListProps = {
-  tasks?: DashboardWorkloadTask[]
+  tasks?: TaskWorkloadItem[]
   isLoading?: boolean
   isError?: boolean
   error?: Error | null
@@ -54,7 +47,7 @@ export default function WorkloadTaskList({
   return (
     <div className="space-y-1">
       {tasks.map((task) => {
-        const taskId = task.taskId ?? task.id
+        const taskId = task.taskId
 
         return (
           <div

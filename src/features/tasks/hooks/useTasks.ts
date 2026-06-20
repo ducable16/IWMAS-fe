@@ -3,28 +3,6 @@ import { taskService } from '../services/taskService'
 import { formatEstimate } from '@/utils/date'
 import type { Task, TaskListItem, TaskListResult, TaskSearchParams } from '@/types'
 
-export type SprintBoardColumnId = 'todo' | 'inprogress' | 'review' | 'done'
-
-export interface SprintBoardTask {
-  id: string
-  title: string
-  priority: string
-  assignee: string
-  tags: string[]
-  comments: number
-  estimate: string
-  done: boolean
-}
-
-export interface SprintBoardColumn {
-  id: SprintBoardColumnId
-  label: string
-  dot: string
-  tasks: SprintBoardTask[]
-}
-
-export type SprintBoardColumns = Record<SprintBoardColumnId, SprintBoardColumn>
-
 function getTaskItems(raw: unknown): Task[] {
   if (Array.isArray(raw)) return raw as Task[]
   if (raw && typeof raw === 'object' && Array.isArray((raw as { items?: unknown }).items)) {
@@ -106,44 +84,5 @@ export function useTasks(enabled = true) {
       })
     },
     enabled,
-  })
-}
-
-export function useSprintBoard() {
-  return useQuery<SprintBoardColumns>({
-    queryKey: ['sprint-board'],
-    staleTime: 15_000,
-    refetchInterval: 60_000,
-    queryFn: async () => {
-      const res = await taskService.getMine()
-      const items = getTaskItems(res.data)
-      const cols: SprintBoardColumns = {
-        todo: { id: 'todo', label: 'To do', dot: 'bg-text-muted', tasks: [] },
-        inprogress: { id: 'inprogress', label: 'In progress', dot: 'bg-accent', tasks: [] },
-        review: { id: 'review', label: 'In review', dot: 'bg-info', tasks: [] },
-        done: { id: 'done', label: 'Done', dot: 'bg-success', tasks: [] },
-      }
-      for (const t of items) {
-        const statusLower = t.status ? String(t.status).toLowerCase() : 'todo'
-        const key =
-          statusLower === 'in_progress' ? 'inprogress' :
-          statusLower === 'in_review' ? 'review' :
-          statusLower === 'done' ? 'done' : 'todo'
-
-        const assigneeName = t.assignee?.fullName || '?'
-
-        cols[key].tasks.push({
-          id: String(t.id),
-          title: t.title || 'Untitled',
-          priority: t.priority ? String(t.priority).toLowerCase() : 'medium',
-          assignee: assigneeName.substring(0, 2).toUpperCase(),
-          tags: [],
-          comments: 0,
-          estimate: formatEstimate(t.estimatedHours),
-          done: key === 'done',
-        })
-      }
-      return cols
-    },
   })
 }

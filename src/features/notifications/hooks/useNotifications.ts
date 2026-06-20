@@ -8,10 +8,9 @@ import {
   UNREAD_COUNT_QUERY_KEY,
   UNREAD_NOTIFICATIONS_QUERY_KEY,
 } from '../utils/notificationCache'
-import type { ApiError, Id } from '@/types'
-
-const getErrorMessage = (err: unknown, fallback: string) =>
-  (err as ApiError | undefined)?.message || fallback
+import { getErrorMessage } from '@/utils/apiError'
+import { ERR_MARK_READ, ERR_MARK_ALL_READ } from '@/utils/errorMessages'
+import type { Id } from '@/types'
 
 /** Section 8.3 GET /api/notifications/unread/count - fallback polling for bell badge */
 export function useUnreadCount() {
@@ -65,7 +64,7 @@ export function useMarkAsRead() {
       queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_QUERY_KEY })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to mark as read')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_MARK_READ)),
   })
 }
 
@@ -80,6 +79,6 @@ export function useMarkAllAsRead() {
       queryClient.invalidateQueries({ queryKey: UNREAD_NOTIFICATIONS_QUERY_KEY })
       queryClient.invalidateQueries({ queryKey: UNREAD_COUNT_QUERY_KEY })
     },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, 'Failed to mark all as read')),
+    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_MARK_ALL_READ)),
   })
 }

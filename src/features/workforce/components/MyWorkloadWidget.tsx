@@ -1,22 +1,23 @@
 import { Link } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, Loader2 } from 'lucide-react'
 import WorkloadLevelBadge from './WorkloadLevelBadge'
-import UtilizationBar from './UtilizationBar'
+import WorkloadBar from './WorkloadBar'
 import { useMyWorkload } from '../hooks/useWorkload'
-import type { WorkloadMember } from '@/types'
+import { useCan } from '@/utils/permissions'
 
 /**
  * Compact self-view widget for the Dashboard page.
- * Shows the current user's workload for the current week.
+ * Shows the current user's real-time workload.
  * Auto-refreshes every 5 minutes + on window focus.
  */
 export default function MyWorkloadWidget() {
   const { data, isLoading, isError } = useMyWorkload()
+  const can = useCan()
 
   if (isLoading) {
     return (
       <div className="card p-5">
-        <h3 className="section-title text-[13px] mb-3">My workload this week</h3>
+        <h3 className="section-title text-[13px] mb-3">My workload</h3>
         <div className="flex items-center justify-center gap-2 py-4 text-text-muted">
           <Loader2 className="w-4 h-4 animate-spin" />
           <span className="text-[12px]">Loading…</span>
@@ -28,7 +29,7 @@ export default function MyWorkloadWidget() {
   if (isError || !data) {
     return (
       <div className="card p-5">
-        <h3 className="section-title text-[13px] mb-3">My workload this week</h3>
+        <h3 className="section-title text-[13px] mb-3">My workload</h3>
         <p className="text-[12px] text-text-muted italic">Unable to load workload data.</p>
       </div>
     )
@@ -36,24 +37,20 @@ export default function MyWorkloadWidget() {
 
   const {
     workloadLevel,
-    utilizationPercent,
-    weeklyRemainingHours,
-    weeklyCapacityHours,
+    workloadPercent,
     overdueTaskCount = 0,
-  } = data as WorkloadMember
+  } = data
 
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="section-title text-[13px]">My workload this week</h3>
+        <h3 className="section-title text-[13px]">My workload</h3>
         <WorkloadLevelBadge level={workloadLevel} />
       </div>
 
-      <UtilizationBar
-        utilizationPercent={utilizationPercent}
+      <WorkloadBar
+        workloadPercent={workloadPercent}
         workloadLevel={workloadLevel}
-        weeklyRemainingHours={weeklyRemainingHours}
-        weeklyCapacityHours={weeklyCapacityHours}
       />
 
       {overdueTaskCount > 0 && (
@@ -63,13 +60,15 @@ export default function MyWorkloadWidget() {
         </div>
       )}
 
-      <Link
-        to="/workforce"
-        className="flex items-center gap-1 text-[12px] text-accent hover:text-accent-hover font-medium transition-colors"
-      >
-        View details
-        <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.75} />
-      </Link>
+      {!can.isHr && (
+        <Link
+          to="/workforce"
+          className="flex items-center gap-1 text-[12px] text-accent hover:text-accent-hover font-medium transition-colors"
+        >
+          View details
+          <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.75} />
+        </Link>
+      )}
     </div>
   )
 }

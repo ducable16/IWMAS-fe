@@ -2,24 +2,23 @@ import { Bell, AlertTriangle, CheckSquare, MessageSquare, UserPlus, type LucideI
 import { useNotifications } from '@/features/notifications/hooks/useNotifications'
 
 const TONE_STYLES = {
-  accent: 'text-accent bg-accent-subtle',
+  accent:  'text-accent bg-accent-subtle',
   success: 'text-success bg-success-subtle',
   warning: 'text-warning bg-warning-subtle',
-  danger: 'text-danger bg-danger-subtle',
-  info: 'text-info bg-info-subtle',
+  danger:  'text-danger bg-danger-subtle',
+  info:    'text-info bg-info-subtle',
 }
 
 type Tone = keyof typeof TONE_STYLES
 
 const TYPE_META: Record<string, { tone: Tone; icon: LucideIcon }> = {
-  TASK_ASSIGNED: { tone: 'accent', icon: CheckSquare },
-  TASK_STATUS_CHANGED: { tone: 'info', icon: CheckSquare },
-  TASK_OVERDUE: { tone: 'danger', icon: AlertTriangle },
-  DEADLINE_REMINDER: { tone: 'warning', icon: AlertTriangle },
-  COMMENT_MENTION: { tone: 'info', icon: MessageSquare },
-  PROJECT_ADDED: { tone: 'success', icon: UserPlus },
-  OVERLOAD_WARNING: { tone: 'danger', icon: AlertTriangle },
-  BURNOUT_ALERT: { tone: 'danger', icon: AlertTriangle },
+  TASK_ASSIGNED:       { tone: 'accent',   icon: CheckSquare  },
+  TASK_STATUS_CHANGED: { tone: 'info',     icon: CheckSquare  },
+  TASK_OVERDUE:        { tone: 'danger',   icon: AlertTriangle },
+  DEADLINE_REMINDER:   { tone: 'warning',  icon: AlertTriangle },
+  COMMENT_MENTION:     { tone: 'info',     icon: MessageSquare },
+  PROJECT_ADDED:       { tone: 'success',  icon: UserPlus     },
+  OVERLOAD_WARNING:    { tone: 'danger',   icon: AlertTriangle },
 }
 
 function formatTime(value?: string) {
@@ -45,7 +44,7 @@ export default function RecentActivity() {
       ) : (
         <div className="space-y-0">
           {list.slice(0, 8).map((item) => {
-            const meta = TYPE_META[item.type ?? ''] || { tone: 'info', icon: Bell }
+            const meta = TYPE_META[item.type ?? ''] || { tone: 'info' as Tone, icon: Bell }
             const Icon = meta.icon
             return (
               <div

@@ -137,6 +137,10 @@ export default function WorkloadPage() {
 
   // TEAM_MEMBER cannot view team workload (§9.7 requires ADMIN/PM).
   // Redirect them directly to their own workload detail (§9.9).
+  if (can.isHr) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   if (can.isTm && currentUser?.id) {
     return <Navigate to={`/workforce/members/${currentUser.id}`} replace />
   }
@@ -147,7 +151,7 @@ export default function WorkloadPage() {
       <div>
         <h2 className="text-subhead text-text-primary">Workload Analytics</h2>
         <p className="text-text-secondary text-[14px] mt-1">
-          Real-time team utilization by project for the selected week
+          Real-time team workload by project
         </p>
       </div>
 
