@@ -8,11 +8,28 @@ import type { UserRole } from '@/constants/enums'
 
 type MaybeRole = UserRole | string | null | undefined
 
+export type PageCapability =
+  | 'projects'
+  | 'tasks'
+  | 'timeLogs'
+  | 'workload'
+  | 'members'
+  | 'settings'
+
 const isAdmin = (r: MaybeRole): boolean => r === 'ADMIN'
 const isHr = (r: MaybeRole): boolean => r === 'HR'
 const isPm = (r: MaybeRole): boolean => r === 'PROJECT_MANAGER'
 const isTm = (r: MaybeRole): boolean => r === 'TEAM_MEMBER'
 const isAuth = (r: MaybeRole): boolean => isAdmin(r) || isHr(r) || isPm(r) || isTm(r)
+const isDeliveryRole = (r: MaybeRole): boolean => isPm(r) || isTm(r)
+
+export const canParticipateInDelivery = (r: MaybeRole): boolean => isDeliveryRole(r)
+
+export const canAccessPage = (r: MaybeRole, capability: PageCapability): boolean => {
+  if (!isAuth(r)) return false
+  if (capability === 'members' || capability === 'settings') return true
+  return isDeliveryRole(r)
+}
 
 export const canManageUsers = (r: MaybeRole): boolean => isAdmin(r) || isHr(r)
 export const canChangeUserRole = (r: MaybeRole): boolean => isAdmin(r)
@@ -22,24 +39,24 @@ export const canViewSensitiveUserFields = (r: MaybeRole): boolean => isAdmin(r) 
 export const canCreateProject = (r: MaybeRole): boolean => isPm(r)
 export const canEditProject = (r: MaybeRole): boolean => isPm(r)
 export const canDeleteProject = (r: MaybeRole): boolean => isPm(r)
-export const canViewProjectMembers = (r: MaybeRole): boolean => isAuth(r)
+export const canViewProjectMembers = (r: MaybeRole): boolean => isDeliveryRole(r)
 export const canManageProjectMembers = (r: MaybeRole): boolean => isPm(r)
 
 export const canCreateTask = (r: MaybeRole): boolean => isPm(r)
-export const canEditTask = (r: MaybeRole): boolean => isAdmin(r) || isPm(r)
+export const canEditTask = (r: MaybeRole): boolean => isPm(r)
 export const canDeleteTask = (r: MaybeRole): boolean => isPm(r)
-export const canUpdateTaskStatus = (r: MaybeRole): boolean => isAuth(r)
-export const canLogTime = (r: MaybeRole): boolean => isAuth(r)
-export const canCommentOnTask = (r: MaybeRole): boolean => isAuth(r)
-export const canModerateComments = (r: MaybeRole): boolean => isAdmin(r)
+export const canUpdateTaskStatus = (r: MaybeRole): boolean => isDeliveryRole(r)
+export const canLogTime = (r: MaybeRole): boolean => isDeliveryRole(r)
+export const canCommentOnTask = (r: MaybeRole): boolean => isDeliveryRole(r)
+export const canModerateComments = (_r: MaybeRole): boolean => false
 
 export const canManageSkillCatalog = (r: MaybeRole): boolean => isAdmin(r)
 export const canViewSkillCatalog = (r: MaybeRole): boolean => isAuth(r)
 export const canManageEmployeeSkills = (r: MaybeRole): boolean => isHr(r)
 export const canManageOwnSkills = (r: MaybeRole): boolean => isHr(r)
 
-export const canViewAllWorkload = (r: MaybeRole): boolean => isHr(r) || isPm(r)
-export const canViewOwnWorkload = (r: MaybeRole): boolean => isAuth(r)
+export const canViewAllWorkload = (r: MaybeRole): boolean => isPm(r)
+export const canViewOwnWorkload = (r: MaybeRole): boolean => isDeliveryRole(r)
 
 export const canSearch = (r: MaybeRole): boolean => isAuth(r)
 

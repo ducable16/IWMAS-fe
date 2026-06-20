@@ -3,7 +3,6 @@ import { ChevronDown, Plus } from 'lucide-react'
 import clsx from 'clsx'
 import { useNavigate } from 'react-router-dom'
 import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
-import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import ProjectFormModal from '@/features/projects/components/ProjectFormModal'
@@ -35,7 +34,6 @@ export default function ProjectsPage() {
   const navigate = useNavigate()
   const can = useCan()
   const canEdit = can.createProject
-  const user = useAuthStore((s) => s.user)
   const usesAllProjects = can.isPm
 
   const [params, setParams] = useState(DEFAULT_PROJECT_FILTERS)

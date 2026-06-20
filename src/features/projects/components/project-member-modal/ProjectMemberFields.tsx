@@ -1,7 +1,5 @@
 import clsx from 'clsx'
-import { PROJECT_ROLES, PROJECT_ROLE_LABEL } from '@/constants/enums'
 import type { ReactNode } from 'react'
-import type { ProjectRole } from '@/constants/enums'
 
 type FieldProps = {
   label: string

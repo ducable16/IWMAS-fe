@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import ProtectedRoute from './ProtectedRoute'
+import CapabilityRoute from './CapabilityRoute'
 import AppLayout from '@/layouts/AppLayout'
 import AuthLayout from '@/layouts/AuthLayout'
 import FullPageSpinner from '@/components/feedback/FullPageSpinner'
@@ -44,13 +45,21 @@ export default function AppRouter() {
             <Route element={<AppLayout />}>
               <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/projects" element={<ProjectsPage />} />
-              <Route path="/projects/:id" element={<ProjectDetailPage />} />
-              <Route path="/tasks" element={<TasksPage />} />
-              <Route path="/tasks/:id" element={<TaskDetailPage />} />
-              <Route path="/time-logs" element={<MyTimeLogsPage />} />
-              <Route path="/workforce" element={<WorkloadPage />} />
-              <Route path="/workforce/members/:userId" element={<MemberWorkloadDetailPage />} />
+              <Route element={<CapabilityRoute capability="projects" />}>
+                <Route path="/projects" element={<ProjectsPage />} />
+                <Route path="/projects/:id" element={<ProjectDetailPage />} />
+              </Route>
+              <Route element={<CapabilityRoute capability="tasks" />}>
+                <Route path="/tasks" element={<TasksPage />} />
+                <Route path="/tasks/:id" element={<TaskDetailPage />} />
+              </Route>
+              <Route element={<CapabilityRoute capability="timeLogs" />}>
+                <Route path="/time-logs" element={<MyTimeLogsPage />} />
+              </Route>
+              <Route element={<CapabilityRoute capability="workload" />}>
+                <Route path="/workforce" element={<WorkloadPage />} />
+                <Route path="/workforce/members/:userId" element={<MemberWorkloadDetailPage />} />
+              </Route>
               <Route path="/members" element={<MembersPage />} />
               <Route path="/users/:id" element={<UserProfilePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />

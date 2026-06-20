@@ -136,8 +136,7 @@ export default function WorkloadPage() {
     setView('workload')
   }, [selectedProject?.id])
 
-  // Only PM and HR can view team workload.
-  // Others (Admin, TM) redirect to their own workload detail.
+  // Project managers see team workload; team members are redirected to their own detail.
   if (!can.viewAllWorkload && currentUser?.id) {
     return <Navigate to={`/workforce/members/${currentUser.id}`} replace />
   }

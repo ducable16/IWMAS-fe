@@ -3,8 +3,8 @@ import { Plus } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
 import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
-import { useAutocompleteExcludeProject } from '@/features/search/hooks/useSearch'
 import { useAddProjectMember } from '../hooks/useProjects'
+import useProjectMemberCandidates from '../hooks/useProjectMemberCandidates'
 import {
   DateNoteFields,
   EffortField,
@@ -102,9 +102,10 @@ export default function ProjectAddMemberModal({
           placeholder="Search by name, email..."
           value={form.userId}
           onChange={(val) => set('userId', val)}
-          useSearchHook={useAutocompleteExcludeProject}
+          useSearchHook={useProjectMemberCandidates}
           searchParams={projectId}
           error={errors.userId}
+          noResultsText="No eligible delivery members found"
         />
 
         {form.userId && (

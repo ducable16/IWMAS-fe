@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { projectService, type ProjectMemberSearchParams } from '../services/projectService'
+import { canParticipateInDelivery } from '@/utils/permissions'
 import { getErrorMessage, getApiErrorCode } from '@/utils/apiError'
 import {
   ERR_CREATE_PROJECT,
@@ -178,7 +179,9 @@ export function useProjectMemberSearch(
         size,
         requiredSkills,
       })
-      return Array.isArray(res.data) ? res.data : []
+      return Array.isArray(res.data)
+        ? res.data.filter((user) => canParticipateInDelivery(user.role))
+        : []
     },
     enabled: !!projectId && enabled,
     placeholderData: keepPreviousData,

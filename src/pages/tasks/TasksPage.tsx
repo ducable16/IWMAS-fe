@@ -9,6 +9,7 @@ import TaskCalendarView from '@/features/tasks/components/TaskCalendarView'
 import TaskTimelineView from '@/features/tasks/components/TaskTimelineView'
 import TaskCreateModal from '@/features/tasks/components/TaskCreateModal'
 import { useCan } from '@/utils/permissions'
+import { canParticipateInDelivery } from '@/utils/permissions'
 import ActiveTaskFilters from './components/ActiveTaskFilters'
 import TasksPageHeader from './components/TasksPageHeader'
 import TasksToolbar from './components/TasksToolbar'
@@ -35,7 +36,9 @@ export default function TasksPage() {
   const { data: projectsData } = can.isTm ? myProjQ : allProjQ
   const projects = projectsData?.projects ?? []
   const { data: membersData } = useMembers()
-  const users = membersData?.members ?? []
+  const users = (membersData?.members ?? []).filter((member) =>
+    canParticipateInDelivery(member.role),
+  )
 
   const tasks = data?.tasks ?? []
   const totalElements = data?.totalElements ?? 0

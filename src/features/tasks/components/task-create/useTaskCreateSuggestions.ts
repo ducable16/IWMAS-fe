@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useProjectAutocomplete } from '@/features/search/hooks/useSearch'
 import { projectService } from '@/features/projects/services/projectService'
+import { canParticipateInDelivery } from '@/utils/permissions'
 import type { Id, PageResponse, Project } from '@/types'
 import type { SuggestionResult } from './taskCreateTypes'
 
@@ -51,10 +52,12 @@ export function useAssigneeSuggestions(
       })
       const data = Array.isArray(res.data) ? res.data : []
       return {
-        suggestions: data.map((member) => ({
-          entityId: member.id,
-          term: member.fullName || member.email || 'Unknown',
-        })),
+        suggestions: data
+          .filter((member) => canParticipateInDelivery(member.role))
+          .map((member) => ({
+            entityId: member.id,
+            term: member.fullName || member.email || 'Unknown',
+          })),
       }
     },
     enabled: !!projectId,

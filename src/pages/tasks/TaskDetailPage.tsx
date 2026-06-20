@@ -49,7 +49,7 @@ export default function TaskDetailPage() {
   const { confirm, dialog: confirmDialog } = useConfirm()
 
   const isAssignee = !!user && !!task && user.id === task.assignee?.id
-  const canEditTask = can.isAdmin || can.isPm || isAssignee
+  const canEditTask = can.isPm || isAssignee
   const canUploadAttachments = can.isPm || can.isTm
   const canDeleteAsManager = can.isPm
   const skillRequirements = toTaskSkillRequirementRequest(task?.skillRequirements || [])

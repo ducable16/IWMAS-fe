@@ -63,7 +63,7 @@ function projectQuery(params: ProjectQueryParams = {}) {
  */
 export const projectService = {
   /**
-   * §3.1 GET /api/projects — ADMIN or PROJECT_MANAGER
+   * §3.1 GET /api/projects — PROJECT_MANAGER only
    * Returns paginated { content, page, size, totalElements, totalPages }
    *
    * @param {{
@@ -98,7 +98,7 @@ export const projectService = {
   /** §3.3 GET /api/projects/{id} */
   getById: (id: Id) => api.get<Project>(`/projects/${id}`),
 
-  /** §3.4 GET /api/projects/suggest-code — ADMIN or PROJECT_MANAGER
+  /** §3.4 GET /api/projects/suggest-code — PROJECT_MANAGER only
    * Derives a unique project code from a given name.
    * @param {string} name — the project name to derive a code from
    * @returns {{ code: string }}
@@ -108,20 +108,20 @@ export const projectService = {
   /**
 
   /**
-   * §3.5 POST /api/projects — ADMIN or PROJECT_MANAGER
+   * §3.5 POST /api/projects — PROJECT_MANAGER only
    * Creates the PM's LEAD membership atomically.
    * @param {{ name, code?, description?, status?, startDate?, endDate?, managerId, managerAllocationPercent }} data
    */
   create: (data: CreateProjectRequest) => api.post<Project>('/projects', data),
 
-  /** §3.6 PUT /api/projects/{id} — ADMIN or PROJECT_MANAGER */
+  /** §3.6 PUT /api/projects/{id} — PROJECT_MANAGER only */
   update: (id: Id, data: UpdateProjectRequest) => api.put<Project>(`/projects/${id}`, data),
 
   /** §3.7 PATCH /api/projects/{id}/manager — PM hand-off */
   changeManager: (id: Id, data: { newManagerId: Id; managerAllocationPercent: number }) =>
     api.patch<Project>(`/projects/${id}/manager`, data),
 
-  /** §3.8 DELETE /api/projects/{id} — ADMIN or PROJECT_MANAGER */
+  /** §3.8 DELETE /api/projects/{id} — PROJECT_MANAGER only */
   remove: (id: Id) => api.delete(`/projects/${id}`),
 
   // ── Members ────────────────────────────────────────────────

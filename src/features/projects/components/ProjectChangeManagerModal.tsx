@@ -3,8 +3,8 @@ import { ArrowRightLeft } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import ModalFormActions from '@/components/ui/ModalFormActions'
 import AutocompleteSelect from '@/components/ui/AutocompleteSelect'
-import { useAutocompleteExcludeProject } from '@/features/search/hooks/useSearch'
 import { useChangeProjectManager } from '../hooks/useProjects'
+import { useProjectManagerCandidates } from '../hooks/useProjectMemberCandidates'
 import RemainingEffortPanel from './project-member-modal/RemainingEffortPanel'
 import { EffortField } from './project-member-modal/ProjectMemberFields'
 import type { FormEvent } from 'react'
@@ -95,9 +95,10 @@ export default function ProjectChangeManagerModal({
           placeholder="Search by name, email..."
           value={form.newManagerId}
           onChange={(val) => set('newManagerId', val)}
-          useSearchHook={useAutocompleteExcludeProject}
+          useSearchHook={useProjectManagerCandidates}
           searchParams={projectId}
           error={errors.newManagerId}
+          noResultsText="No eligible project managers found"
         />
 
         {form.newManagerId && (

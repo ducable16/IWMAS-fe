@@ -1,18 +1,28 @@
-import { AlertTriangle, Brain, FolderKanban, CheckSquare } from 'lucide-react'
+import {
+  AlertTriangle,
+  Brain,
+  CheckSquare,
+  CheckCircle2,
+  FolderKanban,
+  Settings,
+  UserRound,
+  Users,
+  UserX,
+} from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQueries } from '@tanstack/react-query'
 import StatCard from '@/features/dashboard/components/StatCard'
 import RecentActivity from '@/features/dashboard/components/RecentActivity'
-import { useAuthStore } from '@/features/auth/store/authStore'
-import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
 import MyTasksWidget from '@/features/dashboard/components/MyTasksWidget'
 import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel'
-
+import { useAuthStore } from '@/features/auth/store/authStore'
+import { useMembers } from '@/features/members/hooks/useMembers'
 import { useMyProjects, useProjects } from '@/features/projects/hooks/useProjects'
 import { projectService } from '@/features/projects/services/projectService'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
+import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
 import { TASK_STATUSES } from '@/constants/enums'
-import type { Id, ProjectMember } from '@/types'
+import type { Id, ProjectMember, User } from '@/types'
 
 type DashboardMember = {
   id: Id
@@ -20,14 +30,107 @@ type DashboardMember = {
   position?: string
 }
 
-export default function DashboardPage() {
-  const user = useAuthStore((s) => s.user)
-  const firstName = (user?.fullName || user?.email || '').split(' ')[0] || 'there'
-  const role = user?.role
-  const isAdmin = role === 'ADMIN'
-  const isPm = role === 'PROJECT_MANAGER'
-  const isMember = role === 'TEAM_MEMBER'
+function greetingName(user: User | null) {
+  return (user?.fullName || user?.email || '').split(' ')[0] || 'there'
+}
 
+function OperationsDashboard({ role }: { role: 'ADMIN' | 'HR' }) {
+  const user = useAuthStore((state) => state.user)
+  const totalUsers = useMembers({ page: 0, size: 1 })
+  const activeUsers = useMembers({ active: true, page: 0, size: 1 })
+  const disabledUsers = useMembers({ active: false, page: 0, size: 1 })
+  const isAdmin = role === 'ADMIN'
+
+  return (
+    <div className="space-y-6 max-w-[1200px] mx-auto">
+      <div>
+        <h2 className="text-subhead text-text-primary">
+          Good morning, {greetingName(user)}.
+        </h2>
+        <p className="text-text-secondary text-[14px] mt-1">
+          {isAdmin
+            ? 'Manage workspace accounts and system configuration.'
+            : 'Manage employee records and workforce skills.'}
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <StatCard
+          icon={UserRound}
+          label="Total users"
+          value={totalUsers.isLoading ? '-' : totalUsers.data?.totalElements ?? 0}
+          variant="accent"
+        />
+        <StatCard
+          icon={CheckCircle2}
+          label="Active users"
+          value={activeUsers.isLoading ? '-' : activeUsers.data?.totalElements ?? 0}
+          variant="success"
+        />
+        <StatCard
+          icon={UserX}
+          label="Disabled users"
+          value={disabledUsers.isLoading ? '-' : disabledUsers.data?.totalElements ?? 0}
+          variant="warning"
+        />
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+          <RecentActivity />
+        </div>
+        <div className="card p-5 self-start">
+          <h3 className="section-title text-[13px] mb-3">Quick actions</h3>
+          <div className="space-y-0.5 -mx-2">
+            <Link
+              to="/members"
+              className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-bg-hover transition-colors text-text-secondary hover:text-text-primary"
+            >
+              <Users className="w-4 h-4 text-text-muted" strokeWidth={1.75} />
+              <span className="text-[13px]">
+                {isAdmin ? 'Manage user accounts' : 'Manage employee records'}
+              </span>
+            </Link>
+            <Link
+              to="/settings"
+              className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-bg-hover transition-colors text-text-secondary hover:text-text-primary"
+            >
+              <Settings className="w-4 h-4 text-text-muted" strokeWidth={1.75} />
+              <span className="text-[13px]">
+                {isAdmin ? 'Manage skill catalog' : 'View skill catalog'}
+              </span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function TeamMemberDashboard() {
+  const user = useAuthStore((state) => state.user)
+
+  return (
+    <div className="space-y-6 max-w-[900px] mx-auto">
+      <div>
+        <h2 className="text-subhead text-text-primary">
+          Good morning, {greetingName(user)}.
+        </h2>
+        <p className="text-text-secondary text-[14px] mt-1">
+          Here is your workload and task overview for this week.
+        </p>
+      </div>
+
+      <div className="grid gap-5">
+        <MyWorkloadWidget />
+        <MyTasksWidget />
+      </div>
+    </div>
+  )
+}
+
+function ProjectManagerDashboard() {
+  const user = useAuthStore((state) => state.user)
   const today = new Date()
   const day = today.getDay() || 7
   const monday = new Date(today)
@@ -35,111 +138,70 @@ export default function DashboardPage() {
   const sunday = new Date(monday)
   sunday.setDate(monday.getDate() + 6)
 
-  const toDateInput = (d: Date) => d.toISOString().slice(0, 10)
-  const weekStart = toDateInput(monday)
-  const weekEnd = toDateInput(sunday)
-  const todayStr = toDateInput(today)
-
+  const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
   const activeTaskStatuses: string[] = TASK_STATUSES.filter(
-    (s) => s !== 'DONE' && s !== 'CANCELLED',
+    (status) => status !== 'DONE' && status !== 'CANCELLED',
   )
   const activeProjectStatuses: string[] = ['PLANNING', 'IN_PROGRESS']
 
-
-
-  const { data: allProjects } = useProjects(
-    { statuses: activeProjectStatuses, page: 0, size: 1 },
-    isPm,
-  )
-  const { data: myProjects } = useMyProjects(
-    { statuses: activeProjectStatuses, page: 0, size: 1 },
-    !isPm,
-  )
-  const activeProjectsCount = isPm
-    ? allProjects?.totalElements ?? 0
-    : myProjects?.totalElements ?? 0
-
-  const { data: tasksThisWeek } = useSearchTasks({
-    dueDateFrom: weekStart,
-    dueDateTo: weekEnd,
+  const { data: projects } = useProjects({
+    statuses: activeProjectStatuses,
     page: 0,
     size: 1,
   })
-
+  const { data: tasksThisWeek } = useSearchTasks({
+    dueDateFrom: toDateInput(monday),
+    dueDateTo: toDateInput(sunday),
+    page: 0,
+    size: 1,
+  })
   const { data: overdueTasks } = useSearchTasks({
-    dueDateTo: todayStr,
+    dueDateTo: toDateInput(today),
     statuses: activeTaskStatuses,
     page: 0,
     size: 1,
   })
-
-  const tasksThisWeekCount = tasksThisWeek?.totalElements ?? 0
-  const overdueCount = overdueTasks?.totalElements ?? 0
-
-  const { data: myProjectsData } = useMyProjects({ size: 100 }, isPm)
-  const managedProjects = isPm
-    ? (myProjectsData?.projects ?? []).filter((p) => p.managerId === user?.id)
-    : []
-
+  const { data: myProjectsData } = useMyProjects({ size: 100 })
+  const managedProjects = (myProjectsData?.projects ?? []).filter(
+    (project) => project.managerId === user?.id,
+  )
   const memberQueries = useQueries({
     queries: managedProjects.map((project) => ({
       queryKey: ['projects', project.id, 'members'],
       queryFn: async () => {
-        const res = await projectService.getMembers(project.id)
-        return Array.isArray(res.data) ? res.data : []
+        const response = await projectService.getMembers(project.id)
+        return Array.isArray(response.data) ? response.data : []
       },
-      enabled: isPm,
       staleTime: 30_000,
     })),
   })
+  const projectMembers = memberQueries.flatMap(
+    (query) => (query.data || []) as ProjectMember[],
+  )
+  const memberMap = new Map<Id, DashboardMember>()
 
-  const projectMembers = memberQueries.flatMap((q) => (q.data || []) as ProjectMember[])
-  const isMembersLoading = isPm && memberQueries.some((q) => q.isLoading)
-
-  const pmMemberMap = new Map<Id, DashboardMember>()
-  projectMembers.forEach((m) => {
-    pmMemberMap.set(m.userId, {
-      id: m.userId,
-      fullName: m.userFullName || `User ${m.userId}`,
+  projectMembers.forEach((member) => {
+    memberMap.set(member.userId, {
+      id: member.userId,
+      fullName: member.userFullName || `User ${member.userId}`,
     })
   })
-
-  if (user?.id && isPm) {
-    pmMemberMap.set(user.id, {
+  if (user?.id) {
+    memberMap.set(user.id, {
       id: user.id,
       fullName: user.fullName || user.email,
       position: user.position || '',
     })
   }
 
-  const teamMembers: DashboardMember[] = Array.from(pmMemberMap.values())
-
-
-  if (isMember) {
-    return (
-      <div className="space-y-6 max-w-[900px] mx-auto">
-        <div>
-          <h2 className="text-subhead text-text-primary">Good morning, {firstName}.</h2>
-          <p className="text-text-secondary text-[14px] mt-1">
-            Here is your workload and task overview for this week.
-          </p>
-        </div>
-
-        <div className="grid gap-5">
-          <MyWorkloadWidget />
-          <MyTasksWidget />
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
-      {/* Welcome */}
       <div>
-        <h2 className="text-subhead text-text-primary">Good morning, {firstName}.</h2>
+        <h2 className="text-subhead text-text-primary">
+          Good morning, {greetingName(user)}.
+        </h2>
         <p className="text-text-secondary text-[14px] mt-1">
-          Here's what's happening across your workspace today.
+          Here's what's happening across your projects today.
         </p>
       </div>
 
@@ -147,31 +209,28 @@ export default function DashboardPage() {
         <StatCard
           icon={FolderKanban}
           label="Active projects"
-          value={String(activeProjectsCount || '—')}
+          value={projects?.totalElements ?? 0}
           variant="accent"
         />
         <StatCard
           icon={CheckSquare}
           label="Tasks this week"
-          value={String(tasksThisWeekCount || '—')}
-          variant="default"
+          value={tasksThisWeek?.totalElements ?? 0}
         />
         <StatCard
           icon={AlertTriangle}
           label="Overdue tasks"
-          value={String(overdueCount || '—')}
+          value={overdueTasks?.totalElements ?? 0}
           variant="danger"
         />
       </div>
 
-      {isPm && (
-        <TeamWorkloadPanel
-          title="Team workload & tasks"
-          members={teamMembers}
-          isLoading={isMembersLoading}
-          emptyLabel="No members in your managed projects."
-        />
-      )}
+      <TeamWorkloadPanel
+        title="Team workload & tasks"
+        members={Array.from(memberMap.values())}
+        isLoading={memberQueries.some((query) => query.isLoading)}
+        emptyLabel="No members in your managed projects."
+      />
 
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
@@ -181,23 +240,28 @@ export default function DashboardPage() {
           <MyWorkloadWidget />
           <div className="card p-5">
             <h3 className="section-title text-[13px] mb-3">Quick actions</h3>
-            <div className="space-y-0.5 -mx-2">
-              {[
-                { icon: Brain, label: 'Run workload analysis', to: '/workforce' },
-              ].map((action) => (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  className="flex items-center gap-2.5 px-2 py-2 rounded-md hover:bg-bg-hover transition-colors text-text-secondary hover:text-text-primary"
-                >
-                  <action.icon className="w-4 h-4 text-text-muted" strokeWidth={1.75} />
-                  <span className="text-[13px]">{action.label}</span>
-                </Link>
-              ))}
-            </div>
+            <Link
+              to="/workforce"
+              className="flex items-center gap-2.5 px-2 py-2 -mx-2 rounded-md hover:bg-bg-hover transition-colors text-text-secondary hover:text-text-primary"
+            >
+              <Brain className="w-4 h-4 text-text-muted" strokeWidth={1.75} />
+              <span className="text-[13px]">Run workload analysis</span>
+            </Link>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+export default function DashboardPage() {
+  const role = useAuthStore((state) => state.user?.role)
+
+  if (role === 'ADMIN' || role === 'HR') {
+    return <OperationsDashboard role={role} />
+  }
+  if (role === 'TEAM_MEMBER') {
+    return <TeamMemberDashboard />
+  }
+  return <ProjectManagerDashboard />
 }

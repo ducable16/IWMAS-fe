@@ -47,7 +47,7 @@ type DateRangeSectionProps = {
 
 function toManagerOptions(users: MemberView[]): FilterSelectOption[] {
   return users
-    .filter((user) => user.role === 'PROJECT_MANAGER' || user.role === 'ADMIN')
+    .filter((user) => user.role === 'PROJECT_MANAGER')
     .map((user) => ({
       id: user.id,
       label: user.fullName || `#${user.id}`,

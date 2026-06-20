@@ -34,7 +34,7 @@ export function useManagerAutocomplete(
           : []
       const users = items.map(normaliseUser)
       const filtered = users.filter(
-        (u) => (u.role === 'PROJECT_MANAGER' || u.role === 'ADMIN') &&
+        (u) => u.role === 'PROJECT_MANAGER' &&
           (!allowedIds || allowedIds.includes(u.id)),
       )
       return {

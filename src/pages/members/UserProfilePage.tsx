@@ -27,6 +27,7 @@ import {
   USER_STATUS_META,
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
+import { canParticipateInDelivery } from '@/utils/permissions'
 import { UserStatusBadge } from '@/components/ui/Badge'
 import { Avatar } from '@/components/ui/Avatar'
 import { fmtDate, fmtRelative } from '@/utils/date'
@@ -54,12 +55,22 @@ export default function UserProfilePage() {
   const [activeTab, setActiveTab] = useState<MainTab>('tasks')
 
   const { data: user, isLoading, isError, error, refetch } = useUser(userId)
-  const { data: assignedData } = useUserAssignedTasks(userId, { size: 1 }, !!userId)
-  const { data: reportedData } = useUserReportedTasks(userId, { size: 1 }, !!userId)
+  const isOperationsViewer = can.isAdmin || can.isHr
+  const showDeliverySections = !isOperationsViewer && canParticipateInDelivery(user?.role)
+  const { data: assignedData } = useUserAssignedTasks(
+    userId,
+    { size: 1 },
+    !!userId && showDeliverySections,
+  )
+  const { data: reportedData } = useUserReportedTasks(
+    userId,
+    { size: 1 },
+    !!userId && showDeliverySections,
+  )
   const { data: inProgressData } = useUserAssignedTasks(
     userId,
     { statuses: ['IN_PROGRESS'], size: 1 },
-    !!userId,
+    !!userId && showDeliverySections,
   )
 
   if (isLoading) {
@@ -169,62 +180,78 @@ export default function UserProfilePage() {
             </div>
           </div>
 
-          <div className="card p-4">
-            <h3 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider mb-3">
-              Recent Activity
-            </h3>
-            <ActivityFeed userId={userId} />
-          </div>
-
-          <div className="card p-4">
-            <div className="flex items-center gap-1 border-b border-border-subtle mb-4">
-              {MAIN_TABS.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={clsx(
-                    'flex items-center gap-1.5 px-3 pb-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors',
-                    activeTab === tab.id
-                      ? 'border-accent text-accent'
-                      : 'border-transparent text-text-muted hover:text-text-secondary',
-                  )}
-                >
-                  <tab.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
-                  {tab.label}
-                </button>
-              ))}
+          {showDeliverySections && (
+            <div className="card p-4">
+              <h3 className="text-[12px] font-semibold text-text-muted uppercase tracking-wider mb-3">
+                Recent Activity
+              </h3>
+              <ActivityFeed userId={userId} />
             </div>
+          )}
 
-            {activeTab === 'tasks' && <TasksPanel userId={userId} />}
-            {activeTab === 'projects' && <ProjectsPanel userId={userId} />}
-            {activeTab === 'skills' && <UserSkillsPanel userId={userId} />}
+          <div className="card p-4">
+            {showDeliverySections ? (
+              <>
+                <div className="flex items-center gap-1 border-b border-border-subtle mb-4">
+                  {MAIN_TABS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={clsx(
+                        'flex items-center gap-1.5 px-3 pb-2.5 text-[13px] font-medium border-b-2 -mb-px transition-colors',
+                        activeTab === tab.id
+                          ? 'border-accent text-accent'
+                          : 'border-transparent text-text-muted hover:text-text-secondary',
+                      )}
+                    >
+                      <tab.icon className="w-3.5 h-3.5" strokeWidth={1.75} />
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {activeTab === 'tasks' && <TasksPanel userId={userId} />}
+                {activeTab === 'projects' && <ProjectsPanel userId={userId} />}
+                {activeTab === 'skills' && <UserSkillsPanel userId={userId} />}
+              </>
+            ) : (
+              <>
+                <div className="flex items-center gap-2 border-b border-border-subtle pb-3 mb-4">
+                  <Award className="w-4 h-4 text-accent" strokeWidth={1.75} />
+                  <h3 className="text-[13px] font-semibold text-text-primary">Employee skills</h3>
+                </div>
+                <UserSkillsPanel userId={userId} />
+              </>
+            )}
           </div>
         </div>
 
         <div className="w-full xl:w-[240px] xl:shrink-0 space-y-4 xl:sticky xl:top-[68px]">
-          <div className="card p-4 space-y-2.5">
-            <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">
-              Stats
-            </p>
-            <StatCard
-              icon={CheckSquare}
-              label="Assigned tasks"
-              value={assignedData?.totalElements ?? '-'}
-              color="text-accent"
-            />
-            <StatCard
-              icon={Loader2}
-              label="In progress"
-              value={inProgressData?.totalElements ?? '-'}
-              color="text-warning"
-            />
-            <StatCard
-              icon={FileText}
-              label="Reported tasks"
-              value={reportedData?.totalElements ?? '-'}
-              color="text-info"
-            />
-          </div>
+          {showDeliverySections && (
+            <div className="card p-4 space-y-2.5">
+              <p className="text-[11px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                Stats
+              </p>
+              <StatCard
+                icon={CheckSquare}
+                label="Assigned tasks"
+                value={assignedData?.totalElements ?? '-'}
+                color="text-accent"
+              />
+              <StatCard
+                icon={Loader2}
+                label="In progress"
+                value={inProgressData?.totalElements ?? '-'}
+                color="text-warning"
+              />
+              <StatCard
+                icon={FileText}
+                label="Reported tasks"
+                value={reportedData?.totalElements ?? '-'}
+                color="text-info"
+              />
+            </div>
+          )}
 
           {canSeeRestrict && (
             <div className="card p-4 space-y-2">

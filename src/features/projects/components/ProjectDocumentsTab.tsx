@@ -15,7 +15,6 @@ interface ProjectDocumentsTabProps {
   onDeleteDocument: (docId: Id) => void
   user: User | null
   isOwnProject: boolean
-  isAdmin: boolean
 }
 
 export function ProjectDocumentsTab({
@@ -28,7 +27,6 @@ export function ProjectDocumentsTab({
   onDeleteDocument,
   user,
   isOwnProject,
-  isAdmin,
 }: ProjectDocumentsTabProps) {
   return (
     <div className="card overflow-hidden">

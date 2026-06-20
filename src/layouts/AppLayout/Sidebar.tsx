@@ -14,13 +14,16 @@ import {
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useUIStore } from '@/store/uiStore'
 import { useAuthStore } from '@/features/auth/store/authStore'
+import { canAccessPage } from '@/utils/permissions'
 import clsx from 'clsx'
 import type { PointerEvent as ReactPointerEvent } from 'react'
+import type { PageCapability } from '@/utils/permissions'
 
 type NavItem = {
   label: string
   icon: LucideIcon
   to: string
+  capability?: PageCapability
 }
 
 type NavDivider = {
@@ -32,11 +35,11 @@ type SidebarEntry = NavItem | NavDivider
 
 const NAV_ITEMS: SidebarEntry[] = [
   { label: 'Dashboard', icon: LayoutDashboard, to: '/dashboard' },
-  { label: 'Projects', icon: FolderKanban, to: '/projects' },
-  { label: 'Tasks', icon: CheckSquare, to: '/tasks' },
-  { label: 'Time Logs', icon: Clock, to: '/time-logs' },
+  { label: 'Projects', icon: FolderKanban, to: '/projects', capability: 'projects' },
+  { label: 'Tasks', icon: CheckSquare, to: '/tasks', capability: 'tasks' },
+  { label: 'Time Logs', icon: Clock, to: '/time-logs', capability: 'timeLogs' },
   { divider: true, label: 'Workforce' },
-  { label: 'Workload', icon: Brain, to: '/workforce' },
+  { label: 'Workload', icon: Brain, to: '/workforce', capability: 'workload' },
   { divider: true, label: 'Workspace' },
   { label: 'Members', icon: Users, to: '/members' },
   { label: 'Settings', icon: Settings, to: '/settings' },
@@ -55,6 +58,19 @@ function isDivider(item: SidebarEntry): item is NavDivider {
   return 'divider' in item && item.divider
 }
 
+function getVisibleNavItems(role: string | null | undefined): SidebarEntry[] {
+  const visible = NAV_ITEMS.filter(
+    (item) => isDivider(item) || !item.capability || canAccessPage(role, item.capability),
+  )
+
+  return visible.filter((item, index) => {
+    if (!isDivider(item)) return true
+    const hasItemBefore = index > 0 && !isDivider(visible[index - 1] as SidebarEntry)
+    const hasItemAfter = index < visible.length - 1 && !isDivider(visible[index + 1] as SidebarEntry)
+    return hasItemBefore && hasItemAfter
+  })
+}
+
 export default function Sidebar() {
   const collapsed = useUIStore((s) => s.sidebarCollapsed)
   const sidebarWidth = useUIStore((s) => s.sidebarWidth)
@@ -68,11 +84,7 @@ export default function Sidebar() {
   const displayName = user?.fullName || user?.email || 'User'
   const userInitial = displayName[0]?.toUpperCase() || 'U'
   const expandedWidth = clampSidebarWidth(sidebarWidth || DEFAULT_WIDTH)
-  const navItems = user?.role === 'HR'
-    ? NAV_ITEMS.filter((item) => (
-        isDivider(item) ? item.label !== 'Workforce' : item.to !== '/workforce'
-      ))
-    : NAV_ITEMS
+  const navItems = getVisibleNavItems(user?.role)
 
   useEffect(() => {
     if (collapsed || !resizing) return

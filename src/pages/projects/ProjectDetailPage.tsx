@@ -64,7 +64,7 @@ export default function ProjectDetailPage() {
   const updateProject              = useUpdateProject()
   const isPending                  = updateProject.isPending
 
-  // §3.5 / §3.8-3.10: ADMIN always; PM only when they are the project manager.
+  // Project managers can modify only projects they manage.
   const isOwnProject     = !!project && project.managerId === user?.id
   const canEdit          = can.isPm && isOwnProject
   const canManageMembers = can.isPm && isOwnProject
@@ -365,7 +365,6 @@ export default function ProjectDetailPage() {
           onDeleteDocument={deleteDocument}
           user={user}
           isOwnProject={isOwnProject}
-          isAdmin={can.isAdmin}
         />
       )}
 
