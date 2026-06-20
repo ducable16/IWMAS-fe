@@ -26,7 +26,7 @@ export default function ProjectFormModal({ open, project, onClose }: ProjectForm
     errors,
     currentUser,
     isPmSelfOnly,
-    allowedManagerIds,
+
     selectedManager,
     isPending,
     isSuggestingCode,
@@ -88,7 +88,6 @@ export default function ProjectFormModal({ open, project, onClose }: ProjectForm
             value={form.managerId}
             onChange={(val) => setValue('managerId', val)}
             useSearchHook={useManagerAutocomplete}
-            searchParams={{ allowedIds: allowedManagerIds }}
             initialDisplay={selectedManager?.fullName || (isPmSelfOnly ? currentUser?.fullName : '')}
             error={errors.managerId}
             noResultsText="No managers found"

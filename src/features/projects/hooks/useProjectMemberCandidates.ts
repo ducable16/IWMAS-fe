@@ -1,58 +1,48 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { normaliseUser } from '@/features/members/hooks/useMembers'
-import { userService } from '@/features/members/services/memberService'
-import { projectService } from '@/features/projects/services/projectService'
-import { canParticipateInDelivery } from '@/utils/permissions'
-import type { Id, PageResponse, User } from '@/types'
+import { searchService } from '@/features/search/services/searchService'
+import { SEARCH_MIN_PREFIX } from '@/features/search/hooks/useSearch'
+import type { Id } from '@/types'
 
-function pageItems(raw: PageResponse<User> | User[] | null | undefined): User[] {
-  if (Array.isArray(raw)) return raw
-  return Array.isArray(raw?.content) ? raw.content : []
-}
-
+/**
+ * §3.11 / §13.1 — Search candidates for adding a member to a project.
+ *
+ * Uses `GET /api/autocomplete?q=…&excludeProjectId={id}&role=TEAM_MEMBER`
+ * so only TEAM_MEMBER users who are NOT already in the project are returned.
+ */
 function useProjectCandidates(
   query: string,
   projectId?: Id | null,
-  managerOnly = false,
+  role: string = 'TEAM_MEMBER',
 ) {
   const trimmed = query.trim()
 
   return useQuery({
-    queryKey: ['projects', projectId, managerOnly ? 'manager-candidates' : 'member-candidates', trimmed],
-    enabled: !!projectId && trimmed.length >= 2,
-    queryFn: async () => {
-      const [usersResponse, membersResponse] = await Promise.all([
-        userService.getAll({ search: trimmed, active: true, size: 100 }),
-        projectService.getMembers(projectId as Id),
-      ])
-      const existingUserIds = new Set(
-        (Array.isArray(membersResponse.data) ? membersResponse.data : [])
-          .map((member) => String(member.userId)),
-      )
-      const candidates = pageItems(usersResponse.data)
-        .map(normaliseUser)
-        .filter((user) =>
-          (managerOnly ? user.role === 'PROJECT_MANAGER' : canParticipateInDelivery(user.role))
-          && !existingUserIds.has(String(user.id)),
-        )
-
-      return {
-        suggestions: candidates.map((user) => ({
-          term: user.fullName || user.email,
-          entityId: user.id,
-          user,
-        })),
-      }
+    queryKey: ['projects', projectId, role === 'PROJECT_MANAGER' ? 'manager-candidates' : 'member-candidates', trimmed],
+    enabled: !!projectId && trimmed.length >= SEARCH_MIN_PREFIX,
+    queryFn: async ({ signal }) => {
+      const res = await searchService.autocomplete(trimmed, signal, {
+        excludeProjectId: projectId as Id,
+        role,
+      })
+      return res.data ?? { suggestions: [] }
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
   })
 }
 
+/**
+ * §3.7 — Search PM candidates for the "Change Project Manager" modal.
+ * Only returns PROJECT_MANAGER users not already in the project.
+ */
 export function useProjectManagerCandidates(query: string, projectId?: Id | null) {
-  return useProjectCandidates(query, projectId, true)
+  return useProjectCandidates(query, projectId, 'PROJECT_MANAGER')
 }
 
+/**
+ * §3.11 — Search member candidates for the "Add Member" modal.
+ * Only returns TEAM_MEMBER users not already in the project.
+ */
 export default function useProjectMemberCandidates(query: string, projectId?: Id | null) {
-  return useProjectCandidates(query, projectId)
+  return useProjectCandidates(query, projectId, 'TEAM_MEMBER')
 }

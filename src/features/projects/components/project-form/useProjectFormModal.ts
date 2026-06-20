@@ -24,7 +24,7 @@ export function useProjectFormModal({ open, project, onClose }: ProjectFormModal
 
   const currentUser = useAuthStore((s) => s.user)
   const isPmSelfOnly = currentUser?.role === 'PROJECT_MANAGER'
-  const allowedManagerIds = isPmSelfOnly && currentUser?.id ? [currentUser.id] : null
+
 
   const selectedManagerId = form.managerId ? Number(form.managerId) : null
   const { data: selectedManager } = useUser(selectedManagerId)
@@ -179,7 +179,7 @@ export function useProjectFormModal({ open, project, onClose }: ProjectFormModal
     errors,
     currentUser,
     isPmSelfOnly,
-    allowedManagerIds,
+
     selectedManager,
     isPending,
     isSuggestingCode,

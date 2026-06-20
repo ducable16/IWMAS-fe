@@ -23,24 +23,27 @@ export const SEARCH_DEBOUNCE_MS = 220
  * @param {string} query
  * @param {number|string|null} [projectId] - Restrict to project participants
  */
-export function useAutocomplete(query: string | null | undefined, projectId: Id | null = null) {
+export function useAutocomplete(
+  query: string | null | undefined,
+  projectId: Id | null = null,
+  role: string | null = null,
+) {
   const trimmed = (query ?? '').trim()
   const enabled = trimmed.length >= SEARCH_MIN_PREFIX
 
   return useQuery<AutocompleteResponse>({
-    queryKey: ['search', 'autocomplete', trimmed, projectId],
+    queryKey: ['search', 'autocomplete', trimmed, projectId, role],
     enabled,
     queryFn: async ({ signal }) => {
-      const res = await searchService.autocomplete(
-        trimmed,
-        signal,
-        projectId ? { projectId } : {},
-      )
+      const opts: Record<string, Id> = {}
+      if (projectId) opts.projectId = projectId
+      if (role) opts.role = role
+      const res = await searchService.autocomplete(trimmed, signal, opts)
       return res.data
     },
     staleTime: 30_000,
     placeholderData: keepPreviousData,
-    retry: false, // user is still typing; don't waste retries
+    retry: false,
   })
 }
 
@@ -56,19 +59,19 @@ export function useAutocomplete(query: string | null | undefined, projectId: Id 
 export function useAutocompleteExcludeProject(
   query: string | null | undefined,
   excludeProjectId: Id | null = null,
+  role: string | null = null,
 ) {
   const trimmed = (query ?? '').trim()
   const enabled = trimmed.length >= SEARCH_MIN_PREFIX
 
   return useQuery<AutocompleteResponse>({
-    queryKey: ['search', 'autocomplete', trimmed, 'exclude', excludeProjectId],
+    queryKey: ['search', 'autocomplete', trimmed, 'exclude', excludeProjectId, role],
     enabled,
     queryFn: async ({ signal }) => {
-      const res = await searchService.autocomplete(
-        trimmed,
-        signal,
-        excludeProjectId ? { excludeProjectId } : {},
-      )
+      const opts: Record<string, Id> = {}
+      if (excludeProjectId) opts.excludeProjectId = excludeProjectId
+      if (role) opts.role = role
+      const res = await searchService.autocomplete(trimmed, signal, opts)
       return res.data
     },
     staleTime: 30_000,

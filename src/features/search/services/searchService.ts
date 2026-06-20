@@ -9,10 +9,12 @@ import type {
 interface AutocompleteOptions {
   projectId?: Id | undefined
   excludeProjectId?: Id | undefined
+  role?: string | undefined
 }
 
 interface SearchUsersParams {
   q?: string | undefined
+  role?: string | undefined
   page?: number | undefined
   size?: number | undefined
   sortBy?: string | undefined
@@ -46,6 +48,7 @@ export const searchService = {
     const params: Record<string, Id> = { q }
     if (opts.projectId)        params.projectId        = opts.projectId
     if (opts.excludeProjectId) params.excludeProjectId = opts.excludeProjectId
+    if (opts.role)             params.role             = opts.role
     return api.get<AutocompleteResponse>('/autocomplete', { params, ...(signal ? { signal } : {}) })
   },
 
@@ -64,6 +67,7 @@ export const searchService = {
       if (v !== undefined && v !== null && v !== '') qs.append(k, String(v))
     }
     append('q', params.q)
+    append('role', params.role)
     append('page', params.page ?? 0)
     append('size', params.size ?? 20)
     append('sortBy', params.sortBy)
