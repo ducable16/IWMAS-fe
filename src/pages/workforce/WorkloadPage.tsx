@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom'
 import { Search, X, BarChart3, FolderKanban } from 'lucide-react'
 import clsx from 'clsx'
 import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
-import ProjectTaskList from '@/features/workforce/components/ProjectTaskList'
+
 import { useProjects, useMyProjects } from '@/features/projects/hooks/useProjects'
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -13,7 +13,7 @@ type ProjectAutocompleteProps = {
   onSelect: (project: Project | null) => void
 }
 
-type WorkloadView = 'workload' | 'tasks'
+
 
 /* ── Project Autocomplete ───────────────────────────────────── */
 
@@ -130,11 +130,7 @@ export default function WorkloadPage() {
   const can         = useCan()
   const currentUser = useAuthStore((s) => s.user)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
-  const [view, setView] = useState<WorkloadView>('workload')
 
-  useEffect(() => {
-    setView('workload')
-  }, [selectedProject?.id])
 
   // Project managers see team workload; team members are redirected to their own detail.
   if (!can.viewAllWorkload && currentUser?.id) {
@@ -164,36 +160,10 @@ export default function WorkloadPage() {
         )}
       </div>
 
-      {selectedProject && (
-        <div className="flex items-center gap-2">
-          {[
-            { key: 'workload', label: 'Workload' },
-            { key: 'tasks', label: 'Tasks' },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setView(tab.key as WorkloadView)}
-              className={clsx(
-                'px-3 py-1.5 text-[12.5px] font-medium rounded-lg border transition-colors',
-                view === tab.key
-                  ? 'bg-accent text-white border-accent'
-                  : 'bg-bg-surface text-text-secondary border-border hover:border-border-strong',
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      )}
-
       {/* Dashboard or empty state */}
       {selectedProject ? (
         <div className="card p-5">
-          {view === 'workload' ? (
-            <ProjectWorkloadDashboard projectId={selectedProject.id} />
-          ) : (
-            <ProjectTaskList projectId={selectedProject.id} />
-          )}
+          <ProjectWorkloadDashboard projectId={selectedProject.id} />
         </div>
       ) : (
         <div className="card p-12 text-center">

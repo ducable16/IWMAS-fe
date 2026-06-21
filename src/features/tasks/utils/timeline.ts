@@ -31,7 +31,6 @@ export const BASE_RANGE: Record<TimelineScale, { before: number; after: number }
 export const BAR_COLOR = {
   TODO:        { bg: '#C8D0D8', text: '#4B5563' },
   IN_PROGRESS: { bg: '#0075DE', text: '#FFFFFF' },
-  IN_REVIEW:   { bg: '#0284C7', text: '#FFFFFF' },
   DONE:        { bg: '#1AAE39', text: '#FFFFFF' },
   CANCELLED:   { bg: '#94A3B8', text: '#94A3B8' },
 } satisfies Record<string, { bg: string; text: string }>

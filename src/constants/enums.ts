@@ -64,13 +64,12 @@ export const PROJECT_ROLE_LABEL = {
 }
 
 // ── Task status ───────────────────────────────────────────────────────────────
-export const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE', 'CANCELLED'] as const
+export const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'DONE', 'CANCELLED'] as const
 export type TaskStatus = typeof TASK_STATUSES[number]
 
 export const TASK_STATUS_LABEL = {
   TODO:        'To Do',
   IN_PROGRESS: 'In Progress',
-  IN_REVIEW:   'In Review',
   DONE:        'Done',
   CANCELLED:   'Cancelled',
 }
@@ -79,7 +78,6 @@ export const TASK_STATUS_LABEL = {
 export const TASK_STATUS_META = {
   TODO:        { label: 'TO DO',       color: 'bg-[#e2e4e6] text-slate-800 font-bold tracking-wide' },
   IN_PROGRESS: { label: 'IN PROGRESS', color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide' },
-  IN_REVIEW:   { label: 'IN REVIEW',   color: 'bg-amber-300 text-slate-800 font-bold tracking-wide' },
   DONE:        { label: 'DONE',        color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide' },
   CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300 text-slate-800 font-bold tracking-wide'  },
 }
@@ -88,15 +86,13 @@ export const TASK_STATUS_META = {
 export const TASK_STATUS_DETAIL_META = {
   TODO:        { label: 'TO DO',       cls: 'bg-[#e2e4e6] text-slate-800 font-bold border-transparent tracking-wide' },
   IN_PROGRESS: { label: 'IN PROGRESS', cls: 'bg-[#8db5f8] text-slate-800 font-bold border-transparent tracking-wide' },
-  IN_REVIEW:   { label: 'IN REVIEW',   cls: 'bg-amber-300 text-slate-800 font-bold border-transparent tracking-wide' },
   DONE:        { label: 'DONE',        cls: 'bg-[#a6d86e] text-slate-800 font-bold border-transparent tracking-wide' },
   CANCELLED:   { label: 'CANCELLED',   cls: 'bg-rose-300 text-slate-800 font-bold border-transparent tracking-wide'  },
 }
 
 export const TASK_STATUS_TRANSITIONS = {
   TODO: ['IN_PROGRESS', 'CANCELLED'],
-  IN_PROGRESS: ['IN_REVIEW', 'TODO', 'CANCELLED'],
-  IN_REVIEW: ['DONE', 'IN_PROGRESS', 'TODO', 'CANCELLED'],
+  IN_PROGRESS: ['DONE', 'TODO', 'CANCELLED'],
   DONE: ['IN_PROGRESS', 'TODO'],
   CANCELLED: ['TODO'],
 } satisfies Record<TaskStatus, TaskStatus[]>
