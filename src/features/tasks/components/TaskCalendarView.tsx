@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 import clsx from 'clsx'
 import { useTaskCalendar } from '@/features/tasks/hooks/useTaskViews'
 import { TASK_STATUS_META } from '@/constants/enums'
+import { filterTasksByStatuses, isTaskStatusSelected } from '../utils/taskStatusFilter'
 import type { NavigateFunction } from 'react-router-dom'
 import type { TaskFilters, TaskListItem } from '@/types'
 
@@ -119,10 +120,10 @@ export default function TaskCalendarView({ filters }: { filters: TaskFilters }) 
   const taskMap = useMemo(() => {
     const map: Record<string, TaskListItem[]> = {}
     ;(calData || []).forEach(({ date, tasks }) => {
-      map[date] = tasks || []
+      map[date] = filterTasksByStatuses(tasks || [], filters.statuses)
     })
     return map
-  }, [calData])
+  }, [calData, filters.statuses])
 
   // Build calendar grid (Mon-first, 6 weeks)
   const gridDays = useMemo(() => {
@@ -198,12 +199,14 @@ export default function TaskCalendarView({ filters }: { filters: TaskFilters }) 
 
       {/* Legend */}
       <div className="flex items-center gap-4 px-4 py-2 border-t border-border-subtle bg-bg-subtle/20">
-        {Object.entries(TASK_STATUS_META).map(([key, meta]) => (
+        {Object.entries(TASK_STATUS_META)
+          .filter(([key]) => isTaskStatusSelected(key, filters.statuses))
+          .map(([key, meta]) => (
           <div key={key} className="flex items-center gap-1.5">
             <span className={clsx('w-2.5 h-2.5 rounded-sm', meta.color?.split(' ')[0] || 'bg-bg-hover')} />
             <span className="text-[10.5px] text-text-muted">{meta.label}</span>
           </div>
-        ))}
+          ))}
       </div>
     </div>
   )

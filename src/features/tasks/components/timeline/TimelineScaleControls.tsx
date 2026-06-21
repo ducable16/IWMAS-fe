@@ -14,28 +14,31 @@ export default function TimelineScaleControls({
   onTodayClick,
 }: TimelineScaleControlsProps) {
   return (
-    <div className="absolute bottom-4 right-4 z-10 flex items-center gap-0.5 bg-bg-surface border border-border rounded-full px-1.5 py-1 shadow-deep select-none">
+    <div className="shrink-0 flex items-center justify-end gap-2 border-b border-border-subtle bg-bg-surface px-3 py-2 overflow-x-auto select-none">
       <button
+        type="button"
         onClick={onTodayClick}
-        className="text-[12px] font-medium px-3 py-1.5 rounded-full text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
+        className="shrink-0 text-[12px] font-medium px-3 py-1.5 rounded-md border border-border text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-colors"
       >
         Today
       </button>
-      <div className="w-px h-4 bg-border-subtle mx-0.5" />
-      {SCALES.map((item) => (
-        <button
-          key={item.key}
-          onClick={() => onScaleChange(item.key)}
-          className={clsx(
-            'text-[12px] font-medium px-3 py-1.5 rounded-full transition-all duration-150',
-            scale === item.key
-              ? 'bg-accent text-white shadow-sm'
-              : 'text-text-secondary hover:bg-bg-hover hover:text-text-primary',
-          )}
-        >
-          {item.label}
-        </button>
-      ))}
+      <div className="shrink-0 flex items-center gap-0.5 rounded-md bg-bg-subtle p-0.5 border border-border-subtle">
+        {SCALES.map((item) => (
+          <button
+            key={item.key}
+            type="button"
+            onClick={() => onScaleChange(item.key)}
+            className={clsx(
+              'text-[12px] font-medium px-3 py-1 rounded transition-colors',
+              scale === item.key
+                ? 'bg-bg-surface text-text-primary shadow-sm'
+                : 'text-text-secondary hover:text-text-primary',
+            )}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
     </div>
   )
 }

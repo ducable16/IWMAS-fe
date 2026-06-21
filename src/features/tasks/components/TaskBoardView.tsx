@@ -18,6 +18,7 @@ import {
 } from './task-board/taskBoardTypes'
 import { getErrorMessage } from '@/utils/apiError'
 import { ERR_TASK_UPDATE_STATUS, ERR_INVALID_TRANSITION } from '@/utils/errorMessages'
+import { filterTasksByStatuses, isTaskStatusSelected } from '../utils/taskStatusFilter'
 import type { Id, Task, TaskFilters, TaskListItem } from '@/types'
 
 type TaskBoardViewProps = {
@@ -70,17 +71,20 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
   const [dragOver, setDragOver] = useState<BoardStatus | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
 
+  const statusFilterKey = filters.statuses.join(',')
+
   useEffect(() => {
     setLocalGrouped(null)
-  }, [data])
+  }, [data, statusFilterKey])
 
   const serverGrouped = useMemo(() => {
     const grouped = emptyGrouped()
     for (const column of data?.columns ?? []) {
-      grouped[String(column.status).toUpperCase() as BoardStatus] = (column.tasks || []).map(normaliseTask)
+      const status = String(column.status).toUpperCase() as BoardStatus
+      grouped[status] = filterTasksByStatuses(column.tasks || [], filters.statuses).map(normaliseTask)
     }
     return grouped
-  }, [data])
+  }, [data, filters.statuses])
   const grouped = localGrouped ?? serverGrouped
   const tasks = useMemo(() => Object.values(grouped).flat(), [grouped])
 
@@ -210,7 +214,9 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
       )}
 
       <div ref={boardRef} className="flex gap-4 overflow-x-auto pb-4 items-start">
-        {COLUMN_CONFIG.map((col) => (
+        {COLUMN_CONFIG.filter((column) =>
+          isTaskStatusSelected(column.key, filters.statuses),
+        ).map((col) => (
           <TaskBoardColumn
             key={col.key}
             col={col}

@@ -11,7 +11,7 @@ import {
 } from '@/features/tasks/utils/taskSkillRequirements'
 import TaskCreateFields from './task-create/TaskCreateFields'
 import {
-  EMPTY_TASK_CREATE_FORM,
+  createDefaultTaskCreateForm,
   type SetTaskCreateField,
   type TaskCreateForm,
 } from './task-create/taskCreateTypes'
@@ -33,7 +33,7 @@ export default function TaskCreateModal({
   defaultProjectId,
   defaultProjectName,
 }: TaskCreateModalProps) {
-  const [form, setForm] = useState<TaskCreateForm>(EMPTY_TASK_CREATE_FORM)
+  const [form, setForm] = useState<TaskCreateForm>(createDefaultTaskCreateForm)
   const { mutate: createTask, isPending } = useCreateTask()
   const requiredSkillRequirements = getRequiredSkillRequirements(form.skillRequirements)
   const shouldValidateAssignee = !!form.assigneeId && requiredSkillRequirements.length > 0
@@ -66,7 +66,7 @@ export default function TaskCreateModal({
   useEffect(() => {
     if (open) {
       setForm({
-        ...EMPTY_TASK_CREATE_FORM,
+        ...createDefaultTaskCreateForm(),
         projectId: defaultProjectId || '',
       })
     }

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import type { Id, TaskSkillRequirementRequest } from '@/types'
 
 export interface TaskCreateForm {
@@ -27,15 +28,17 @@ export type SetTaskCreateField = <K extends keyof TaskCreateForm>(
   value: TaskCreateForm[K],
 ) => void
 
-export const EMPTY_TASK_CREATE_FORM: TaskCreateForm = {
-  title: '',
-  description: '',
-  priority: 'MEDIUM',
-  type: 'FEATURE',
-  projectId: '',
-  assigneeId: '',
-  startDate: '',
-  dueDate: '',
-  estimatedHours: '',
-  skillRequirements: [],
+export function createDefaultTaskCreateForm(): TaskCreateForm {
+  return {
+    title: '',
+    description: '',
+    priority: 'MEDIUM',
+    type: 'FEATURE',
+    projectId: '',
+    assigneeId: '',
+    startDate: dayjs().format('YYYY-MM-DD'),
+    dueDate: '',
+    estimatedHours: '',
+    skillRequirements: [],
+  }
 }

@@ -94,7 +94,6 @@ export default function TasksPage() {
         <div className="space-y-2.5">
           <TasksToolbar
             filters={filters}
-            viewMode={viewMode}
             activeCount={activeCount}
             isStale={isStale}
             onChange={set}

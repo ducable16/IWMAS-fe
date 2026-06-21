@@ -3,11 +3,9 @@ import clsx from 'clsx'
 import SearchInput from '@/components/ui/SearchInput'
 import { STATUS_META, TASK_STATUSES } from '@/features/tasks/components/TaskFilterDrawer'
 import type { TaskFilterChange, TaskFilters } from '@/types'
-import type { ViewMode } from '../tasksPageConfig'
 
 type TasksToolbarProps = {
   filters: TaskFilters
-  viewMode: ViewMode
   activeCount: number
   isStale: boolean
   onChange: TaskFilterChange
@@ -16,7 +14,6 @@ type TasksToolbarProps = {
 
 export default function TasksToolbar({
   filters,
-  viewMode,
   activeCount,
   isStale,
   onChange,
@@ -31,39 +28,37 @@ export default function TasksToolbar({
         className="py-2 min-w-[240px] max-w-[420px] flex-1 focus-within:border-border-strong focus-within:ring-0 transition-colors"
       />
 
-      {viewMode !== 'calendar' && (
-        <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg overflow-x-auto max-w-full">
-          <button
-            onClick={() => onChange('statuses', [])}
-            className={clsx(
-              'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
-              filters.statuses.length === 0
-                ? 'bg-bg-surface text-text-primary border border-border-subtle'
-                : 'text-text-muted hover:text-text-secondary',
-            )}
-          >
-            ALL
-          </button>
-          {TASK_STATUSES.map((status) => {
-            const meta = STATUS_META[status]
-            const active = filters.statuses.length === 1 && filters.statuses[0] === status
-            return (
-              <button
-                key={status}
-                onClick={() => onChange('statuses', active ? [] : [status])}
-                className={clsx(
-                  'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
-                  active
-                    ? 'bg-bg-surface text-text-primary border border-border-subtle'
-                    : 'text-text-muted hover:text-text-secondary',
-                )}
-              >
-                {meta.label}
-              </button>
-            )
-          })}
-        </div>
-      )}
+      <div className="flex gap-1 p-0.5 bg-bg-subtle border border-border-subtle rounded-lg overflow-x-auto max-w-full">
+        <button
+          onClick={() => onChange('statuses', [])}
+          className={clsx(
+            'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
+            filters.statuses.length === 0
+              ? 'bg-bg-surface text-text-primary border border-border-subtle'
+              : 'text-text-muted hover:text-text-secondary',
+          )}
+        >
+          ALL
+        </button>
+        {TASK_STATUSES.map((status) => {
+          const meta = STATUS_META[status]
+          const active = filters.statuses.length === 1 && filters.statuses[0] === status
+          return (
+            <button
+              key={status}
+              onClick={() => onChange('statuses', active ? [] : [status])}
+              className={clsx(
+                'text-[12px] px-2.5 py-1 rounded-md transition-colors font-medium whitespace-nowrap',
+                active
+                  ? 'bg-bg-surface text-text-primary border border-border-subtle'
+                  : 'text-text-muted hover:text-text-secondary',
+              )}
+            >
+              {meta.label}
+            </button>
+          )
+        })}
+      </div>
 
       <button
         onClick={onOpenFilters}

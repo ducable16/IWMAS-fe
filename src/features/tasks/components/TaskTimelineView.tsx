@@ -32,6 +32,7 @@ import { TimelineRow } from './TimelineRow'
 import TimelineFooter from './timeline/TimelineFooter'
 import TimelineGrid from './timeline/TimelineGrid'
 import TimelineScaleControls from './timeline/TimelineScaleControls'
+import { filterTasksByStatuses } from '../utils/taskStatusFilter'
 
 interface UpdateTaskDatesVariables {
   id: Id
@@ -65,7 +66,10 @@ export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
   const ppd = SCALES.find((item) => item.key === scale)?.ppd ?? 30
   const params = { ...filters, size: 200, page: 0 }
   const { data, isLoading, isError, error, refetch } = useSearchTasks(params)
-  const rawTasks = useMemo(() => data?.tasks ?? [], [data?.tasks])
+  const rawTasks = useMemo(
+    () => filterTasksByStatuses(data?.tasks ?? [], filters.statuses),
+    [data?.tasks, filters.statuses],
+  )
 
   const { rangeStart, days, todayOffset, timelineW } = useMemo(
     () => getTimelineRange(rawTasks, scale, ppd),
@@ -228,6 +232,12 @@ export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
 
   return (
     <div className="card overflow-hidden flex flex-col relative">
+      <TimelineScaleControls
+        scale={scale}
+        onScaleChange={setScale}
+        onTodayClick={scrollToToday}
+      />
+
       <div
         ref={scrollRef}
         className="overflow-auto"
@@ -284,12 +294,6 @@ export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
           />
         </div>
       </div>
-
-      <TimelineScaleControls
-        scale={scale}
-        onScaleChange={setScale}
-        onTodayClick={scrollToToday}
-      />
 
       {tooltip && !dragRef.current && (
         <BarTooltip
