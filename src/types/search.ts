@@ -23,6 +23,12 @@ export interface AutocompleteResponse {
   tookMs?: number | undefined
 }
 
+export type ProjectAutocompleteSource = Exclude<SearchSource, 'redis'>
+
+export interface ProjectAutocompleteResponse extends Omit<AutocompleteResponse, 'source'> {
+  source?: ProjectAutocompleteSource | undefined
+}
+
 export interface AutocompleteOption {
   value: Id
   label: string

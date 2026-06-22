@@ -1,19 +1,5 @@
-import type { WorkloadLevel } from '@/constants/enums'
+import type { LoadLevel } from '@/constants/enums'
 import type { Id } from './api'
-
-export interface WorkloadSnapshotResponse {
-  id: Id
-  userId: Id
-  userFullName: string
-  snapshotDate: string
-  projectCount: number
-  activeTaskCount: number
-  overdueTaskCount: number
-  predictedLateTaskCount: number
-  unestimatedTaskCount: number
-  workloadPercent: number
-  workloadLevel: WorkloadLevel | string
-}
 
 export interface TaskWorkloadItem {
   taskId: Id
@@ -23,6 +9,7 @@ export interface TaskWorkloadItem {
   priority: string
   startDate: string | null
   dueDate: string | null
+  /** Mirrors estimatedHours in workload responses; null when the task is unestimated. */
   remainingHours: number | null
   executionSeq: number | null
   projectedStartDate: string | null
@@ -38,22 +25,28 @@ export interface ProjectAllocationItem {
   projectName: string
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
-  workloadLevel: WorkloadLevel | string
+  backlogHours: number
   /** Null when the lane has no capacity (BLOCKED / UNDEFINED). */
-  workloadPercent: number | null
+  backlogDays: number | null
+  loadLevel: LoadLevel | string
+  overdueCount: number
   predictedLateTaskCount: number
 }
 
 export interface MemberWorkloadResponse {
   userId: Id
   userFullName: string
-  position: string | null
-  workloadLevel: WorkloadLevel | string
-  workloadPercent: number
+  email: string
+  loadLevel: LoadLevel | string
+  /** Workdays needed to clear the most-loaded lane; null when no lane has capacity. */
+  worstBacklogDays: number | null
+  atRiskCount: number
   activeTaskCount: number
   overdueTaskCount: number
   predictedLateTaskCount: number
   unestimatedTaskCount: number
+  /** Always populated, including list responses where tasks is null. */
+  unestimatedTasks: TaskWorkloadItem[]
   projectAllocations: ProjectAllocationItem[]
   /** Null in the project-member list; populated by user real-time endpoints. */
   tasks: TaskWorkloadItem[] | null
@@ -64,8 +57,11 @@ export interface ProjectScheduleResponse {
   projectName: string
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
-  workloadLevel: WorkloadLevel | string
-  workloadPercent: number
+  backlogHours: number
+  /** Null when the lane has no capacity (BLOCKED / UNDEFINED). */
+  backlogDays: number | null
+  loadLevel: LoadLevel | string
+  overdueCount: number
   predictedLateTaskCount: number
   savedOrder: boolean
   tasks: TaskWorkloadItem[]

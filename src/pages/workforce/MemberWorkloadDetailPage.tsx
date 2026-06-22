@@ -6,8 +6,9 @@ import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import ProjectAllocationsTable from '@/features/workforce/components/member-workload-detail/ProjectAllocationsTable'
 import WorkloadTaskSections from '@/features/workforce/components/member-workload-detail/WorkloadTaskSections'
 import TaskArrangementPanel from '@/features/workforce/components/TaskArrangementPanel'
-import WorkloadBar from '@/features/workforce/components/WorkloadBar'
-import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
+import BacklogMetric from '@/features/workforce/components/BacklogMetric'
+import DeadlineRiskIndicator from '@/features/workforce/components/DeadlineRiskIndicator'
+import LoadLevelBadge from '@/features/workforce/components/LoadLevelBadge'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyWorkload, useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
@@ -30,9 +31,8 @@ function WorkloadDetailContent({
   selectedProjectId: Id | null
   onProjectChange: (projectId: Id) => void
 }) {
-  const [showAllTasks, setShowAllTasks] = useState(false)
+
   const tasks = data.tasks ?? []
-  const overdueTasks = tasks.filter((task) => task.overdue)
   const allocations = data.projectAllocations ?? []
   const activeProjectId = selectedProjectId ?? allocations[0]?.projectId ?? null
 
@@ -60,44 +60,54 @@ function WorkloadDetailContent({
                   </span>
                 )}
               </div>
-              {data.position && (
-                <p className="text-[13px] text-text-muted mt-0.5">{data.position}</p>
+              {data.email && (
+                <p className="text-[13px] text-text-muted mt-0.5">{data.email}</p>
               )}
               <div className="mt-2">
-                <WorkloadLevelBadge level={data.workloadLevel} />
+                <LoadLevelBadge level={data.loadLevel} />
               </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-border-subtle">
-          <WorkloadBar
-            workloadPercent={data.workloadPercent}
-            workloadLevel={data.workloadLevel}
-          />
+        <div className="mt-5 grid gap-3 border-t border-border-subtle pt-4 sm:grid-cols-2">
+          <div className="rounded-xl bg-bg-subtle px-3 py-2.5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Workload volume</p>
+            <BacklogMetric days={data.worstBacklogDays} />
+          </div>
+          <div className="rounded-xl bg-bg-subtle px-3 py-2.5">
+            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Deadline risk</p>
+            <DeadlineRiskIndicator
+              atRiskCount={data.atRiskCount}
+              overdueCount={data.overdueTaskCount}
+              predictedLateCount={data.predictedLateTaskCount}
+              compact
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-4">
-          <button
-            type="button"
-            onClick={() => setShowAllTasks((value) => !value)}
-            className="text-center p-3 bg-bg-subtle rounded-xl hover:bg-bg-hover transition-colors"
-          >
+          <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p className="text-[20px] font-bold text-text-primary tabular-nums">
               {data.activeTaskCount ?? 0}
             </p>
             <p className="text-[11.5px] text-text-muted mt-0.5">Active tasks</p>
-          </button>
+          </div>
           <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p
               className={clsx(
                 'text-[20px] font-bold tabular-nums',
-                overdueTasks.length > 0 ? 'text-danger' : 'text-text-primary',
+                data.atRiskCount > 0 ? 'text-danger' : 'text-text-primary',
               )}
             >
-              {overdueTasks.length}
+              {data.atRiskCount}
             </p>
-            <p className="text-[11.5px] text-text-muted mt-0.5">Overdue</p>
+            <p className="text-[11.5px] text-text-muted mt-0.5">At risk</p>
+            {data.atRiskCount > 0 && (
+              <p className="mt-0.5 text-[10px] text-text-muted">
+                {data.overdueTaskCount} overdue · {data.predictedLateTaskCount} predicted
+              </p>
+            )}
           </div>
           <div className="text-center p-3 bg-bg-subtle rounded-xl">
             <p className="text-[20px] font-bold text-text-primary tabular-nums">
@@ -120,7 +130,7 @@ function WorkloadDetailContent({
         selectedProjectId={activeProjectId}
         onProjectChange={onProjectChange}
       />
-      <WorkloadTaskSections tasks={tasks} showAllTasks={showAllTasks} variant="page" />
+      <WorkloadTaskSections tasks={tasks} variant="page" />
 
       <p className="text-[12px] text-text-muted text-center pb-4">
         <span className="font-semibold text-text-secondary">{data.activeTaskCount}</span>

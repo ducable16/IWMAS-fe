@@ -23,7 +23,7 @@ export function useUnreadCount() {
         : Number(res.data ?? 0))
     },
     refetchInterval: 30_000,
-    staleTime: 0,
+    staleTime: 30_000,
   })
 }
 

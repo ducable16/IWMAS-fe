@@ -15,7 +15,6 @@ const ProjectsPage = lazy(() => import('@/pages/projects/ProjectsPage'))
 const ProjectDetailPage = lazy(() => import('@/pages/projects/ProjectDetailPage'))
 const TasksPage = lazy(() => import('@/pages/tasks/TasksPage'))
 const TaskDetailPage = lazy(() => import('@/pages/tasks/TaskDetailPage'))
-const MyTimeLogsPage = lazy(() => import('@/pages/time-logs/MyTimeLogsPage'))
 const WorkloadPage = lazy(() => import('@/pages/workforce/WorkloadPage'))
 const MemberWorkloadDetailPage = lazy(() => import('@/pages/workforce/MemberWorkloadDetailPage'))
 const MembersPage = lazy(() => import('@/pages/members/MembersPage'))
@@ -52,9 +51,6 @@ export default function AppRouter() {
               <Route element={<CapabilityRoute capability="tasks" />}>
                 <Route path="/tasks" element={<TasksPage />} />
                 <Route path="/tasks/:id" element={<TaskDetailPage />} />
-              </Route>
-              <Route element={<CapabilityRoute capability="timeLogs" />}>
-                <Route path="/time-logs" element={<MyTimeLogsPage />} />
               </Route>
               <Route element={<CapabilityRoute capability="workload" />}>
                 <Route path="/workforce" element={<WorkloadPage />} />

@@ -1,97 +1,77 @@
-import { memo, useCallback, useState } from 'react'
+import { memo, useCallback, useMemo, useState } from 'react'
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import clsx from 'clsx'
-import WorkloadLevelBadge from '@/features/workforce/components/WorkloadLevelBadge'
-import WorkloadBar from '@/features/workforce/components/WorkloadBar'
-import { useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
+import BacklogMetric from '@/features/workforce/components/BacklogMetric'
+import DeadlineRiskIndicator from '@/features/workforce/components/DeadlineRiskIndicator'
+import LoadLevelBadge from '@/features/workforce/components/LoadLevelBadge'
+import { compareMemberWorkload } from '@/features/workforce/workloadPresentation'
+import { LiveError } from '@/components/feedback/LiveStateOverlay'
 import WorkloadTaskList from './WorkloadTaskList'
-import type { Id } from '@/types'
-
-type TeamMember = {
-  id: Id
-  fullName?: string
-  position?: string
-}
+import type { Id, MemberWorkloadResponse } from '@/types'
 
 type MemberRowProps = {
-  member: TeamMember
+  member: MemberWorkloadResponse
   expanded: boolean
   onToggle: (id: Id) => void
 }
 
 type TeamWorkloadPanelProps = {
   title?: string
-  members?: TeamMember[]
+  members?: MemberWorkloadResponse[]
   isLoading?: boolean
+  isError?: boolean
+  error?: Error | { message?: string } | null
+  onRetry?: () => void
   emptyLabel?: string
 }
 
 const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: MemberRowProps) {
-  const { data, isLoading, isError, error } = useUserWorkloadDetail(
-    member.id,
-    expanded,
-  )
-  const hasLoaded = !!data
-
   return (
     <div className="rounded-xl border border-border-subtle bg-bg-surface">
       <button
-        onClick={() => onToggle(member.id)}
+        type="button"
+        onClick={() => onToggle(member.userId)}
         className={clsx(
           'w-full flex items-start gap-4 p-4 text-left',
           'hover:bg-bg-subtle/40 transition-colors rounded-xl',
         )}
       >
         <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
               <p className="text-[13px] font-semibold text-text-primary truncate">
-                {member.fullName || 'Unknown'}
+                {member.userFullName || 'Unknown'}
               </p>
-              {member.position && (
+              {member.email && (
                 <p className="text-[11.5px] text-text-muted truncate mt-0.5">
-                  {member.position}
+                  {member.email}
                 </p>
               )}
             </div>
-            <div className="shrink-0">
-              {data?.workloadLevel ? (
-                <WorkloadLevelBadge level={data.workloadLevel} />
-              ) : isLoading ? (
-                <span className="text-[11.5px] text-text-muted">Loading...</span>
-              ) : (
-                <span className="text-[11.5px] text-text-muted">Not loaded</span>
-              )}
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <LoadLevelBadge level={member.loadLevel} />
+              <DeadlineRiskIndicator
+                atRiskCount={member.atRiskCount}
+                overdueCount={member.overdueTaskCount}
+                predictedLateCount={member.predictedLateTaskCount}
+                compact
+              />
             </div>
           </div>
 
           <div className="mt-2">
-            {hasLoaded ? (
-              <WorkloadBar
-                workloadPercent={data.workloadPercent}
-                workloadLevel={data.workloadLevel}
-                compact
-              />
-            ) : (
-              <div className="h-2 rounded-full bg-bg-subtle" />
-            )}
+            <BacklogMetric days={member.worstBacklogDays} compact />
           </div>
 
           <div className="mt-2 text-[11.5px] text-text-muted">
-            {hasLoaded ? (
-              <span>
-                <span className="font-semibold text-text-secondary tabular-nums">
-                  {data.activeTaskCount ?? 0}
-                </span>{' '}
-                active tasks
-                {data.overdueTaskCount > 0 && (
-                  <span className="text-danger font-semibold">
-                    {' '}- {data.overdueTaskCount} overdue
-                  </span>
-                )}
+            <span className="font-semibold text-text-secondary tabular-nums">
+              {member.activeTaskCount ?? 0}
+            </span>{' '}
+            active tasks
+            {member.unestimatedTaskCount > 0 && (
+              <span className="text-warning font-semibold">
+                {' '}· {member.unestimatedTaskCount} unestimated
               </span>
-            ) : (
-              <span>Tasks: -</span>
             )}
           </div>
         </div>
@@ -104,10 +84,7 @@ const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: Member
       {expanded && (
         <div className="px-4 pb-4">
           <WorkloadTaskList
-            tasks={data?.tasks || []}
-            isLoading={isLoading}
-            isError={isError}
-            error={error}
+            tasks={member.tasks ?? member.unestimatedTasks ?? []}
             emptyLabel="No tasks for this member"
           />
         </div>
@@ -120,9 +97,13 @@ export default function TeamWorkloadPanel({
   title = 'Team workload & tasks',
   members = [],
   isLoading,
+  isError,
+  error,
+  onRetry,
   emptyLabel = 'No members to display.',
 }: TeamWorkloadPanelProps) {
   const [expandedId, setExpandedId] = useState<Id | null>(null)
+  const sortedMembers = useMemo(() => [...members].sort(compareMemberWorkload), [members])
   const handleToggle = useCallback((id: Id) => {
     setExpandedId((current) => current === id ? null : id)
   }, [])
@@ -136,7 +117,16 @@ export default function TeamWorkloadPanel({
     )
   }
 
-  if (!members.length) {
+  if (isError) {
+    return (
+      <div className="card p-5">
+        <h3 className="section-title text-[13px] mb-4">{title}</h3>
+        <LiveError error={error} {...(onRetry ? { onRetry } : {})} />
+      </div>
+    )
+  }
+
+  if (!sortedMembers.length) {
     return (
       <div className="card p-5">
         <h3 className="section-title text-[13px] mb-4">{title}</h3>
@@ -149,11 +139,11 @@ export default function TeamWorkloadPanel({
     <div className="card p-5 space-y-3">
       <h3 className="section-title text-[13px]">{title}</h3>
       <div className="space-y-2">
-        {members.map((member) => (
+        {sortedMembers.map((member) => (
           <MemberRow
-            key={member.id}
+            key={member.userId}
             member={member}
-            expanded={expandedId === member.id}
+            expanded={expandedId === member.userId}
             onToggle={handleToggle}
           />
         ))}

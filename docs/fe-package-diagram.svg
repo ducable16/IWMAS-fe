@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="950" viewBox="0 0 1600 950" role="img" aria-labelledby="title desc">
+  <title id="title">Biểu đồ năm package chính của IWAS-fe</title>
+  <desc id="desc">Application Shell, Pages, Feature Modules, Shared, Config and Infrastructure cùng quan hệ với IWAS Backend.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 Z" fill="#56616c"/>
+    </marker>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="130%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#1f2937" flood-opacity="0.10"/>
+    </filter>
+    <style>
+      .canvas { fill: #fbfaf7; }
+      .outer { fill: none; stroke: #56616c; stroke-width: 2.5; }
+      .body { fill: #f7f4ed; stroke: #aa9d88; stroke-width: 2; }
+      .tab { fill: #e8e1d5; stroke: #aa9d88; stroke-width: 2; }
+      .backend { fill: #e7f0f8; stroke: #7894ad; stroke-width: 2; }
+      .title { font: 700 24px Inter, Arial, sans-serif; fill: #24292f; }
+      .heading { font: 700 20px Inter, Arial, sans-serif; fill: #24292f; }
+      .text { font: 15px Inter, Arial, sans-serif; fill: #4b5563; }
+      .small { font: 13px Inter, Arial, sans-serif; fill: #4b5563; }
+      .edge { fill: none; stroke: #56616c; stroke-width: 2.1; marker-end: url(#arrow); }
+      .cross { fill: none; stroke: #9a5f45; stroke-width: 2.1; stroke-dasharray: 8 6; marker-end: url(#arrow); }
+      .label-bg { fill: #fbfaf7; }
+      .label { font: 12px Inter, Arial, sans-serif; fill: #46515b; }
+      .cross-label { font: 12px Inter, Arial, sans-serif; fill: #8b4f38; }
+    </style>
+  </defs>
+
+  <rect class="canvas" width="1600" height="950"/>
+  <path class="tab" d="M35 28 L245 28 L272 60 L35 60 Z"/>
+  <text class="title" x="55" y="53">IWAS-fe Frontend</text>
+  <rect class="outer" x="35" y="60" width="1275" height="855" rx="8"/>
+
+  <!-- Main dependencies behind package surfaces -->
+  <path class="edge" d="M560 230 C480 250, 370 275, 300 315"/>
+  <path class="edge" d="M720 230 L840 290"/>
+  <path class="edge" d="M535 230 C420 410, 330 540, 300 650"/>
+  <path class="edge" d="M790 230 C890 400, 950 510, 970 630"/>
+
+  <path class="edge" d="M520 410 L630 410"/>
+  <path class="edge" d="M260 520 L300 650"/>
+  <path class="edge" d="M430 520 C620 590, 790 590, 880 630"/>
+
+  <path class="edge" d="M760 540 C650 585, 500 610, 420 650"/>
+  <path class="edge" d="M1010 540 L1010 630"/>
+
+  <path class="edge" d="M620 735 L720 735"/>
+  <path class="edge" d="M720 790 L620 790"/>
+
+  <!-- Cross-boundary dependencies -->
+  <path class="cross" d="M420 650 C500 580, 585 545, 690 500"/>
+  <path class="cross" d="M880 630 C850 580, 820 550, 790 520"/>
+
+  <!-- Backend connections -->
+  <path class="edge" d="M1220 790 C1285 820, 1325 820, 1370 800"/>
+  <path class="cross" d="M1210 470 C1340 530, 1420 630, 1450 700"/>
+
+  <!-- 1. Application Shell -->
+  <g filter="url(#shadow)">
+    <path class="tab" d="M450 100 L625 100 L655 130 L450 130 Z"/>
+    <rect class="body" x="450" y="130" width="470" height="100" rx="4"/>
+  </g>
+  <text class="heading" x="472" y="126">1. Application Shell</text>
+  <text class="text" x="472" y="167">main.tsx · App.tsx</text>
+  <text class="text" x="472" y="197">routes/ · layouts/</text>
+
+  <!-- 2. Pages -->
+  <g filter="url(#shadow)">
+    <path class="tab" d="M90 315 L185 315 L215 345 L90 345 Z"/>
+    <rect class="body" x="90" y="345" width="430" height="175" rx="4"/>
+  </g>
+  <text class="heading" x="112" y="341">2. Pages</text>
+  <text class="text" x="112" y="382">pages/ — route-level screens</text>
+  <text class="small" x="112" y="416">auth · dashboard · members · notifications</text>
+  <text class="small" x="112" y="444">projects · settings · tasks · workforce · errors</text>
+  <text class="small" x="112" y="486">Điều phối UI và feature theo từng route</text>
+
+  <!-- 3. Feature Modules -->
+  <g filter="url(#shadow)">
+    <path class="tab" d="M630 290 L825 290 L855 320 L630 320 Z"/>
+    <rect class="body" x="630" y="320" width="580" height="220" rx="4"/>
+  </g>
+  <text class="heading" x="652" y="316">3. Feature Modules</text>
+  <text class="text" x="652" y="357">features/</text>
+  <text class="small" x="652" y="390">auth · dashboard · members · notifications · projects</text>
+  <text class="small" x="652" y="418">search · settings · skills · tasks · workforce</text>
+  <line x1="652" y1="438" x2="1180" y2="438" stroke="#c5b9a7"/>
+  <text class="small" x="652" y="467">components · hooks · services · store · utils</text>
+  <text class="small" x="652" y="500">Có phối hợp trực tiếp giữa một số feature liên quan</text>
+
+  <!-- 4. Shared, including data contracts -->
+  <g filter="url(#shadow)">
+    <path class="tab" d="M120 650 L230 650 L260 680 L120 680 Z"/>
+    <rect class="body" x="120" y="680" width="500" height="175" rx="4"/>
+  </g>
+  <text class="heading" x="142" y="676">4. Shared</text>
+  <text class="text" x="142" y="718">components/ — ui · feedback</text>
+  <text class="text" x="142" y="749">hooks/ · utils/ · styles/</text>
+  <text class="text" x="142" y="780">types/ — API &amp; domain contracts</text>
+  <text class="small" x="142" y="824">UI · utilities · shared data definitions</text>
+
+  <!-- 5. Config & Infrastructure -->
+  <g filter="url(#shadow)">
+    <path class="tab" d="M720 630 L940 630 L970 660 L720 660 Z"/>
+    <rect class="body" x="720" y="660" width="500" height="195" rx="4"/>
+  </g>
+  <text class="heading" x="742" y="656">5. Config &amp; Infrastructure</text>
+  <text class="text" x="742" y="698">lib/ — axios · queryClient</text>
+  <text class="text" x="742" y="729">store/ — tenantStore · uiStore</text>
+  <text class="text" x="742" y="760">constants/ · import.meta.env</text>
+  <text class="small" x="742" y="805">HTTP · cache · global state · runtime configuration</text>
+
+  <!-- Backend -->
+  <g filter="url(#shadow)">
+    <rect class="backend" x="1370" y="700" width="200" height="150" rx="12"/>
+  </g>
+  <text class="heading" x="1470" y="745" text-anchor="middle">IWAS Backend</text>
+  <text class="text" x="1470" y="784" text-anchor="middle">REST API</text>
+  <text class="text" x="1470" y="812" text-anchor="middle">STOMP/WebSocket</text>
+
+  <!-- Edge labels -->
+  <rect class="label-bg" x="1250" y="835" width="92" height="21" rx="4"/>
+  <text class="label" x="1296" y="850" text-anchor="middle">HTTP / Axios</text>
+  <rect class="label-bg" x="1295" y="575" width="140" height="21" rx="4"/>
+  <text class="cross-label" x="1365" y="590" text-anchor="middle">notifications realtime</text>
+  <rect class="label-bg" x="455" y="575" width="176" height="21" rx="4"/>
+  <text class="cross-label" x="543" y="590" text-anchor="middle">Shared → feature dependencies</text>
+  <rect class="label-bg" x="770" y="565" width="145" height="21" rx="4"/>
+  <text class="cross-label" x="842" y="580" text-anchor="middle">axios → authStore</text>
+  <rect class="label-bg" x="630" y="722" width="80" height="21" rx="4"/>
+  <text class="label" x="670" y="737" text-anchor="middle">enums</text>
+  <rect class="label-bg" x="630" y="782" width="80" height="21" rx="4"/>
+  <text class="label" x="670" y="797" text-anchor="middle">types</text>
+</svg>

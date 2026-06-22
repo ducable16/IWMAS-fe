@@ -1,0 +1,72 @@
+%% IWAS-fe - package diagram derived from the current source tree and imports
+%% Import vào draw.io: Arrange > Insert > Advanced > Mermaid
+%% Nét liền: phụ thuộc chính; nét đứt: phụ thuộc chéo hoặc kết nối realtime
+flowchart TB
+
+    subgraph FRONTEND["IWAS-fe Frontend — src/"]
+        direction TB
+
+        subgraph APP["1. Application Shell"]
+            appEntry["main.tsx · App.tsx"]
+            appRouting["routes/ · layouts/"]
+        end
+
+        subgraph MIDDLE[" "]
+            direction LR
+
+            subgraph PAGES["2. Pages — pages/"]
+                pageGroups["auth · dashboard · members · notifications<br/>projects · settings · tasks · workforce · errors"]
+                pageRole["Route-level screens · UI orchestration"]
+            end
+
+            subgraph FEATURES["3. Feature Modules — features/"]
+                featureNames["auth · dashboard · members · notifications · projects<br/>search · settings · skills · tasks · workforce"]
+                featurePattern["components · hooks · services · store · utils"]
+                featureLinks["Cross-feature collaboration:<br/>dashboard → workforce · tasks → projects/skills/search · workforce → tasks"]
+            end
+        end
+
+        subgraph BOTTOM[" "]
+            direction LR
+
+            subgraph SHARED["4. Shared"]
+                sharedUi["components/ — ui · feedback"]
+                sharedCommon["hooks/ · utils/ · styles/"]
+                sharedTypes["types/ — API &amp; domain contracts"]
+            end
+
+            subgraph CONFIG["5. Config &amp; Infrastructure"]
+                configLib["lib/ — axios · queryClient"]
+                configStore["store/ — tenantStore · uiStore"]
+                configValues["constants/ · import.meta.env"]
+            end
+        end
+
+        APP --> PAGES
+        APP --> FEATURES
+        APP --> SHARED
+        APP --> CONFIG
+
+        PAGES --> FEATURES
+        PAGES --> SHARED
+        PAGES --> CONFIG
+
+        FEATURES --> SHARED
+        FEATURES --> CONFIG
+
+        SHARED -->|"domain enums · metadata"| CONFIG
+        CONFIG -->|"API &amp; domain types"| SHARED
+
+        SHARED -.->|"MentionTextarea → projects<br/>permissions → authStore"| FEATURES
+        CONFIG -.->|"axios → authStore"| FEATURES
+    end
+
+    backend[["IWAS Backend<br/>REST API · STOMP/WebSocket"]]:::external
+
+    CONFIG -->|"HTTP / Axios"| backend
+    FEATURES -.->|"notifications realtime"| backend
+
+    style MIDDLE fill:transparent,stroke:transparent
+    style BOTTOM fill:transparent,stroke:transparent
+    classDef default fill:#F7F4ED,stroke:#B9AA92,color:#252525;
+    classDef external fill:#E7F0F8,stroke:#7894AD,color:#25384A;

@@ -15,6 +15,7 @@ import {
   ERR_TASK_SKILL_MISMATCH,
 } from '@/utils/errorMessages'
 import { ERROR_CODES } from '@/constants/errorCodes'
+import { invalidateTaskPlanningQueries } from '../utils/planningQueryInvalidation'
 import type {
   CreateTaskRequest,
   Id,
@@ -108,6 +109,7 @@ export function useUpdateTaskStatus(id: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+      invalidateTaskPlanningQueries(queryClient)
     },
   })
 }
@@ -171,6 +173,7 @@ export function useUpdateTask(id: Id | null | undefined) {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+      invalidateTaskPlanningQueries(queryClient)
     },
     onError: (err: unknown) => toast.error(getTaskWriteErrorMessage(err, ERR_UPDATE_TASK)),
   })
@@ -187,6 +190,7 @@ export function useCreateTask() {
       if (res.data?.projectId) {
         queryClient.invalidateQueries({ queryKey: ['tasks', 'board', res.data.projectId] })
       }
+      invalidateTaskPlanningQueries(queryClient)
     },
     onError: (err: unknown) => toast.error(getTaskWriteErrorMessage(err, ERR_CREATE_TASK)),
   })
@@ -202,6 +206,7 @@ export function useDeleteTask() {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'search'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'mine'] })
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board'] })
+      invalidateTaskPlanningQueries(queryClient)
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_TASK)),
   })

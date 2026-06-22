@@ -2,6 +2,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '@/features/auth/store/authStore'
+import { canModifyTask } from '@/utils/permissions'
+import { invalidateTaskPlanningQueries } from '@/features/tasks/utils/planningQueryInvalidation'
 import { useTaskBoard } from '@/features/tasks/hooks/useTaskViews'
 import { taskService } from '@/features/tasks/services/taskService'
 import { formatEstimate } from '@/utils/date'
@@ -62,6 +65,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const boardRef = useRef<HTMLDivElement | null>(null)
+  const currentUser = useAuthStore((state) => state.user)
 
   const projectId = filters.projectId
   const { data, isLoading, isError, error, refetch } = useTaskBoard(projectId)
@@ -100,6 +104,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board', projectId] })
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId] })
       queryClient.invalidateQueries({ queryKey: ['tasks', taskId, 'history'] })
+      invalidateTaskPlanningQueries(queryClient)
     },
   })
 
@@ -147,8 +152,13 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
   }, [dragging])
 
   const handleDragStart = (taskId: Id, colKey: BoardStatus) => {
+    const task = tasks.find((item) => String(item.id) === String(taskId))
+    if (!task || !canModifyTask(currentUser?.role, currentUser?.id, task.assigneeId)) return
     setDragging({ taskId: String(taskId), fromCol: colKey })
   }
+
+  const canDragTask = (task: TaskListItem) =>
+    canModifyTask(currentUser?.role, currentUser?.id, task.assigneeId)
 
   const handleDrop = (toColKey: BoardStatus) => {
     if (!dragging || dragging.fromCol === toColKey) {
@@ -226,6 +236,7 @@ export default function TaskBoardView({ filters, canCreate = false }: TaskBoardV
             onDragLeave={() => setDragOver(null)}
             onDrop={() => handleDrop(col.key)}
             onDragStart={(taskId) => handleDragStart(taskId, col.key)}
+            canDragTask={canDragTask}
             navigate={navigate}
             onStartAdd={() => setCreateOpen(true)}
             canCreate={canCreate}

@@ -4,6 +4,7 @@ import toast from 'react-hot-toast'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
 import { taskService } from '@/features/tasks/services/taskService'
+import { invalidateTaskPlanningQueries } from '@/features/tasks/utils/planningQueryInvalidation'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import type { ApiError, Id, TaskFilters, TaskListItem } from '@/types'
 
@@ -99,6 +100,7 @@ export default function TaskTimelineView({ filters }: TaskTimelineViewProps) {
       queryClient.invalidateQueries({ queryKey: ['tasks', 'board', filters.projectId] })
       queryClient.invalidateQueries({ queryKey: ['tasks', id] })
       queryClient.invalidateQueries({ queryKey: ['tasks', id, 'history'] })
+      invalidateTaskPlanningQueries(queryClient)
       toast.success('Task dates updated')
     },
     onError: (err: unknown) => {

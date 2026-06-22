@@ -43,6 +43,7 @@ export function DetailsSidebar({
       q: memberSearch,
       size: 10,
       requiredSkills,
+      role: 'TEAM_MEMBER',
     },
     canEdit && editingField === 'assignee',
   )
@@ -161,12 +162,6 @@ export function DetailsSidebar({
                 setEditingField={setEditingField}
                 save={save}
               />
-            </DetailRow>
-
-            <DetailRow label="Actual">
-              <span className="text-text-secondary text-[13px]">
-                {task.actualHours ? `${task.actualHours}h` : 'None'}
-              </span>
             </DetailRow>
 
             <DetailRow label="Reporter">

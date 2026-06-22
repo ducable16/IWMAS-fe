@@ -11,7 +11,6 @@ type MaybeRole = UserRole | string | null | undefined
 export type PageCapability =
   | 'projects'
   | 'tasks'
-  | 'timeLogs'
   | 'workload'
   | 'members'
   | 'settings'
@@ -45,8 +44,14 @@ export const canManageProjectMembers = (r: MaybeRole): boolean => isPm(r)
 export const canCreateTask = (r: MaybeRole): boolean => isPm(r)
 export const canEditTask = (r: MaybeRole): boolean => isPm(r)
 export const canDeleteTask = (r: MaybeRole): boolean => isPm(r)
-export const canUpdateTaskStatus = (r: MaybeRole): boolean => isDeliveryRole(r)
-export const canLogTime = (r: MaybeRole): boolean => isDeliveryRole(r)
+
+/** Contextual task mutation rule for update, status and date changes. */
+export const canModifyTask = (
+  r: MaybeRole,
+  currentUserId: string | number | null | undefined,
+  assigneeId: string | number | null | undefined,
+): boolean => isPm(r) || (isTm(r) && currentUserId != null && assigneeId != null
+  && String(currentUserId) === String(assigneeId))
 export const canCommentOnTask = (r: MaybeRole): boolean => isDeliveryRole(r)
 export const canModerateComments = (_r: MaybeRole): boolean => false
 
@@ -83,8 +88,6 @@ export function useCan() {
     createTask: canCreateTask(role),
     editTask: canEditTask(role),
     deleteTask: canDeleteTask(role),
-    updateTaskStatus: canUpdateTaskStatus(role),
-    logTime: canLogTime(role),
     commentOnTask: canCommentOnTask(role),
     moderateComments: canModerateComments(role),
 

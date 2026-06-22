@@ -1,7 +1,7 @@
 import {
+  AlertCircle,
   AlertTriangle,
   Brain,
-  CheckSquare,
   CheckCircle2,
   FolderKanban,
   Settings,
@@ -10,25 +10,18 @@ import {
   UserX,
 } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useQueries } from '@tanstack/react-query'
 import StatCard from '@/features/dashboard/components/StatCard'
 import RecentActivity from '@/features/dashboard/components/RecentActivity'
 import MyTasksWidget from '@/features/dashboard/components/MyTasksWidget'
 import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMembers } from '@/features/members/hooks/useMembers'
-import { useMyProjects, useProjects } from '@/features/projects/hooks/useProjects'
-import { projectService } from '@/features/projects/services/projectService'
+import { useProjects } from '@/features/projects/hooks/useProjects'
 import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
+import { useMyTeamWorkload, useMyWorkload } from '@/features/workforce/hooks/useWorkload'
 import { TASK_STATUSES } from '@/constants/enums'
-import type { Id, ProjectMember, User } from '@/types'
-
-type DashboardMember = {
-  id: Id
-  fullName: string
-  position?: string
-}
+import type { User } from '@/types'
 
 function greetingName(user: User | null) {
   return (user?.fullName || user?.email || '').split(' ')[0] || 'there'
@@ -132,11 +125,6 @@ function TeamMemberDashboard() {
 function ProjectManagerDashboard() {
   const user = useAuthStore((state) => state.user)
   const today = new Date()
-  const day = today.getDay() || 7
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - day + 1)
-  const sunday = new Date(monday)
-  sunday.setDate(monday.getDate() + 6)
 
   const toDateInput = (date: Date) => date.toISOString().slice(0, 10)
   const activeTaskStatuses: string[] = TASK_STATUSES.filter(
@@ -149,50 +137,19 @@ function ProjectManagerDashboard() {
     page: 0,
     size: 1,
   })
-  const { data: tasksThisWeek } = useSearchTasks({
-    dueDateFrom: toDateInput(monday),
-    dueDateTo: toDateInput(sunday),
-    page: 0,
-    size: 1,
-  })
   const { data: overdueTasks } = useSearchTasks({
     dueDateTo: toDateInput(today),
     statuses: activeTaskStatuses,
     page: 0,
     size: 1,
   })
-  const { data: myProjectsData } = useMyProjects({ size: 100 })
-  const managedProjects = (myProjectsData?.projects ?? []).filter(
-    (project) => project.managerId === user?.id,
-  )
-  const memberQueries = useQueries({
-    queries: managedProjects.map((project) => ({
-      queryKey: ['projects', project.id, 'members'],
-      queryFn: async () => {
-        const response = await projectService.getMembers(project.id)
-        return Array.isArray(response.data) ? response.data : []
-      },
-      staleTime: 30_000,
-    })),
-  })
-  const projectMembers = memberQueries.flatMap(
-    (query) => (query.data || []) as ProjectMember[],
-  )
-  const memberMap = new Map<Id, DashboardMember>()
-
-  projectMembers.forEach((member) => {
-    memberMap.set(member.userId, {
-      id: member.userId,
-      fullName: member.userFullName || `User ${member.userId}`,
-    })
-  })
-  if (user?.id) {
-    memberMap.set(user.id, {
-      id: user.id,
-      fullName: user.fullName || user.email,
-      position: user.position || '',
-    })
-  }
+  const teamWorkload = useMyTeamWorkload()
+  const myWorkload = useMyWorkload()
+  const unestimatedTaskCount = (myWorkload.data?.unestimatedTaskCount ?? 0)
+    + (teamWorkload.data ?? []).reduce(
+      (total, member) => total + (member.unestimatedTaskCount ?? 0),
+      0,
+    )
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
@@ -213,9 +170,10 @@ function ProjectManagerDashboard() {
           variant="accent"
         />
         <StatCard
-          icon={CheckSquare}
-          label="Tasks this week"
-          value={tasksThisWeek?.totalElements ?? 0}
+          icon={AlertCircle}
+          label="Unestimated tasks"
+          value={teamWorkload.isLoading || myWorkload.isLoading ? '-' : unestimatedTaskCount}
+          variant="warning"
         />
         <StatCard
           icon={AlertTriangle}
@@ -227,8 +185,11 @@ function ProjectManagerDashboard() {
 
       <TeamWorkloadPanel
         title="Team workload & tasks"
-        members={Array.from(memberMap.values())}
-        isLoading={memberQueries.some((query) => query.isLoading)}
+        members={teamWorkload.data ?? []}
+        isLoading={teamWorkload.isLoading}
+        isError={teamWorkload.isError}
+        error={teamWorkload.error}
+        onRetry={() => { void teamWorkload.refetch() }}
         emptyLabel="No members in your managed projects."
       />
 

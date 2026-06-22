@@ -64,6 +64,17 @@ export default function WorkloadTaskList({
             <TaskStatusBadge status={task.status || 'TODO'} className="shrink-0" />
             <span
               className={clsx(
+                'shrink-0 rounded-md px-1.5 py-0.5 text-[10.5px] font-semibold tabular-nums',
+                task.unestimated
+                  ? 'border border-warning/20 bg-warning/10 text-warning'
+                  : 'bg-bg-subtle text-text-muted',
+              )}
+              title={task.unestimated ? 'Add an estimate to include this task in workload planning' : 'Estimated effort'}
+            >
+              {task.unestimated ? 'Needs estimate' : `${task.remainingHours?.toFixed(1) ?? '-'}h est.`}
+            </span>
+            <span
+              className={clsx(
                 'text-[11.5px] tabular-nums shrink-0 flex items-center gap-1',
                 task.overdue ? 'text-danger font-semibold' : 'text-text-muted',
               )}

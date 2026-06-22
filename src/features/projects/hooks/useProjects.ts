@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { projectService, type ProjectMemberSearchParams } from '../services/projectService'
-import { canParticipateInDelivery } from '@/utils/permissions'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import { getErrorMessage, getApiErrorCode } from '@/utils/apiError'
 import {
   ERR_CREATE_PROJECT,
@@ -127,6 +127,20 @@ export function useMyProjects(params: ProjectQueryParams = {}, enabled = true) {
   })
 }
 
+export function useMyManagedProjectMembers(enabled = true) {
+  const user = useAuthStore((state) => state.user)
+
+  return useQuery<User[]>({
+    queryKey: ['projects', 'my', 'members', user?.id],
+    queryFn: async () => {
+      const res = await projectService.getMyManagedMembers()
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: user?.role === 'PROJECT_MANAGER' && enabled,
+    staleTime: 60_000,
+  })
+}
+
 export function useProject(id: Id | null | undefined) {
   return useQuery({
     queryKey: ['projects', id],
@@ -171,17 +185,17 @@ export function useProjectMemberSearch(
   const q = params.q ?? ''
   const size = params.size ?? 10
   const requiredSkills = params.requiredSkills
+  const role = params.role
   return useQuery<User[]>({
-    queryKey: ['projects', projectId, 'members', 'search', q, size, requiredSkills],
+    queryKey: ['projects', projectId, 'members', 'search', q, size, requiredSkills, role],
     queryFn: async () => {
       const res = await projectService.searchMembers(projectId as Id, {
         q,
         size,
         requiredSkills,
+        role,
       })
-      return Array.isArray(res.data)
-        ? res.data.filter((user) => canParticipateInDelivery(user.role))
-        : []
+      return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId && enabled,
     placeholderData: keepPreviousData,
@@ -288,6 +302,7 @@ export function useAddProjectMember(projectId: Id | null | undefined) {
     onSuccess: () => {
       toast.success('Member added')
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', 'my', 'members'] })
     },
     onError: (err: unknown) => {
       const code = getApiErrorCode(err)
@@ -323,6 +338,10 @@ export function useRemoveProjectMember(projectId: Id | null | undefined) {
     mutationFn: (memberId: Id) => projectService.removeMember(projectId as Id, memberId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'members', 'search'] })
+      queryClient.invalidateQueries({ queryKey: ['projects', 'my', 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['workload'] })
     },
     onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_REMOVE_MEMBER)),
   })

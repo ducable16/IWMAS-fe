@@ -202,21 +202,27 @@ export const SEARCH_SOURCE_LABEL = {
 
 // ── Workload level (§9 / §11) ─────────────────────────────────────────────────
 //
-// v3 risk badge — driven by the schedule simulation, not raw utilisation.
-// Severity (worst first): OVERDUE > WILL_SLIP > TIGHT > HEALTHY > AVAILABLE
-export const WORKLOAD_LEVELS = [
-  'OVERDUE', 'WILL_SLIP', 'TIGHT', 'HEALTHY', 'AVAILABLE', 'BLOCKED', 'UNDEFINED',
+// Dashboard workload-volume badge driven by backlog depth.
+// Severity (worst first): OVERLOADED > BUSY > AVAILABLE > BLOCKED > UNDEFINED
+export const LOAD_LEVELS = [
+  'OVERLOADED', 'BUSY', 'AVAILABLE', 'BLOCKED', 'UNDEFINED',
 ] as const
-export type WorkloadLevel = typeof WORKLOAD_LEVELS[number]
+export type LoadLevel = typeof LOAD_LEVELS[number]
 
-export const WORKLOAD_LEVEL_META = {
-  OVERDUE:   { label: 'Overdue',   bg: 'bg-danger/15',        text: 'text-danger',     dot: 'bg-danger',        border: 'border-danger/25'     },
-  WILL_SLIP: { label: 'Will Slip', bg: 'bg-orange-500/15',    text: 'text-orange-600', dot: 'bg-orange-500',    border: 'border-orange-500/25' },
-  TIGHT:     { label: 'Tight',     bg: 'bg-warning/15',       text: 'text-warning',    dot: 'bg-warning',       border: 'border-warning/25'    },
-  HEALTHY:   { label: 'Healthy',   bg: 'bg-success/15',       text: 'text-success',    dot: 'bg-success',       border: 'border-success/25'    },
-  AVAILABLE: { label: 'Available', bg: 'bg-info/15',          text: 'text-info',       dot: 'bg-info',          border: 'border-info/25'       },
-  BLOCKED:   { label: 'Observer',  bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle'  },
-  UNDEFINED: { label: 'N/A',       bg: 'bg-bg-subtle',        text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle'  },
+export const LOAD_LEVEL_META = {
+  OVERLOADED: { label: 'Overloaded', bg: 'bg-orange-500/15', text: 'text-orange-600', dot: 'bg-orange-500', border: 'border-orange-500/25' },
+  BUSY:       { label: 'Busy',       bg: 'bg-warning/15',    text: 'text-warning',    dot: 'bg-warning',    border: 'border-warning/25' },
+  AVAILABLE:  { label: 'Available',  bg: 'bg-info/15',       text: 'text-info',       dot: 'bg-info',       border: 'border-info/25' },
+  BLOCKED:    { label: 'Observer',   bg: 'bg-bg-subtle',     text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle' },
+  UNDEFINED:  { label: 'N/A',        bg: 'bg-bg-subtle',     text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle' },
+} satisfies Record<LoadLevel, { label: string; bg: string; text: string; dot: string; border: string }>
+
+export const LOAD_LEVEL_SEVERITY: Record<LoadLevel, number> = {
+  OVERLOADED: 0,
+  BUSY: 1,
+  AVAILABLE: 2,
+  BLOCKED: 3,
+  UNDEFINED: 4,
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

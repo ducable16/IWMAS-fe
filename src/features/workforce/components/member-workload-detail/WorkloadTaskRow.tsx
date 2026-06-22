@@ -48,13 +48,17 @@ export default function WorkloadTaskRow({ task, variant }: WorkloadTaskRowProps)
 
       <span
         className={clsx(
-          'font-medium text-text-secondary bg-bg-subtle shrink-0 tabular-nums',
+          'font-medium shrink-0 tabular-nums',
           isPage
-            ? 'text-[11.5px] border border-border-subtle px-2 py-0.5 rounded-lg'
+            ? 'text-[11.5px] border px-2 py-0.5 rounded-lg'
             : 'text-[11px] px-1.5 py-0.5 rounded',
+          task.unestimated
+            ? 'border-warning/20 bg-warning/10 text-warning'
+            : 'border-border-subtle bg-bg-subtle text-text-secondary',
         )}
+        title={task.unestimated ? 'Add an estimate to include this task in workload planning' : 'Estimated effort'}
       >
-        {task.remainingHours?.toFixed(1) ?? '-'} h
+        {task.unestimated ? 'Needs estimate' : `${task.remainingHours?.toFixed(1) ?? '-'}h estimate`}
       </span>
 
       {isPage && (

@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { AlertTriangle, ArrowRight, Loader2 } from 'lucide-react'
-import WorkloadLevelBadge from './WorkloadLevelBadge'
-import WorkloadBar from './WorkloadBar'
+import { ArrowRight, Loader2 } from 'lucide-react'
+import BacklogMetric from './BacklogMetric'
+import DeadlineRiskIndicator from './DeadlineRiskIndicator'
+import LoadLevelBadge from './LoadLevelBadge'
 import { useMyWorkload } from '../hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
 
@@ -36,29 +37,27 @@ export default function MyWorkloadWidget() {
   }
 
   const {
-    workloadLevel,
-    workloadPercent,
+    loadLevel,
+    worstBacklogDays,
+    atRiskCount = 0,
     overdueTaskCount = 0,
+    predictedLateTaskCount = 0,
   } = data
 
   return (
     <div className="card p-5 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <h3 className="section-title text-[13px]">My workload</h3>
-        <WorkloadLevelBadge level={workloadLevel} />
+        <LoadLevelBadge level={loadLevel} />
       </div>
 
-      <WorkloadBar
-        workloadPercent={workloadPercent}
-        workloadLevel={workloadLevel}
-      />
+      <BacklogMetric days={worstBacklogDays} />
 
-      {overdueTaskCount > 0 && (
-        <div className="flex items-center gap-1.5 text-[12px] text-danger font-semibold bg-danger/[0.06] border border-danger/15 rounded-lg px-3 py-2">
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0" strokeWidth={2} />
-          {overdueTaskCount} overdue task{overdueTaskCount > 1 ? 's' : ''} need attention
-        </div>
-      )}
+      <DeadlineRiskIndicator
+        atRiskCount={atRiskCount}
+        overdueCount={overdueTaskCount}
+        predictedLateCount={predictedLateTaskCount}
+      />
 
       {!can.isHr && (
         <Link

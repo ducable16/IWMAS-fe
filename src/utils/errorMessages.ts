@@ -73,10 +73,7 @@ export const ERR_CATEGORY_HAS_SKILLS = 'This category still has active skills an
 export const ERR_SKILL_HAS_TASKS     = 'This skill is required by one or more active tasks and cannot be deleted.'
 export const ERR_SKILL_HAS_MEMBERS   = 'This skill is assigned to one or more members and cannot be deleted.'
 
-// ── Time logs ─────────────────────────────────────────────────────────────────
-export const ERR_LOG_WORK        = 'Failed to log work'
-export const ERR_UPDATE_TIME_LOG = 'Failed to update time log'
-export const ERR_DELETE_TIME_LOG = 'Failed to delete time log'
+// Projects
 export const ERR_CHANGE_MANAGER  = 'Failed to change project manager'
 
 // ── Notifications ─────────────────────────────────────────────────────────────

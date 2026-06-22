@@ -1,14 +1,12 @@
-import { MessageSquare, History, Timer } from 'lucide-react'
+import { MessageSquare, History } from 'lucide-react'
 import clsx from 'clsx'
 import { CommentsTab } from './CommentsTab'
 import { HistoryTab } from './HistoryTab'
-import { WorkLogTab } from './WorkLogTab'
 import type { Id, TaskComment } from '@/types'
 
 const ACTIVITY_TABS = [
   { id: 'comments', label: 'Comments', icon: MessageSquare },
   { id: 'history',  label: 'History',  icon: History       },
-  { id: 'worklog',  label: 'Work log', icon: Timer         },
 ]
 
 interface ActivitySectionProps {
@@ -43,7 +41,6 @@ export function ActivitySection({ activeTab, onTabChange, taskId, comments, proj
       <div className="min-h-[80px]">
         {activeTab === 'comments' && <CommentsTab taskId={taskId} comments={comments} projectId={projectId} />}
         {activeTab === 'history'  && <HistoryTab taskId={taskId} />}
-        {activeTab === 'worklog'  && <WorkLogTab taskId={taskId} />}
       </div>
     </div>
   )

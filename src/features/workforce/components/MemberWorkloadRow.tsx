@@ -1,7 +1,8 @@
 import clsx from 'clsx'
-import { AlertTriangle } from 'lucide-react'
-import WorkloadLevelBadge from './WorkloadLevelBadge'
-import WorkloadBar from './WorkloadBar'
+import BacklogMetric from './BacklogMetric'
+import DeadlineRiskIndicator from './DeadlineRiskIndicator'
+import LoadLevelBadge from './LoadLevelBadge'
+import { allocationAtRiskCount } from '../workloadPresentation'
 import type { MemberWorkloadResponse } from '@/types'
 
 type MemberWorkloadRowProps = {
@@ -14,7 +15,7 @@ type MemberWorkloadRowProps = {
  *
  * When `projectAllocations` is present (endpoint 9.5, project members),
  * it contains exactly 1 item — the allocation for the current project.
- * In that case we show project-specific and aggregate workload bars.
+ * In that case we show project-specific and aggregate workload/risk axes.
  *
  * When `projectAllocations` is absent (team-wide view §9.4) we show the
  * standard single total bar.
@@ -22,11 +23,14 @@ type MemberWorkloadRowProps = {
 export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRowProps) {
   const {
     userFullName = 'Unknown',
-    position = '',
-    workloadLevel = 'AVAILABLE',
-    workloadPercent = null,
+    email = '',
+    loadLevel = 'UNDEFINED',
+    worstBacklogDays = null,
+    atRiskCount = 0,
     activeTaskCount = 0,
     overdueTaskCount = 0,
+    predictedLateTaskCount = 0,
+    unestimatedTaskCount = 0,
     projectAllocations = null,
   } = member
 
@@ -59,54 +63,65 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
         {initials}
       </div>
 
-      {/* Name + position */}
+      {/* Name + email */}
       <div className="min-w-0 flex-shrink-0 w-[180px]">
         <p className="text-[13px] font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
           {userFullName}
         </p>
-        {position && (
-          <p className="text-[11.5px] text-text-muted truncate mt-0.5">{position}</p>
+        {email && (
+          <p className="text-[11.5px] text-text-muted truncate mt-0.5">{email}</p>
         )}
       </div>
 
-      {/* Badge — project-specific level takes priority */}
-      <div className="shrink-0 mt-0.5">
-        <WorkloadLevelBadge level={projectAlloc ? projectAlloc.workloadLevel : workloadLevel} />
+      {/* Workload volume — project-specific level takes priority */}
+      <div className="shrink-0 mt-0.5 space-y-1">
+        <p className="text-[9.5px] uppercase tracking-wider font-semibold text-text-muted">Workload</p>
+        <LoadLevelBadge level={projectAlloc ? projectAlloc.loadLevel : loadLevel} />
       </div>
 
-      {/* Workload bar(s) */}
-      <div className="flex-1 min-w-[240px] space-y-2">
+      {/* Backlog and deadline-risk axes */}
+      <div className="flex-1 min-w-[260px] space-y-2.5">
         {projectAlloc ? (
           <>
-            {/* Primary: project-specific */}
-            <div>
-              <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
+            <div className="grid gap-1.5 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
+              <div>
+                <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
                 {projectAlloc.projectName}
-              </p>
-              <WorkloadBar
-                workloadPercent={projectAlloc.workloadPercent}
-                workloadLevel={projectAlloc.workloadLevel}
+                </p>
+                <BacklogMetric days={projectAlloc.backlogDays} hours={projectAlloc.backlogHours} compact />
+              </div>
+              <DeadlineRiskIndicator
+                atRiskCount={allocationAtRiskCount(projectAlloc)}
+                overdueCount={projectAlloc.overdueCount}
+                predictedLateCount={projectAlloc.predictedLateTaskCount}
                 compact
               />
             </div>
-            {/* Secondary: total */}
-            <div>
-              <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
+            <div className="grid gap-1.5 border-t border-border-subtle pt-2 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
+              <div>
+                <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
                 Total (all projects)
-              </p>
-              <WorkloadBar
-                workloadPercent={workloadPercent}
-                workloadLevel={workloadLevel}
+                </p>
+                <BacklogMetric days={worstBacklogDays} compact />
+              </div>
+              <DeadlineRiskIndicator
+                atRiskCount={atRiskCount}
+                overdueCount={overdueTaskCount}
+                predictedLateCount={predictedLateTaskCount}
                 compact
               />
             </div>
           </>
         ) : (
-          <WorkloadBar
-            workloadPercent={workloadPercent}
-            workloadLevel={workloadLevel}
-            compact
-          />
+          <div className="grid gap-1.5 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
+            <BacklogMetric days={worstBacklogDays} compact />
+            <DeadlineRiskIndicator
+              atRiskCount={atRiskCount}
+              overdueCount={overdueTaskCount}
+              predictedLateCount={predictedLateTaskCount}
+              compact
+            />
+          </div>
         )}
       </div>
 
@@ -116,10 +131,9 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
           <span className="font-medium tabular-nums">{activeTaskCount}</span>
           <span className="text-text-muted"> tasks</span>
         </p>
-        {overdueTaskCount > 0 && (
-          <p className="flex items-center justify-end gap-1 text-[11.5px] text-danger font-semibold mt-0.5">
-            <AlertTriangle className="w-3 h-3" strokeWidth={2} />
-            {overdueTaskCount} overdue
+        {unestimatedTaskCount > 0 && (
+          <p className="text-[11px] text-warning font-medium mt-0.5">
+            {unestimatedTaskCount} unestimated
           </p>
         )}
       </div>

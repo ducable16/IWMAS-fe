@@ -1,6 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { searchService } from '../services/searchService'
-import type { AutocompleteResponse, Id } from '@/types'
+import { useAuthStore } from '@/features/auth/store/authStore'
+import type { AutocompleteResponse, Id, ProjectAutocompleteResponse } from '@/types'
 export { useDebouncedValue } from '@/utils/hooks'
 
 /**
@@ -86,10 +87,11 @@ export function useAutocompleteExcludeProject(
 export function useProjectAutocomplete(query: string | null | undefined) {
   const trimmed = (query ?? '').trim()
   const enabled = trimmed.length >= SEARCH_MIN_PREFIX
+  const userId = useAuthStore((state) => state.user?.id)
 
-  return useQuery<AutocompleteResponse>({
-    queryKey: ['search', 'autocomplete-projects', trimmed],
-    enabled,
+  return useQuery<ProjectAutocompleteResponse>({
+    queryKey: ['search', 'autocomplete-projects', userId, trimmed],
+    enabled: enabled && !!userId,
     queryFn: async ({ signal }) => {
       const res = await searchService.autocompleteProjects(trimmed, signal)
       return res.data
@@ -109,6 +111,7 @@ export function useProjectAutocomplete(query: string | null | undefined) {
  */
 interface UserSearchParams {
   q?: string
+  role?: string
   page?: number
   size?: number
   sortBy?: string

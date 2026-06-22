@@ -1,0 +1,108 @@
+%% ============================================================
+%% IWAS-fe — Biểu đồ phụ thuộc gói (RUNTIME dependencies)
+%% Import vào draw.io: Arrange > Insert > Advanced > Mermaid
+%% ============================================================
+flowchart TD
+    APP(["IWAS-fe<br/>(src)"]):::app
+
+    %% ---------- Core Runtime ----------
+    subgraph CORE["🧩 Core Runtime"]
+        react["react"]
+        reactdom["react-dom"]
+        usse["use-sync-external-store"]
+    end
+
+    %% ---------- Routing ----------
+    subgraph ROUTE["🧭 Routing"]
+        rrd["react-router-dom"]
+    end
+
+    %% ---------- State ----------
+    subgraph STATE["🗃️ State Management"]
+        rq["@tanstack/react-query"]
+        zustand["zustand"]
+    end
+
+    %% ---------- HTTP / Realtime ----------
+    subgraph NET["🌐 HTTP / Realtime"]
+        axios["axios"]
+        stomp["@stomp/stompjs"]
+    end
+
+    %% ---------- Form & Validation ----------
+    subgraph FORM["📝 Form & Validation"]
+        rhf["react-hook-form"]
+        zod["zod"]
+        resolvers["@hookform/resolvers"]
+    end
+
+    %% ---------- UI / Styling ----------
+    subgraph UI["🎨 UI / Icons / Styling"]
+        lucide["lucide-react"]
+        toast["react-hot-toast"]
+        clsx["clsx"]
+        twmerge["tailwind-merge"]
+    end
+
+    %% ---------- Drag & Drop ----------
+    subgraph DND["✋ Drag & Drop (@dnd-kit)"]
+        dndcore["@dnd-kit/core"]
+        dndsort["@dnd-kit/sortable"]
+        dndutil["@dnd-kit/utilities"]
+    end
+
+    %% ---------- Rich Text Editor ----------
+    subgraph EDITOR["📄 Rich Text (@blocknote)"]
+        bnariakit["@blocknote/ariakit"]
+        bnreact["@blocknote/react"]
+        bncore["@blocknote/core"]
+    end
+
+    %% ---------- Charts & Utils ----------
+    subgraph MISC["📊 Charts & Utils"]
+        recharts["recharts"]
+        dayjs["dayjs"]
+        fde["fast-deep-equal"]
+    end
+
+    %% ---------- App -> direct dependencies ----------
+    APP --> react
+    APP --> reactdom
+    APP --> rrd
+    APP --> rq
+    APP --> zustand
+    APP --> axios
+    APP --> stomp
+    APP --> resolvers
+    APP --> lucide
+    APP --> toast
+    APP --> clsx
+    APP --> twmerge
+    APP --> dndsort
+    APP --> bnariakit
+    APP --> recharts
+    APP --> dayjs
+    APP --> fde
+
+    %% ---------- Inter-package dependencies ----------
+    reactdom --> react
+    usse --> react
+    zustand --> usse
+    resolvers --> rhf
+    resolvers --> zod
+    dndsort --> dndcore
+    dndsort --> dndutil
+    bnariakit --> bnreact
+    bnreact --> bncore
+
+    %% ---------- React peer dependencies (UI libs) ----------
+    rrd -.->|peer| react
+    rq -.->|peer| react
+    toast -.->|peer| react
+    lucide -.->|peer| react
+    rhf -.->|peer| react
+    recharts -.->|peer| react
+    bnreact -.->|peer| react
+
+    classDef app fill:#C96442,stroke:#8a3f25,color:#fff,font-weight:bold;
+    classDef default fill:#F5F0E8,stroke:#C9BBA6,color:#3a3a3a;

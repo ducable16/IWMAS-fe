@@ -17,7 +17,6 @@ export interface Task {
   dueDate?: string | null
   startDate?: string | null
   estimatedHours?: number | null
-  actualHours?: number | null
   comments?: TaskComment[] | undefined
   skillRequirements?: TaskSkillRequirement[] | undefined
   projectName?: string | null | undefined
@@ -165,27 +164,6 @@ export interface UpdateTaskDatesRequest {
 
 export interface TaskCommentRequest {
   content: string
-}
-
-export interface TimeLogRequest {
-  taskId: Id
-  logDate: string             // §5.3: YYYY-MM-DD
-  hoursSpent: number          // §5.3: 0.1–24.0
-  remainingHours?: number     // §5.3: member-reported remaining effort (feeds workload v3 simulation)
-  description?: string        // §5.3: free text
-}
-
-// §5 TimeLogResponse — returned by GET/POST/PUT time-log endpoints
-export interface TimeLogResponse {
-  id: Id
-  taskId: Id
-  taskTitle?: string | null
-  userId: Id
-  logDate: string
-  hoursSpent: number
-  remainingHours?: number | null
-  description?: string | null
-  createdAt?: string
 }
 
 // Section 4.12 activity history returned by GET /api/tasks/{id}/history

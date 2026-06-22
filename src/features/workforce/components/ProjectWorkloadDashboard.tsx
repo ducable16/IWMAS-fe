@@ -1,9 +1,10 @@
 import { useNavigate } from 'react-router-dom'
-import { Users, AlertTriangle, UserCheck } from 'lucide-react'
+import { Users, AlertTriangle, Gauge } from 'lucide-react'
 import MemberWorkloadRow from './MemberWorkloadRow'
 import { useProjectWorkload } from '../hooks/useWorkload'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
 import type { Id, MemberWorkloadResponse } from '@/types'
+import { compareMemberWorkload } from '../workloadPresentation'
 
 type ProjectWorkloadDashboardProps = {
   projectId: Id | null | undefined
@@ -29,10 +30,10 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
   }
 
   // Summary counts
-  const workloadMembers = members
+  const workloadMembers = [...members].sort(compareMemberWorkload)
   const total      = workloadMembers.length
-  const overloaded = workloadMembers.filter((m) => m.workloadLevel === 'OVERDUE' || m.workloadLevel === 'WILL_SLIP').length
-  const available  = workloadMembers.filter((m) => m.workloadLevel === 'AVAILABLE' || m.workloadLevel === 'HEALTHY').length
+  const overloaded = workloadMembers.filter((m) => m.loadLevel === 'OVERLOADED').length
+  const atRisk     = workloadMembers.filter((m) => m.atRiskCount > 0).length
 
   return (
     <div className="space-y-4">
@@ -45,16 +46,18 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
           </span>
 
           {overloaded > 0 && (
-            <span className="flex items-center gap-1.5 text-danger font-semibold">
-              <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
+            <span className="flex items-center gap-1.5 text-orange-600 font-semibold">
+              <Gauge className="w-3.5 h-3.5" strokeWidth={2} />
               {overloaded} overloaded
             </span>
           )}
 
-          <span className="flex items-center gap-1.5 text-success">
-            <UserCheck className="w-3.5 h-3.5" strokeWidth={1.75} />
-            <span className="font-medium">{available}</span> available
-          </span>
+          {atRisk > 0 && (
+            <span className="flex items-center gap-1.5 text-danger font-semibold">
+              <AlertTriangle className="w-3.5 h-3.5" strokeWidth={2} />
+              {atRisk} at risk
+            </span>
+          )}
         </div>
       )}
 

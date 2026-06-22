@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { arrangementService, workloadService } from '../services/workforceService'
+import { useAuthStore } from '@/features/auth/store/authStore'
 import type {
   ArrangementQueryParams,
   ArrangeResponse,
@@ -10,7 +11,7 @@ import type {
   SchedulePreviewRequest,
 } from '@/types'
 
-// ── §9.5 Project members real-time workload ───────────────────────────────────
+// ── §9.1 Project members real-time workload ──────────────────────────────────
 
 export function useProjectWorkload(
   projectId: Id | null | undefined,
@@ -26,7 +27,7 @@ export function useProjectWorkload(
   })
 }
 
-// ── §9.6 User real-time workload (with task breakdown) ────────────────────────
+// ── §9.2 User real-time workload (with task breakdown) ──────────────────────
 
 export function useUserWorkloadDetail(
   userId: Id | null | undefined,
@@ -43,22 +44,42 @@ export function useUserWorkloadDetail(
   })
 }
 
-// ── §9.7 My real-time workload ────────────────────────────────────────────────
+// ── §9.2.1 Current PM's team workload (with task breakdown) ─────────────────
+
+export function useMyTeamWorkload() {
+  const user = useAuthStore((state) => state.user)
+
+  return useQuery<MemberWorkloadResponse[]>({
+    queryKey: ['workload', 'my-team', 'realtime', user?.id],
+    queryFn: async () => {
+      const res = await workloadService.getMyTeamRealtime()
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled: user?.role === 'PROJECT_MANAGER',
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+// ── §9.3 My real-time workload ──────────────────────────────────────────────
 
 export function useMyWorkload() {
+  const userId = useAuthStore((state) => state.user?.id)
+
   return useQuery<MemberWorkloadResponse | null>({
-    queryKey: ['workload', 'me', 'realtime'],
+    queryKey: ['workload', 'me', 'realtime', userId],
     queryFn: async () => {
       const res = await workloadService.getMyRealtime()
       return res.data ?? null
     },
+    enabled: !!userId,
     staleTime: 60_000,
     refetchOnWindowFocus: true,
     refetchInterval: 300_000,
   })
 }
 
-// ── §9.8 My saved schedule for a project ─────────────────────────────────────
+// ── §9.4 My saved schedule for a project ────────────────────────────────────
 
 export function useMySchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
@@ -72,7 +93,7 @@ export function useMySchedule(projectId: Id | null | undefined, enabled = true) 
   })
 }
 
-// ── §9.9 ATC schedule suggestion ─────────────────────────────────────────────
+// ── §9.5 ATC schedule suggestion ────────────────────────────────────────────
 
 export function useSuggestSchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
@@ -86,7 +107,7 @@ export function useSuggestSchedule(projectId: Id | null | undefined, enabled = t
   })
 }
 
-// ── §9.10 Preview custom order (no persist) ───────────────────────────────────
+// ── §9.6 Preview custom order (no persist) ──────────────────────────────────
 
 export function usePreviewSchedule() {
   return useMutation<ProjectScheduleResponse, unknown, SchedulePreviewRequest>({
@@ -97,7 +118,7 @@ export function usePreviewSchedule() {
   })
 }
 
-// ── §9.11 Save schedule ───────────────────────────────────────────────────────
+// ── §9.7 Save schedule ───────────────────────────────────────────────────────
 
 export function useSaveSchedule() {
   const queryClient = useQueryClient()

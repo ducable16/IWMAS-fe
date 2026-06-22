@@ -1,0 +1,66 @@
+%% ============================================================
+%% IWAS-fe — Biểu đồ phụ thuộc gói (BUILD / DEV toolchain)
+%% Import vào draw.io: Arrange > Insert > Advanced > Mermaid
+%% ============================================================
+flowchart TD
+    APP(["IWAS-fe<br/>(src)"]):::app
+
+    %% ---------- Bundler ----------
+    subgraph BUILD["⚡ Bundler"]
+        vite["vite"]
+        viteplugin["@vitejs/plugin-react"]
+    end
+
+    %% ---------- TypeScript ----------
+    subgraph TS["🔷 TypeScript"]
+        tsc["typescript"]
+        tsnode["ts-node"]
+        typesnode["@types/node"]
+        typesreact["@types/react"]
+        typesreactdom["@types/react-dom"]
+    end
+
+    %% ---------- CSS toolchain ----------
+    subgraph CSS["🎨 CSS Toolchain"]
+        tailwind["tailwindcss"]
+        postcss["postcss"]
+        autoprefixer["autoprefixer"]
+    end
+
+    %% ---------- Linting ----------
+    subgraph LINT["🧹 Linting"]
+        eslint["eslint"]
+        tsparser["@typescript-eslint/parser"]
+        tsplugin["@typescript-eslint/eslint-plugin"]
+        plreact["eslint-plugin-react"]
+        plhooks["eslint-plugin-react-hooks"]
+        plrefresh["eslint-plugin-react-refresh"]
+    end
+
+    %% ---------- App -> dev tooling ----------
+    APP --> vite
+    APP --> tsc
+    APP --> tailwind
+    APP --> eslint
+
+    %% ---------- Inter-package dependencies ----------
+    vite --> viteplugin
+    viteplugin -.->|transform JSX| react["react (runtime)"]:::ext
+
+    tailwind --> postcss
+    postcss --> autoprefixer
+
+    tsc --> tsnode
+    typesreactdom --> typesreact
+
+    eslint --> tsparser
+    eslint --> tsplugin
+    eslint --> plreact
+    eslint --> plhooks
+    eslint --> plrefresh
+    tsparser --> tsc
+    tsplugin --> tsparser
+
+    classDef app fill:#C96442,stroke:#8a3f25,color:#fff,font-weight:bold;
+    classDef ext fill:#E8EEF5,stroke:#9DB4CC,color:#3a3a3a,stroke-dasharray:4 3;
+    classDef default fill:#F5F0E8,stroke:#C9BBA6,color:#3a3a3a;

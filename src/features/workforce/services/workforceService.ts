@@ -10,35 +10,39 @@ import type {
 } from '@/types'
 
 export const workloadService = {
-  // API 9.5: project members' real-time workload.
+  // API 9.1: project members' real-time workload.
   getProjectMembers: (projectId: Id) =>
     api.get<MemberWorkloadResponse[]>(`/workload/projects/${projectId}/members`),
 
-  // API 9.6: one user's real-time workload with task details.
+  // API 9.2: one user's real-time workload with task details.
   getUserRealtime: (userId: Id) =>
     api.get<MemberWorkloadResponse>(`/workload/users/${userId}/realtime`),
 
-  // API 9.7: authenticated user's real-time workload.
+  // API 9.2.1: all distinct members across the current PM's managed projects.
+  getMyTeamRealtime: () =>
+    api.get<MemberWorkloadResponse[]>('/workload/my-team/realtime'),
+
+  // API 9.3: authenticated user's real-time workload.
   getMyRealtime: () =>
     api.get<MemberWorkloadResponse>('/workload/me/realtime'),
 
-  // API 9.8: saved execution order, or ATC when no custom order exists.
+  // API 9.4: saved execution order, or ATC when no custom order exists.
   getMySchedule: (projectId: Id) =>
     api.get<ProjectScheduleResponse>('/workload/me/schedule', { params: { projectId } }),
 
-  // API 9.9: current ATC suggestion without persistence.
+  // API 9.5: current ATC suggestion without persistence.
   suggestSchedule: (projectId: Id) =>
     api.get<ProjectScheduleResponse>('/workload/me/schedule/suggest', { params: { projectId } }),
 
-  // API 9.10: simulate a custom order without persistence.
+  // API 9.6: simulate a custom order without persistence.
   previewSchedule: (data: SchedulePreviewRequest) =>
     api.post<ProjectScheduleResponse>('/workload/me/schedule/preview', data),
 
-  // API 9.11: persist a custom execution order.
+  // API 9.7: persist a custom execution order.
   saveSchedule: (data: SchedulePreviewRequest) =>
     api.put<ProjectScheduleResponse>('/workload/me/schedule', data),
 
-  // Backend extension: clear executionSeq and resume automatic ATC ordering.
+  // Reset: clear executionSeq and resume automatic ATC ordering.
   resetSchedule: (projectId: Id) =>
     api.delete<ProjectScheduleResponse>('/workload/me/schedule', { params: { projectId } }),
 }

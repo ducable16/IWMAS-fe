@@ -1,7 +1,9 @@
 import { FolderOpen } from 'lucide-react'
 import clsx from 'clsx'
-import WorkloadBar from '../WorkloadBar'
-import WorkloadLevelBadge from '../WorkloadLevelBadge'
+import BacklogMetric from '../BacklogMetric'
+import DeadlineRiskIndicator from '../DeadlineRiskIndicator'
+import LoadLevelBadge from '../LoadLevelBadge'
+import { allocationAtRiskCount } from '../../workloadPresentation'
 import type { Id, ProjectAllocationItem } from '@/types'
 
 interface ProjectAllocationsTableProps {
@@ -43,15 +45,20 @@ export default function ProjectAllocationsTable({
                 )}
               </div>
               <div className="shrink-0">
-                <WorkloadLevelBadge level={allocation.workloadLevel} />
+                <LoadLevelBadge level={allocation.loadLevel} />
               </div>
               <div className="flex-1 min-w-[120px]">
-                <WorkloadBar
-                  workloadPercent={allocation.workloadPercent}
-                  workloadLevel={allocation.workloadLevel}
-                  compact
+                <BacklogMetric
+                  days={allocation.backlogDays}
+                  hours={allocation.backlogHours}
                 />
               </div>
+              <DeadlineRiskIndicator
+                atRiskCount={allocationAtRiskCount(allocation)}
+                overdueCount={allocation.overdueCount}
+                predictedLateCount={allocation.predictedLateTaskCount}
+                compact
+              />
               <div className="shrink-0 text-right">
                 {allocation.dailyCapacityHours != null && (
                   <p className="text-[11px] text-text-muted tabular-nums">
@@ -63,7 +70,7 @@ export default function ProjectAllocationsTable({
           )
 
           const className = clsx(
-            'flex w-full items-center gap-4 rounded-xl border py-2.5 px-3 text-left transition-colors',
+            'flex w-full flex-wrap items-center gap-4 rounded-xl border py-2.5 px-3 text-left transition-colors md:flex-nowrap',
             active
               ? 'border-accent/35 bg-accent/[0.06]'
               : 'border-transparent bg-bg-subtle hover:bg-bg-hover',

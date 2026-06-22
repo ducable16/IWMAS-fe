@@ -8,6 +8,7 @@ import type { COLUMN_CONFIG } from './taskBoardTypes'
 
 type TaskCardProps = {
   task: TaskListItem
+  canDrag: boolean
   onDragStart: () => void
   onClick: () => void
 }
@@ -20,6 +21,7 @@ type BoardColumnProps = {
   onDragLeave: () => void
   onDrop: () => void
   onDragStart: (taskId: Id) => void
+  canDragTask: (task: TaskListItem) => boolean
   navigate: NavigateFunction
   onStartAdd: () => void
   canCreate?: boolean
@@ -27,21 +29,26 @@ type BoardColumnProps = {
 
 const TYPE_META_BY_KEY = TYPE_META as Record<string, { label: string; color: string }>
 
-function TaskCard({ task, onDragStart, onClick }: TaskCardProps) {
+function TaskCard({ task, canDrag, onDragStart, onClick }: TaskCardProps) {
   const hasKnownType = Boolean(TYPE_META_BY_KEY[task.type])
   const isDone = task.status === 'DONE'
   const isCxl = task.status === 'CANCELLED'
 
   return (
     <div
-      draggable
+      draggable={canDrag}
       onDragStart={(e) => {
+        if (!canDrag) {
+          e.preventDefault()
+          return
+        }
         e.dataTransfer.effectAllowed = 'move'
         onDragStart()
       }}
       onClick={onClick}
       className={clsx(
-        'card p-3 cursor-grab active:cursor-grabbing group hover:border-border transition-colors select-none',
+        'card p-3 group hover:border-border transition-colors select-none',
+        canDrag ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer',
         (isDone || isCxl) && 'opacity-55',
       )}
     >
@@ -54,10 +61,12 @@ function TaskCard({ task, onDragStart, onClick }: TaskCardProps) {
         >
           {task.title}
         </p>
-        <GripVertical
-          className="w-3.5 h-3.5 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
-          strokeWidth={1.75}
-        />
+        {canDrag && (
+          <GripVertical
+            className="w-3.5 h-3.5 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity shrink-0 mt-0.5"
+            strokeWidth={1.75}
+          />
+        )}
       </div>
 
       {hasKnownType && (
@@ -94,6 +103,7 @@ export default function TaskBoardColumn({
   onDragLeave,
   onDrop,
   onDragStart,
+  canDragTask,
   navigate,
   onStartAdd,
   canCreate = false,
@@ -126,6 +136,7 @@ export default function TaskBoardColumn({
           <TaskCard
             key={task.id}
             task={task}
+            canDrag={canDragTask(task)}
             onDragStart={() => onDragStart(task.id)}
             onClick={() => navigate(`/tasks/${task.id}`)}
           />

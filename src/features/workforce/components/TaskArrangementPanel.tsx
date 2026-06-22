@@ -29,7 +29,9 @@ import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import { LiveEmpty, LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import { TaskPriorityBadge } from '@/components/ui/Badge'
-import WorkloadLevelBadge from './WorkloadLevelBadge'
+import BacklogMetric from './BacklogMetric'
+import DeadlineRiskIndicator from './DeadlineRiskIndicator'
+import LoadLevelBadge from './LoadLevelBadge'
 import { fmtDay } from '@/utils/date'
 import {
   useArrangeLane,
@@ -545,13 +547,19 @@ export default function TaskArrangementPanel({
 
           {visibleSchedule && (
             <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/20 bg-accent/[0.04] px-3 py-2">
-              <WorkloadLevelBadge level={visibleSchedule.workloadLevel} />
-              <span className="text-[12px] text-text-secondary">
-                Workload <span className="font-semibold tabular-nums">{visibleSchedule.workloadPercent.toFixed(0)}%</span>
-              </span>
-              <span className="text-[12px] text-text-secondary">
-                Predicted late <span className="font-semibold tabular-nums">{visibleSchedule.predictedLateTaskCount}</span>
-              </span>
+              <LoadLevelBadge level={visibleSchedule.loadLevel} />
+              <div className="min-w-[180px] flex-1">
+                <BacklogMetric
+                  days={visibleSchedule.backlogDays}
+                  hours={visibleSchedule.backlogHours}
+                />
+              </div>
+              <DeadlineRiskIndicator
+                atRiskCount={visibleSchedule.overdueCount + visibleSchedule.predictedLateTaskCount}
+                overdueCount={visibleSchedule.overdueCount}
+                predictedLateCount={visibleSchedule.predictedLateTaskCount}
+                compact
+              />
             </div>
           )}
 

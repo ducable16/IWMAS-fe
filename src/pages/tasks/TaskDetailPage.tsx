@@ -20,7 +20,7 @@ import {
 } from '@/features/tasks/utils/taskSkillRequirements'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { useCan } from '@/utils/permissions'
+import { canModifyTask, useCan } from '@/utils/permissions'
 import type { TaskSkillRequirementRequest, UpdateTaskRequest } from '@/types'
 
 const DescriptionEditor = lazy(() => import('@/features/tasks/components/DescriptionEditor'))
@@ -48,8 +48,11 @@ export default function TaskDetailPage() {
   const can = useCan()
   const { confirm, dialog: confirmDialog } = useConfirm()
 
-  const isAssignee = !!user && !!task && user.id === task.assignee?.id
-  const canEditTask = can.isPm || isAssignee
+  const canEditTask = canModifyTask(
+    user?.role,
+    user?.id,
+    task?.assignee?.id ?? task?.assigneeId,
+  )
   const canUploadAttachments = can.isPm || can.isTm
   const canDeleteAsManager = can.isPm
   const skillRequirements = toTaskSkillRequirementRequest(task?.skillRequirements || [])

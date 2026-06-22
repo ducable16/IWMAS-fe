@@ -1,0 +1,45 @@
+%% ============================================================
+%% IWAS-fe — Mẫu phụ thuộc nội bộ 1 feature (feature-folder)
+%% Áp dụng cho mọi domain: auth, projects, tasks, workforce, ...
+%% Import vào draw.io: Arrange > Insert > Advanced > Mermaid
+%% ============================================================
+flowchart TD
+
+    subgraph FEATURE["features/&lt;domain&gt;/"]
+        components["components/<br/>(UI, React-hook-form + zod)"]
+        hooks["hooks/<br/>(useXxx — React Query mutations/queries)"]
+        services["services/<br/>(axios calls thuần)"]
+        store["store/<br/>(zustand — state cục bộ domain)"]
+    end
+
+    subgraph SHARED["Shared"]
+        axios["lib/axios"]
+        queryClient["lib/queryClient"]
+        ui["components/ui"]
+        feedback["components/feedback"]
+        utils["utils/"]
+        constants["constants/"]
+        types["types/"]
+    end
+
+    backend[["Backend API"]]:::ext
+
+    %% ---------- Luồng phụ thuộc trong feature ----------
+    components --> hooks
+    components --> store
+    components --> ui
+    components --> feedback
+    hooks --> services
+    hooks --> store
+    hooks --> queryClient
+    services --> axios
+    services --> types
+    axios --> backend
+
+    %% ---------- Dùng chung ----------
+    components --> utils
+    components --> constants
+    hooks --> utils
+
+    classDef ext fill:#E8EEF5,stroke:#9DB4CC,color:#3a3a3a;
+    classDef default fill:#F5F0E8,stroke:#C9BBA6,color:#3a3a3a;

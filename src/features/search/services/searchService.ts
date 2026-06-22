@@ -2,6 +2,7 @@ import api from '@/lib/axios'
 import type {
   AutocompleteResponse,
   Id,
+  ProjectAutocompleteResponse,
   SearchProjectsParams,
   SearchProjectsResponse,
 } from '@/types'
@@ -56,7 +57,7 @@ export const searchService = {
    * §13.3 GET /api/autocomplete/projects — project typeahead
    */
   autocompleteProjects: (q: string, signal?: AbortSignal) =>
-    api.get<AutocompleteResponse>('/autocomplete/projects', { params: { q }, ...(signal ? { signal } : {}) }),
+    api.get<ProjectAutocompleteResponse>('/autocomplete/projects', { params: { q }, ...(signal ? { signal } : {}) }),
 
   /**
    * §13.2 GET /api/search — full paginated user search (ES + Postgres fallback)

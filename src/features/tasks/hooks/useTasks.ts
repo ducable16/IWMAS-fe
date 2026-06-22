@@ -61,28 +61,3 @@ export function useSearchTasks(params: TaskSearchParams = {}, enabled = true) {
     refetchInterval: 60_000,
   })
 }
-
-export function useTasks(enabled = true) {
-  return useQuery({
-    queryKey: ['tasks', 'mine'],
-    queryFn: async () => {
-      const res = await taskService.getMine()
-      const items = getTaskItems(res.data)
-      return items.map((t) => {
-        const assigneeName = t.assignee?.fullName || '?'
-        return {
-          id: t.id,
-          title: t.title || 'Untitled',
-          status: t.status ? String(t.status).toLowerCase() : 'todo',
-          priority: t.priority ? String(t.priority).toLowerCase() : 'medium',
-          assignee: assigneeName.substring(0, 2).toUpperCase(),
-          due: t.dueDate || '-',
-          estimate: formatEstimate(t.estimatedHours),
-          estimatedHours: t.estimatedHours ?? null,
-          actualHours: t.actualHours ?? null,
-        }
-      })
-    },
-    enabled,
-  })
-}

@@ -36,6 +36,7 @@ export interface ProjectMemberSearchParams {
   q?: string | undefined
   size?: number | undefined
   requiredSkills?: string | undefined
+  role?: string | undefined
 }
 
 function append(qs: URLSearchParams, key: string, value: QueryValue) {
@@ -95,6 +96,9 @@ export const projectService = {
     return api.get<PageResponse<Project>>(q ? `/projects/my?${q}` : '/projects/my')
   },
 
+  /** §3.2.1 GET /api/projects/my/members — distinct active team roster for the current PM. */
+  getMyManagedMembers: () => api.get<User[]>('/projects/my/members'),
+
   /** §3.3 GET /api/projects/{id} */
   getById: (id: Id) => api.get<Project>(`/projects/${id}`),
 
@@ -130,7 +134,7 @@ export const projectService = {
   getMembers: (id: Id) => api.get<ProjectMember[]>(`/projects/${id}/members`),
 
   /**
-   * §3.9 GET /api/projects/{id}/members/search — Assignee autocomplete
+   * §3.10 GET /api/projects/{id}/members/search — Assignee autocomplete
    * Returns users who can be assigned tasks in this project
    * (project manager + active members).
    *
@@ -138,6 +142,7 @@ export const projectService = {
    * @param {string} q         — keyword matched against fullName, email, position
    * @param {number} [size=10] — max results (capped at 50 by server)
    * @param {string} requiredSkills — comma-separated skillId[:minLevel] pairs
+   * @param {string} role — optional system role filter
    */
   searchMembers: (id: Id, params: ProjectMemberSearchParams = {}) =>
     api.get<User[]>(`/projects/${id}/members/search`, {
@@ -145,6 +150,7 @@ export const projectService = {
         q: params.q ?? '',
         size: params.size ?? 10,
         requiredSkills: params.requiredSkills,
+        role: params.role,
       },
     }),
 
