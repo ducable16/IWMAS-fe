@@ -12,8 +12,7 @@ import {
   ERR_UPDATE_MEMBER,
   ERR_REMOVE_MEMBER,
   ERR_MANAGER_UNCHANGED,
-  ERR_UPLOAD_DOCUMENT,
-  ERR_DELETE_DOCUMENT,
+
   ERR_MEMBER_ALREADY_EXISTS,
   ERR_ALLOC_EXCEED_CREATE,
   ERR_ALLOC_EXCEED_ADD,
@@ -28,7 +27,7 @@ import type {
   Id,
   PageResponse,
   Project,
-  ProjectDocument,
+
   ProjectMember,
   ProjectMemberRequest,
   UpdateProjectRequest,
@@ -165,17 +164,6 @@ export function useProjectMembers(projectId: Id | null | undefined) {
   })
 }
 
-export function useProjectDocuments(projectId: Id | null | undefined) {
-  return useQuery<ProjectDocument[]>({
-    queryKey: ['projects', projectId, 'documents'],
-    queryFn: async () => {
-      const res = await projectService.getDocuments(projectId as Id)
-      return Array.isArray(res.data) ? res.data : []
-    },
-    enabled: !!projectId,
-    staleTime: 30_000,
-  })
-}
 
 export function useProjectMemberSearch(
   projectId: Id | null | undefined,
@@ -350,28 +338,3 @@ export function useRemoveProjectMember(projectId: Id | null | undefined) {
   })
 }
 
-export function useUploadProjectDocument(projectId: Id | null | undefined) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (file: File) => projectService.uploadDocument(projectId as Id, file),
-    onSuccess: () => {
-      toast.success('Document uploaded')
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
-    },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_UPLOAD_DOCUMENT)),
-  })
-}
-
-export function useDeleteProjectDocument(projectId: Id | null | undefined) {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: (documentId: Id) => projectService.deleteDocument(projectId as Id, documentId),
-    onSuccess: () => {
-      toast.success('Document deleted')
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId, 'documents'] })
-      queryClient.invalidateQueries({ queryKey: ['projects', projectId] })
-    },
-    onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_DELETE_DOCUMENT)),
-  })
-}

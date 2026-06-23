@@ -27,15 +27,6 @@ export interface ProjectMember {
   note?: string | null
 }
 
-export interface ProjectDocument {
-  id: Id
-  projectId?: Id | undefined
-  fileName?: string | undefined
-  url?: string | undefined
-  fileSize?: number | undefined
-  uploadedBy?: Id | undefined
-  createdAt?: string | undefined
-}
 
 export interface ProjectListResult {
   projects: Project[]

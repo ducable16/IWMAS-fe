@@ -4,7 +4,7 @@ import type {
   Id,
   PageResponse,
   Project,
-  ProjectDocument,
+
   ProjectMember,
   ProjectMemberRequest,
   QueryValue,
@@ -196,14 +196,4 @@ export const projectService = {
     )
   },
 
-  // Documents
-  getDocuments: (projectId: Id) =>
-    api.get<ProjectDocument[]>(`/projects/${projectId}/documents`),
-  uploadDocument: (projectId: Id, file: File) => {
-    const formData = new FormData()
-    formData.append('file', file)
-    return api.post<ProjectDocument>(`/projects/${projectId}/documents`, formData)
-  },
-  deleteDocument: (projectId: Id, documentId: Id) =>
-    api.delete(`/projects/${projectId}/documents/${documentId}`),
 }

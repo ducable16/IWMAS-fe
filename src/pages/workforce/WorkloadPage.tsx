@@ -142,9 +142,6 @@ export default function WorkloadPage() {
       {/* Header */}
       <div>
         <h2 className="text-subhead text-text-primary">Workload Analytics</h2>
-        <p className="text-text-secondary text-[14px] mt-1">
-          Real-time team workload by project
-        </p>
       </div>
 
       {/* Project search */}
@@ -169,9 +166,6 @@ export default function WorkloadPage() {
         <div className="card p-12 text-center">
           <BarChart3 className="w-10 h-10 text-text-muted mx-auto mb-3 opacity-40" strokeWidth={1.5} />
           <p className="text-[14px] text-text-muted">Select a project to view team workload</p>
-          <p className="text-[12px] text-text-muted mt-1">
-            Search for a project by name or code above
-          </p>
         </div>
       )}
     </div>

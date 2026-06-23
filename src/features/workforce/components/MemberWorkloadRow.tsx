@@ -46,93 +46,91 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={clsx(
-        'w-full flex flex-wrap xl:flex-nowrap items-start gap-4 p-4 rounded-xl transition-all duration-150',
+        'grid w-full grid-cols-1 items-start gap-4 rounded-xl p-4 transition-all duration-150',
+        'sm:grid-cols-2 xl:grid-cols-[minmax(190px,1.15fr)_110px_minmax(190px,1fr)_minmax(190px,1fr)_90px] xl:items-center',
         'bg-bg-surface border border-border-subtle',
         'hover:border-border-strong hover:shadow-sm hover:bg-bg-subtle/50',
         'active:scale-[0.995]',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30',
         'text-left group',
       )}
     >
-      {/* Avatar */}
-      <div className={clsx(
-        'w-10 h-10 rounded-full flex items-center justify-center text-[13px] font-bold shrink-0 mt-0.5',
-        'bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/15 text-accent',
-      )}>
-        {initials}
-      </div>
-
-      {/* Name + email */}
-      <div className="min-w-0 flex-shrink-0 w-[180px]">
-        <p className="text-[13px] font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
-          {userFullName}
-        </p>
-        {email && (
-          <p className="text-[11.5px] text-text-muted truncate mt-0.5">{email}</p>
-        )}
+      {/* Member identity */}
+      <div className="flex min-w-0 items-center gap-3 sm:col-span-2 xl:col-span-1">
+        <div className={clsx(
+          'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-[13px] font-bold',
+          'border border-accent/15 bg-gradient-to-br from-accent/20 to-accent/5 text-accent',
+        )}>
+          {initials}
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-[13px] font-semibold text-text-primary transition-colors group-hover:text-accent">
+            {userFullName}
+          </p>
+          {email && (
+            <p className="mt-0.5 truncate text-[12px] text-text-muted">{email}</p>
+          )}
+        </div>
       </div>
 
       {/* Workload volume — project-specific level takes priority */}
-      <div className="shrink-0 mt-0.5 space-y-1">
-        <p className="text-[9.5px] uppercase tracking-wider font-semibold text-text-muted">Workload</p>
+      <div className="min-w-0">
+        <p className="mb-1.5 text-[12px] font-medium text-text-primary xl:sr-only">Workload</p>
         <LoadLevelBadge level={projectAlloc ? projectAlloc.loadLevel : loadLevel} />
       </div>
 
-      {/* Backlog and deadline-risk axes */}
-      <div className="flex-1 min-w-[260px] space-y-2.5">
+      {/* Selected-project axes */}
+      <div className="min-w-0 space-y-1.5">
+        <p className="text-[12px] font-medium text-text-primary xl:sr-only">Selected project</p>
         {projectAlloc ? (
           <>
-            <div className="grid gap-1.5 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
-              <div>
-                <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
-                {projectAlloc.projectName}
-                </p>
-                <BacklogMetric days={projectAlloc.backlogDays} hours={projectAlloc.backlogHours} compact />
-              </div>
+            <BacklogMetric
+              days={projectAlloc.backlogDays}
+              hours={projectAlloc.backlogHours}
+              variant="analytics-row"
+            />
+            <div>
               <DeadlineRiskIndicator
                 atRiskCount={allocationAtRiskCount(projectAlloc)}
                 overdueCount={projectAlloc.overdueCount}
                 predictedLateCount={projectAlloc.predictedLateTaskCount}
                 compact
-              />
-            </div>
-            <div className="grid gap-1.5 border-t border-border-subtle pt-2 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
-              <div>
-                <p className="text-[10px] text-text-muted mb-0.5 uppercase tracking-wide font-medium">
-                Total (all projects)
-                </p>
-                <BacklogMetric days={worstBacklogDays} compact />
-              </div>
-              <DeadlineRiskIndicator
-                atRiskCount={atRiskCount}
-                overdueCount={overdueTaskCount}
-                predictedLateCount={predictedLateTaskCount}
-                compact
+                variant="analytics-row"
               />
             </div>
           </>
         ) : (
-          <div className="grid gap-1.5 sm:grid-cols-[minmax(130px,1fr)_auto] sm:items-center">
-            <BacklogMetric days={worstBacklogDays} compact />
-            <DeadlineRiskIndicator
-              atRiskCount={atRiskCount}
-              overdueCount={overdueTaskCount}
-              predictedLateCount={predictedLateTaskCount}
-              compact
-            />
-          </div>
+          <p className="text-[12px] text-text-muted">Project data unavailable</p>
         )}
       </div>
 
-      {/* Stats */}
-      <div className="shrink-0 text-right min-w-[110px] mt-0.5">
-        <p className="text-[12px] text-text-secondary">
-          <span className="font-medium tabular-nums">{activeTaskCount}</span>
-          <span className="text-text-muted"> tasks</span>
+      {/* Aggregate axes remain visible for every member. */}
+      <div className="min-w-0 space-y-1.5">
+        <p className="text-[12px] font-medium text-text-primary xl:sr-only">All projects</p>
+        <BacklogMetric days={worstBacklogDays} variant="analytics-row" />
+        <div>
+          <DeadlineRiskIndicator
+            atRiskCount={atRiskCount}
+            overdueCount={overdueTaskCount}
+            predictedLateCount={predictedLateTaskCount}
+            compact
+            variant="analytics-row"
+          />
+        </div>
+      </div>
+
+      {/* Task counts */}
+      <div className="min-w-0 text-left xl:text-right">
+        <p className="mb-1.5 text-[12px] font-medium text-text-primary xl:sr-only">Tasks</p>
+        <p className="text-[13px] text-text-secondary">
+          <span className="font-semibold tabular-nums text-text-primary">{activeTaskCount}</span>
+          <span className="text-text-muted"> active</span>
         </p>
         {unestimatedTaskCount > 0 && (
-          <p className="text-[11px] text-warning font-medium mt-0.5">
+          <p className="mt-0.5 text-[12px] font-medium text-warning">
             {unestimatedTaskCount} unestimated
           </p>
         )}

@@ -29,8 +29,7 @@ export const ERR_ADD_MEMBER      = 'Failed to add member'
 export const ERR_UPDATE_MEMBER   = 'Failed to update member'
 export const ERR_REMOVE_MEMBER   = 'Failed to remove member'
 export const ERR_MANAGER_UNCHANGED = 'New manager cannot be the current manager'
-export const ERR_UPLOAD_DOCUMENT = 'Failed to upload document'
-export const ERR_DELETE_DOCUMENT = 'Failed to delete document'
+
 
 // ── Project member — specific codes (§12: 4004, 4005, 4008) ──────────────────
 export const ERR_MEMBER_ALREADY_EXISTS    = 'This user is already a member of this project.'

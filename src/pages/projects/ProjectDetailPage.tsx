@@ -1,17 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ChangeEvent } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { useConfirm } from '@/hooks/useConfirm'
 import {
   ArrowLeft, Pencil, Trash2, X, Save, Loader2,
-  type LucideIcon, BarChart3, Lock, Paperclip
+  type LucideIcon, ClipboardList, Lock
 } from 'lucide-react'
 import clsx from 'clsx'
 import {
   useProject, useProjectMembers, useDeleteProject,
   useRemoveProjectMember, useUpdateProject,
-  useProjectDocuments,
-  useUploadProjectDocument, useDeleteProjectDocument,
 } from '@/features/projects/hooks/useProjects'
 import ProjectAddMemberModal from '@/features/projects/components/ProjectAddMemberModal'
 import ProjectEditMemberModal from '@/features/projects/components/ProjectEditMemberModal'
@@ -23,16 +21,14 @@ import {
 } from '@/constants/enums'
 import { useCan } from '@/utils/permissions'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import ProjectWorkloadDashboard from '@/features/workforce/components/ProjectWorkloadDashboard'
-import type { ChangeEvent } from 'react'
 import type { ProjectMember } from '@/types'
 import type { ProjectStatus } from '@/constants/enums'
 
 import { ProjectOverviewTab } from '@/features/projects/components/ProjectOverviewTab'
 import { ProjectMembersTab } from '@/features/projects/components/ProjectMembersTab'
-import { ProjectDocumentsTab } from '@/features/projects/components/ProjectDocumentsTab'
+import { ProjectTasksTab } from '@/features/projects/components/ProjectTasksTab'
 
-type ProjectDetailTab = 'overview' | 'members' | 'documents' | 'workload'
+type ProjectDetailTab = 'overview' | 'members' | 'tasks'
 
 type ProjectDetailForm = {
   name: string
@@ -56,11 +52,8 @@ export default function ProjectDetailPage() {
 
   const { data: project, isLoading, isError, error, refetch } = useProject(projectId)
   const { data: members = [], isLoading: membersLoading } = useProjectMembers(projectId)
-  const { data: documents = [], isLoading: documentsLoading } = useProjectDocuments(projectId)
   const { mutate: deleteProject }  = useDeleteProject()
   const { mutate: removeMember }   = useRemoveProjectMember(projectId)
-  const { mutate: uploadDocument, isPending: isUploadingDocument } = useUploadProjectDocument(projectId)
-  const { mutate: deleteDocument, isPending: isDeletingDocument } = useDeleteProjectDocument(projectId)
   const updateProject              = useUpdateProject()
   const isPending                  = updateProject.isPending
 
@@ -68,7 +61,6 @@ export default function ProjectDetailPage() {
   const isOwnProject     = !!project && project.managerId === user?.id
   const canEdit          = can.isPm && isOwnProject
   const canManageMembers = can.isPm && isOwnProject
-  const canUploadDocuments = true // Any participant can upload
 
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })
@@ -174,15 +166,6 @@ export default function ProjectDetailPage() {
     })
   }
 
-  const handleUploadDocument = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    uploadDocument(file, {
-      onSettled: () => {
-        e.target.value = ''
-      },
-    })
-  }
 
   if (isLoading) return <LiveLoading label="Loading project…" />
   if (isError)   return <LiveError error={error} onRetry={refetch} />
@@ -305,8 +288,7 @@ export default function ProjectDetailPage() {
         {([
           { id: 'overview', label: 'Overview' },
           { id: 'members',  label: 'Members', count: members.length },
-          { id: 'documents', label: 'Documents', count: documents.length, icon: Paperclip },
-          ...(canEdit ? [{ id: 'workload', label: 'Workload', icon: BarChart3 }] : []),
+          { id: 'tasks', label: 'Tasks', icon: ClipboardList },
         ] as Array<{ id: ProjectDetailTab; label: string; count?: number; icon?: LucideIcon }>).map((tab) => (
           <button
             key={tab.id}
@@ -353,26 +335,11 @@ export default function ProjectDetailPage() {
         />
       )}
 
-      {/* ── Tab: Documents ── */}
-      {activeTab === 'documents' && (
-        <ProjectDocumentsTab
-          documents={documents}
-          documentsLoading={documentsLoading}
-          canUploadDocuments={canUploadDocuments}
-          isUploadingDocument={isUploadingDocument}
-          isDeletingDocument={isDeletingDocument}
-          onUploadDocument={handleUploadDocument}
-          onDeleteDocument={deleteDocument}
-          user={user}
-          isOwnProject={isOwnProject}
+      {/* ── Tab: Tasks ── */}
+      {activeTab === 'tasks' && (
+        <ProjectTasksTab
+          projectId={projectId}
         />
-      )}
-
-      {/* ── Tab: Workload ── */}
-      {activeTab === 'workload' && canEdit && (
-        <div className="card p-5">
-          <ProjectWorkloadDashboard projectId={projectId} />
-        </div>
       )}
 
       <ProjectAddMemberModal

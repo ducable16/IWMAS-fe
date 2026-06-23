@@ -72,6 +72,20 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
         <LiveEmpty label="No team members in this project" />
       )}
 
+      {/* Shared column labels replace repeated labels inside every member row. */}
+      {!isLoading && !isError && total > 0 && (
+        <div
+          aria-hidden="true"
+          className="hidden gap-4 px-4 text-[12px] font-medium text-text-primary xl:grid xl:grid-cols-[minmax(190px,1.15fr)_110px_minmax(190px,1fr)_minmax(190px,1fr)_90px]"
+        >
+          <span>Member</span>
+          <span>Workload</span>
+          <span>Selected project</span>
+          <span>All projects</span>
+          <span className="text-right">Tasks</span>
+        </div>
+      )}
+
       {/* Member rows */}
       {!isLoading && !isError && total > 0 && (
         <div className="space-y-2">

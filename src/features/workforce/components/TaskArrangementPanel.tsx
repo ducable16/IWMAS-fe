@@ -160,25 +160,32 @@ function SortableArrangeRow({
           )}
         </div>
 
-        <div className="mt-2 grid gap-2 text-[11.5px] text-text-muted sm:grid-cols-4">
-          <span className={clsx('tabular-nums', task.slackHours < 0 && 'font-semibold text-warning')}>
-            Slack {formatHours(task.slackHours)}
-          </span>
+        <div
+          className={clsx(
+            'mt-2 grid gap-2 text-[11.5px] text-text-muted',
+            task.slackHours < 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-4',
+          )}
+        >
+          {task.slackHours >= 0 && (
+            <span className="tabular-nums">
+              Slack {formatHours(task.slackHours)}
+            </span>
+          )}
           <span className={clsx('tabular-nums', task.projectedTardinessHours > 0 && 'font-semibold text-danger')}>
             Late {formatHours(task.projectedTardinessHours)}
           </span>
-          <span className="tabular-nums">Start {fmtDay(projectedStart)}</span>
-          <span className={clsx('tabular-nums', willSlip && 'font-semibold text-danger')}>
+          <span className="tabular-nums text-text-primary">Start {fmtDay(projectedStart)}</span>
+          <span
+            className={clsx(
+              'tabular-nums font-semibold',
+              willSlip ? 'text-danger' : 'text-success',
+            )}
+          >
             Finish {fmtDay(projectedFinish)}
             {lateByWorkdays > 0 ? ` (+${lateByWorkdays}d)` : ''}
           </span>
         </div>
 
-        {task.reason && (
-          <p className="mt-2 line-clamp-2 text-[11.5px] text-text-muted" title={task.reason}>
-            {task.reason}
-          </p>
-        )}
       </div>
     </div>
   )
@@ -504,9 +511,6 @@ export default function TaskArrangementPanel({
             {arrangement && (
               <div className="mb-3 flex flex-wrap gap-2 text-[11.5px] text-text-muted">
                 <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
-                  ATC k={arrangement.k.toFixed(1)}
-                </span>
-                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
                   Allocation {arrangement.allocatedEffortPercent ?? '-'}%
                 </span>
                 <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
@@ -538,11 +542,6 @@ export default function TaskArrangementPanel({
                 <TaskPriorityBadge priority={nextQuery.data.priority} className="shrink-0" />
               )}
             </div>
-            {nextQuery.data?.reason && (
-              <p className="mt-2 text-[11.5px] text-text-muted" title={nextQuery.data.reason}>
-                {nextQuery.data.reason}
-              </p>
-            )}
           </div>
 
           {visibleSchedule && (
