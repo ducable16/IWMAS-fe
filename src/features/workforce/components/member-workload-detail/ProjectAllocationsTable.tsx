@@ -2,7 +2,6 @@ import { FolderOpen } from 'lucide-react'
 import clsx from 'clsx'
 import BacklogMetric from '../BacklogMetric'
 import DeadlineRiskIndicator from '../DeadlineRiskIndicator'
-import LoadLevelBadge from '../LoadLevelBadge'
 import { allocationAtRiskCount } from '../../workloadPresentation'
 import type { Id, ProjectAllocationItem } from '@/types'
 
@@ -43,9 +42,6 @@ export default function ProjectAllocationsTable({
                     Allocated: <span className="font-medium">{allocation.allocatedEffortPercent}%</span>
                   </p>
                 )}
-              </div>
-              <div className="shrink-0">
-                <LoadLevelBadge level={allocation.loadLevel} />
               </div>
               <div className="flex-1 min-w-[120px]">
                 <BacklogMetric

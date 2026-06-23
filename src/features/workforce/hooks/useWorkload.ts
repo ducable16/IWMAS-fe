@@ -7,6 +7,7 @@ import type {
   Id,
   MemberWorkloadResponse,
   NextTaskResponse,
+  ProjectMemberWorkloadResponse,
   ProjectScheduleResponse,
   SchedulePreviewRequest,
 } from '@/types'
@@ -16,7 +17,7 @@ import type {
 export function useProjectWorkload(
   projectId: Id | null | undefined,
 ) {
-  return useQuery<MemberWorkloadResponse[]>({
+  return useQuery<ProjectMemberWorkloadResponse[]>({
     queryKey: ['workload', 'project', projectId],
     queryFn: async () => {
       const res = await workloadService.getProjectMembers(projectId as Id)
@@ -41,23 +42,6 @@ export function useUserWorkloadDetail(
     },
     enabled: !!userId && enabled,
     staleTime: 30_000,
-  })
-}
-
-// ── §9.2.1 Current PM's team workload (with task breakdown) ─────────────────
-
-export function useMyTeamWorkload() {
-  const user = useAuthStore((state) => state.user)
-
-  return useQuery<MemberWorkloadResponse[]>({
-    queryKey: ['workload', 'my-team', 'realtime', user?.id],
-    queryFn: async () => {
-      const res = await workloadService.getMyTeamRealtime()
-      return Array.isArray(res.data) ? res.data : []
-    },
-    enabled: user?.role === 'PROJECT_MANAGER',
-    staleTime: 30_000,
-    refetchOnWindowFocus: true,
   })
 }
 

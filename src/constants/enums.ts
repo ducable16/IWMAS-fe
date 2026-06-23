@@ -217,14 +217,6 @@ export const LOAD_LEVEL_META = {
   UNDEFINED:  { label: 'N/A',        bg: 'bg-bg-subtle',     text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle' },
 } satisfies Record<LoadLevel, { label: string; bg: string; text: string; dot: string; border: string }>
 
-export const LOAD_LEVEL_SEVERITY: Record<LoadLevel, number> = {
-  OVERLOADED: 0,
-  BUSY: 1,
-  AVAILABLE: 2,
-  BLOCKED: 3,
-  UNDEFINED: 4,
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Convert an enum map into <option> array: [{ value, label }] */

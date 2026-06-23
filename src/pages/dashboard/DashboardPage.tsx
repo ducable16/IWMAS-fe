@@ -23,7 +23,6 @@ import {
   useUnestimatedTasks,
 } from '@/features/tasks/hooks/useTasks'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
-import { useMyTeamWorkload } from '@/features/workforce/hooks/useWorkload'
 import { TASK_STATUSES } from '@/constants/enums'
 import type { User } from '@/types'
 
@@ -136,10 +135,12 @@ function ProjectManagerDashboard() {
   )
   const activeProjectStatuses: string[] = ['PLANNING', 'IN_PROGRESS']
 
-  const { data: projects } = useProjects({
+  const activeProjects = useProjects({
     statuses: activeProjectStatuses,
     page: 0,
-    size: 1,
+    size: 100,
+    sortBy: 'name',
+    sortDirection: 'ASC',
   })
   const { data: overdueTasks } = useSearchTasks({
     dueDateTo: toDateInput(today),
@@ -147,7 +148,6 @@ function ProjectManagerDashboard() {
     page: 0,
     size: 1,
   })
-  const teamWorkload = useMyTeamWorkload()
   const unestimatedTasks = useUnestimatedTasks()
   const unassignedTasks = useUnassignedTasks()
 
@@ -166,7 +166,7 @@ function ProjectManagerDashboard() {
         <StatCard
           icon={FolderKanban}
           label="Active projects"
-          value={projects?.totalElements ?? 0}
+          value={activeProjects.data?.totalElements ?? 0}
           variant="accent"
         />
         <StatCard
@@ -190,12 +190,12 @@ function ProjectManagerDashboard() {
 
       <TeamWorkloadPanel
         title="Team workload & tasks"
-        members={teamWorkload.data ?? []}
-        isLoading={teamWorkload.isLoading}
-        isError={teamWorkload.isError}
-        error={teamWorkload.error}
-        onRetry={() => { void teamWorkload.refetch() }}
-        emptyLabel="No members in your managed projects."
+        projects={activeProjects.data?.projects ?? []}
+        isLoading={activeProjects.isLoading}
+        isError={activeProjects.isError}
+        error={activeProjects.error}
+        onRetry={() => { void activeProjects.refetch() }}
+        emptyLabel="No active projects to display."
       />
 
       <div className="grid lg:grid-cols-3 gap-6">

@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Loader2 } from 'lucide-react'
 import BacklogMetric from './BacklogMetric'
 import DeadlineRiskIndicator from './DeadlineRiskIndicator'
-import LoadLevelBadge from './LoadLevelBadge'
 import { useMyWorkload } from '../hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
 
@@ -37,7 +36,6 @@ export default function MyWorkloadWidget() {
   }
 
   const {
-    loadLevel,
     worstBacklogDays,
     atRiskCount = 0,
     overdueTaskCount = 0,
@@ -46,10 +44,7 @@ export default function MyWorkloadWidget() {
 
   return (
     <div className="card p-5 space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h3 className="section-title text-[13px]">My workload</h3>
-        <LoadLevelBadge level={loadLevel} />
-      </div>
+      <h3 className="section-title text-[13px]">My workload</h3>
 
       <BacklogMetric days={worstBacklogDays} />
 

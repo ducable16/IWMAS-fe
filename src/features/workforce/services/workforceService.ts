@@ -5,6 +5,7 @@ import type {
   Id,
   MemberWorkloadResponse,
   NextTaskResponse,
+  ProjectMemberWorkloadResponse,
   ProjectScheduleResponse,
   SchedulePreviewRequest,
 } from '@/types'
@@ -12,15 +13,11 @@ import type {
 export const workloadService = {
   // API 9.1: project members' real-time workload.
   getProjectMembers: (projectId: Id) =>
-    api.get<MemberWorkloadResponse[]>(`/workload/projects/${projectId}/members`),
+    api.get<ProjectMemberWorkloadResponse[]>(`/workload/projects/${projectId}/members`),
 
   // API 9.2: one user's real-time workload with task details.
   getUserRealtime: (userId: Id) =>
     api.get<MemberWorkloadResponse>(`/workload/users/${userId}/realtime`),
-
-  // API 9.2.1: all distinct members across the current PM's managed projects.
-  getMyTeamRealtime: () =>
-    api.get<MemberWorkloadResponse[]>('/workload/my-team/realtime'),
 
   // API 9.3: authenticated user's real-time workload.
   getMyRealtime: () =>

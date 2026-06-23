@@ -1,37 +1,22 @@
 import clsx from 'clsx'
 import BacklogMetric from './BacklogMetric'
 import DeadlineRiskIndicator from './DeadlineRiskIndicator'
-import LoadLevelBadge from './LoadLevelBadge'
 import { allocationAtRiskCount } from '../workloadPresentation'
-import type { MemberWorkloadResponse } from '@/types'
+import type { ProjectMemberWorkloadResponse } from '@/types'
 
 type MemberWorkloadRowProps = {
-  member: MemberWorkloadResponse
+  member: ProjectMemberWorkloadResponse
   onClick?: () => void
 }
 
-/**
- * A single row in the team workload table.
- *
- * When `projectAllocations` is present (endpoint 9.5, project members),
- * it contains exactly 1 item — the allocation for the current project.
- * In that case we show project-specific and aggregate workload/risk axes.
- *
- * When `projectAllocations` is absent (team-wide view §9.4) we show the
- * standard single total bar.
- */
+/** A project-scoped member row returned by workload endpoint 9.1. */
 export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRowProps) {
   const {
     userFullName = 'Unknown',
     email = '',
-    loadLevel = 'UNDEFINED',
-    worstBacklogDays = null,
-    atRiskCount = 0,
     activeTaskCount = 0,
-    overdueTaskCount = 0,
-    predictedLateTaskCount = 0,
     unestimatedTaskCount = 0,
-    projectAllocations = null,
+    projectAllocation,
   } = member
 
   const initials = userFullName
@@ -41,16 +26,13 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
     .join('')
     .toUpperCase()
 
-  // Project-specific allocation (only present in §9.6 project member endpoint)
-  const projectAlloc = projectAllocations?.[0] ?? null
-
   return (
     <button
       type="button"
       onClick={onClick}
       className={clsx(
         'grid w-full grid-cols-1 items-start gap-4 rounded-xl p-4 transition-all duration-150',
-        'sm:grid-cols-2 xl:grid-cols-[minmax(190px,1.15fr)_110px_minmax(190px,1fr)_minmax(190px,1fr)_90px] xl:items-center',
+        'sm:grid-cols-2 xl:grid-cols-[minmax(240px,1.2fr)_minmax(300px,1fr)_100px] xl:items-center',
         'bg-bg-surface border border-border-subtle',
         'hover:border-border-strong hover:shadow-sm hover:bg-bg-subtle/50',
         'active:scale-[0.995]',
@@ -76,46 +58,19 @@ export default function MemberWorkloadRow({ member, onClick }: MemberWorkloadRow
         </div>
       </div>
 
-      {/* Workload volume — project-specific level takes priority */}
-      <div className="min-w-0">
-        <p className="mb-1.5 text-[12px] font-medium text-text-primary xl:sr-only">Workload</p>
-        <LoadLevelBadge level={projectAlloc ? projectAlloc.loadLevel : loadLevel} />
-      </div>
-
       {/* Selected-project axes */}
       <div className="min-w-0 space-y-1.5">
         <p className="text-[12px] font-medium text-text-primary xl:sr-only">Selected project</p>
-        {projectAlloc ? (
-          <>
-            <BacklogMetric
-              days={projectAlloc.backlogDays}
-              hours={projectAlloc.backlogHours}
-              variant="analytics-row"
-            />
-            <div>
-              <DeadlineRiskIndicator
-                atRiskCount={allocationAtRiskCount(projectAlloc)}
-                overdueCount={projectAlloc.overdueCount}
-                predictedLateCount={projectAlloc.predictedLateTaskCount}
-                compact
-                variant="analytics-row"
-              />
-            </div>
-          </>
-        ) : (
-          <p className="text-[12px] text-text-muted">Project data unavailable</p>
-        )}
-      </div>
-
-      {/* Aggregate axes remain visible for every member. */}
-      <div className="min-w-0 space-y-1.5">
-        <p className="text-[12px] font-medium text-text-primary xl:sr-only">All projects</p>
-        <BacklogMetric days={worstBacklogDays} variant="analytics-row" />
+        <BacklogMetric
+          days={projectAllocation.backlogDays}
+          hours={projectAllocation.backlogHours}
+          variant="analytics-row"
+        />
         <div>
           <DeadlineRiskIndicator
-            atRiskCount={atRiskCount}
-            overdueCount={overdueTaskCount}
-            predictedLateCount={predictedLateTaskCount}
+            atRiskCount={allocationAtRiskCount(projectAllocation)}
+            overdueCount={projectAllocation.overdueCount}
+            predictedLateCount={projectAllocation.predictedLateTaskCount}
             compact
             variant="analytics-row"
           />

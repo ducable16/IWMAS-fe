@@ -8,7 +8,6 @@ import WorkloadTaskSections from '@/features/workforce/components/member-workloa
 import TaskArrangementPanel from '@/features/workforce/components/TaskArrangementPanel'
 import BacklogMetric from '@/features/workforce/components/BacklogMetric'
 import DeadlineRiskIndicator from '@/features/workforce/components/DeadlineRiskIndicator'
-import LoadLevelBadge from '@/features/workforce/components/LoadLevelBadge'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyWorkload, useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
@@ -63,9 +62,6 @@ function WorkloadDetailContent({
               {data.email && (
                 <p className="text-[13px] text-text-muted mt-0.5">{data.email}</p>
               )}
-              <div className="mt-2">
-                <LoadLevelBadge level={data.loadLevel} />
-              </div>
             </div>
           </div>
         </div>

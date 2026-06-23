@@ -26,18 +26,28 @@ export interface ProjectAllocationItem {
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
   backlogHours: number
-  /** Null when the lane has no capacity (BLOCKED / UNDEFINED). */
+  /** Null when the lane has no capacity. */
   backlogDays: number | null
-  loadLevel: LoadLevel | string
   overdueCount: number
   predictedLateTaskCount: number
+}
+
+/** Project-scoped workload returned by API 9.1. */
+export interface ProjectMemberWorkloadResponse {
+  userId: Id
+  userFullName: string
+  email: string
+  projectAllocation: ProjectAllocationItem
+  activeTaskCount: number
+  unestimatedTaskCount: number
+  unestimatedTasks: TaskWorkloadItem[]
+  tasks: TaskWorkloadItem[]
 }
 
 export interface MemberWorkloadResponse {
   userId: Id
   userFullName: string
   email: string
-  loadLevel: LoadLevel | string
   /** Workdays needed to clear the most-loaded lane; null when no lane has capacity. */
   worstBacklogDays: number | null
   atRiskCount: number
@@ -45,11 +55,11 @@ export interface MemberWorkloadResponse {
   overdueTaskCount: number
   predictedLateTaskCount: number
   unestimatedTaskCount: number
-  /** Always populated, including list responses where tasks is null. */
+  /** Always populated. */
   unestimatedTasks: TaskWorkloadItem[]
   projectAllocations: ProjectAllocationItem[]
-  /** Null in the project-member list; populated by user real-time endpoints. */
-  tasks: TaskWorkloadItem[] | null
+  /** Always populated by the user real-time endpoints. */
+  tasks: TaskWorkloadItem[]
 }
 
 export interface ProjectScheduleResponse {
@@ -58,7 +68,7 @@ export interface ProjectScheduleResponse {
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
   backlogHours: number
-  /** Null when the lane has no capacity (BLOCKED / UNDEFINED). */
+  /** Null when the lane has no capacity. */
   backlogDays: number | null
   loadLevel: LoadLevel | string
   overdueCount: number

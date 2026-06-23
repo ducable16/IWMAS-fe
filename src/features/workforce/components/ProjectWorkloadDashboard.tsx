@@ -1,10 +1,13 @@
 import { useNavigate } from 'react-router-dom'
-import { Users, AlertTriangle, Gauge } from 'lucide-react'
+import { Users, AlertTriangle } from 'lucide-react'
 import MemberWorkloadRow from './MemberWorkloadRow'
 import { useProjectWorkload } from '../hooks/useWorkload'
 import { LiveLoading, LiveError, LiveEmpty } from '@/components/feedback/LiveStateOverlay'
-import type { Id, MemberWorkloadResponse } from '@/types'
-import { compareMemberWorkload } from '../workloadPresentation'
+import type { Id, ProjectMemberWorkloadResponse } from '@/types'
+import {
+  allocationAtRiskCount,
+  compareProjectMemberWorkload,
+} from '../workloadPresentation'
 
 type ProjectWorkloadDashboardProps = {
   projectId: Id | null | undefined
@@ -22,7 +25,7 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
     projectId,
   )
 
-  const handleRowClick = (member: MemberWorkloadResponse) => {
+  const handleRowClick = (member: ProjectMemberWorkloadResponse) => {
     const params = new URLSearchParams()
     if (projectId) params.set('projectId', String(projectId))
     const query = params.toString()
@@ -30,10 +33,11 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
   }
 
   // Summary counts
-  const workloadMembers = [...members].sort(compareMemberWorkload)
+  const workloadMembers = [...members].sort(compareProjectMemberWorkload)
   const total      = workloadMembers.length
-  const overloaded = workloadMembers.filter((m) => m.loadLevel === 'OVERLOADED').length
-  const atRisk     = workloadMembers.filter((m) => m.atRiskCount > 0).length
+  const atRisk = workloadMembers.filter(
+    (member) => allocationAtRiskCount(member.projectAllocation) > 0,
+  ).length
 
   return (
     <div className="space-y-4">
@@ -44,13 +48,6 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
             <Users className="w-3.5 h-3.5 text-text-muted" strokeWidth={1.75} />
             <span className="font-semibold">{total}</span> members
           </span>
-
-          {overloaded > 0 && (
-            <span className="flex items-center gap-1.5 text-orange-600 font-semibold">
-              <Gauge className="w-3.5 h-3.5" strokeWidth={2} />
-              {overloaded} overloaded
-            </span>
-          )}
 
           {atRisk > 0 && (
             <span className="flex items-center gap-1.5 text-danger font-semibold">
@@ -76,12 +73,10 @@ export default function ProjectWorkloadDashboard({ projectId }: ProjectWorkloadD
       {!isLoading && !isError && total > 0 && (
         <div
           aria-hidden="true"
-          className="hidden gap-4 px-4 text-[12px] font-medium text-text-primary xl:grid xl:grid-cols-[minmax(190px,1.15fr)_110px_minmax(190px,1fr)_minmax(190px,1fr)_90px]"
+          className="hidden gap-4 px-4 text-[12px] font-medium text-text-primary xl:grid xl:grid-cols-[minmax(240px,1.2fr)_minmax(300px,1fr)_100px]"
         >
           <span>Member</span>
-          <span>Workload</span>
           <span>Selected project</span>
-          <span>All projects</span>
           <span className="text-right">Tasks</span>
         </div>
       )}
