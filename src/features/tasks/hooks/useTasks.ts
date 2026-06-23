@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { taskService } from '../services/taskService'
 import { formatEstimate } from '@/utils/date'
-import type { Task, TaskListItem, TaskListResult, TaskSearchParams } from '@/types'
+import type { Id, Task, TaskListItem, TaskListResult, TaskSearchParams } from '@/types'
 
 function getTaskItems(raw: unknown): Task[] {
   if (Array.isArray(raw)) return raw as Task[]
@@ -59,5 +59,39 @@ export function useSearchTasks(params: TaskSearchParams = {}, enabled = true) {
     placeholderData: (prev) => prev,
     staleTime: 30_000,
     refetchInterval: 60_000,
+  })
+}
+
+/** §4.20 — tasks without an estimate in projects managed by the current PM. */
+export function useUnestimatedTasks(
+  projectId?: Id | null,
+  enabled = true,
+) {
+  return useQuery<Task[]>({
+    queryKey: ['tasks', 'unestimated', projectId ?? null],
+    queryFn: async () => {
+      const res = await taskService.getUnestimated(projectId)
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+  })
+}
+
+/** §4.21 — tasks without an assignee in projects managed by the current PM. */
+export function useUnassignedTasks(
+  projectId?: Id | null,
+  enabled = true,
+) {
+  return useQuery<Task[]>({
+    queryKey: ['tasks', 'unassigned', projectId ?? null],
+    queryFn: async () => {
+      const res = await taskService.getUnassigned(projectId)
+      return Array.isArray(res.data) ? res.data : []
+    },
+    enabled,
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
   })
 }

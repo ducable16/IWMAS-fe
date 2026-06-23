@@ -52,10 +52,11 @@ export const ERR_DELETE_COMMENT     = 'Failed to delete comment'
 export const ERR_UPLOAD_ATTACHMENT  = 'Failed to upload attachment'
 export const ERR_DELETE_ATTACHMENT  = 'Failed to delete attachment'
 
-// ── Task — specific codes (§12: 5005, 5006, 5007) ────────────────────────────
+// ── Task — specific codes (§12: 5005, 5006, 5007, 5008) ──────────────────────
 export const ERR_TASK_DATE_REVERSED  = 'Start date must not be after due date.'
 export const ERR_TASK_DATE_REQUIRED  = 'At least one of start date or due date is required.'
 export const ERR_TASK_SKILL_MISMATCH = 'Assignee does not meet the required skill level for this task.'
+export const ERR_TASK_MANAGER_ASSIGNEE = 'Project managers cannot be assigned tasks.'
 
 // ── Skill catalog ─────────────────────────────────────────────────────────────
 export const ERR_CREATE_SKILL     = 'Failed to create skill'

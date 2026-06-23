@@ -12,7 +12,7 @@ import { getErrorMessage } from '@/utils/apiError'
 import { ERR_MARK_READ, ERR_MARK_ALL_READ } from '@/utils/errorMessages'
 import type { Id } from '@/types'
 
-/** Section 8.3 GET /api/notifications/unread/count - fallback polling for bell badge */
+/** Section 8.3 GET /api/notifications/unread/count - REST bootstrap for the bell badge. */
 export function useUnreadCount() {
   return useQuery({
     queryKey: UNREAD_COUNT_QUERY_KEY,
@@ -22,7 +22,6 @@ export function useUnreadCount() {
         ? Number(res.data.count)
         : Number(res.data ?? 0))
     },
-    refetchInterval: 30_000,
     staleTime: 30_000,
   })
 }

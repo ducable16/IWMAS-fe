@@ -283,6 +283,9 @@ export function useChangeProjectManager() {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.invalidateQueries({ queryKey: ['projects', id] })
       queryClient.invalidateQueries({ queryKey: ['projects', id, 'members'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['workload'] })
+      queryClient.invalidateQueries({ queryKey: ['arrangement'] })
     },
     onError: (err: unknown) => {
       const code = getApiErrorCode(err)

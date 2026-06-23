@@ -11,6 +11,7 @@ export const ERROR_CODES = {
   TASK_DATE_REVERSED:           5005,
   TASK_DATE_REQUIRED:           5006,
   TASK_ASSIGNEE_SKILL_MISSING:  5007,
+  TASK_MANAGER_NOT_ASSIGNABLE:  5008,
 
   // ── §3 Skill / Category ────────────────────────────────────────────────────
   SKILL_CATEGORY_HAS_SKILLS:    3007,

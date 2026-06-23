@@ -29,6 +29,16 @@ function append(qs: URLSearchParams, key: string, value: QueryValue) {
 export const taskService = {
   getByProject: (projectId: Id) => api.get<Task[]>(`/projects/${projectId}/tasks`),
   getMine:       ()          => api.get<Task[]>('/tasks/my'),
+  /** §4.20 GET /api/tasks/unestimated — PM's unestimated tasks across managed projects. */
+  getUnestimated: (projectId?: Id | null) =>
+    api.get<Task[]>('/tasks/unestimated', {
+      params: projectId == null ? undefined : { projectId },
+    }),
+  /** §4.21 GET /api/tasks/unassigned — PM's unassigned tasks across managed projects. */
+  getUnassigned: (projectId?: Id | null) =>
+    api.get<Task[]>('/tasks/unassigned', {
+      params: projectId == null ? undefined : { projectId },
+    }),
   getById:       (id: Id)        => api.get<Task>(`/tasks/${id}`),
   create:        (data: CreateTaskRequest)      => api.post<Task>('/tasks', data),
   update:        (id: Id, data: UpdateTaskRequest)  => api.put<Task>(`/tasks/${id}`, data),

@@ -17,9 +17,13 @@ import TeamWorkloadPanel from '@/features/dashboard/components/TeamWorkloadPanel
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMembers } from '@/features/members/hooks/useMembers'
 import { useProjects } from '@/features/projects/hooks/useProjects'
-import { useSearchTasks } from '@/features/tasks/hooks/useTasks'
+import {
+  useSearchTasks,
+  useUnassignedTasks,
+  useUnestimatedTasks,
+} from '@/features/tasks/hooks/useTasks'
 import MyWorkloadWidget from '@/features/workforce/components/MyWorkloadWidget'
-import { useMyTeamWorkload, useMyWorkload } from '@/features/workforce/hooks/useWorkload'
+import { useMyTeamWorkload } from '@/features/workforce/hooks/useWorkload'
 import { TASK_STATUSES } from '@/constants/enums'
 import type { User } from '@/types'
 
@@ -144,12 +148,8 @@ function ProjectManagerDashboard() {
     size: 1,
   })
   const teamWorkload = useMyTeamWorkload()
-  const myWorkload = useMyWorkload()
-  const unestimatedTaskCount = (myWorkload.data?.unestimatedTaskCount ?? 0)
-    + (teamWorkload.data ?? []).reduce(
-      (total, member) => total + (member.unestimatedTaskCount ?? 0),
-      0,
-    )
+  const unestimatedTasks = useUnestimatedTasks()
+  const unassignedTasks = useUnassignedTasks()
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
@@ -162,7 +162,7 @@ function ProjectManagerDashboard() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           icon={FolderKanban}
           label="Active projects"
@@ -172,8 +172,13 @@ function ProjectManagerDashboard() {
         <StatCard
           icon={AlertCircle}
           label="Unestimated tasks"
-          value={teamWorkload.isLoading || myWorkload.isLoading ? '-' : unestimatedTaskCount}
+          value={unestimatedTasks.isLoading ? '-' : unestimatedTasks.data?.length ?? 0}
           variant="warning"
+        />
+        <StatCard
+          icon={UserX}
+          label="Unassigned tasks"
+          value={unassignedTasks.isLoading ? '-' : unassignedTasks.data?.length ?? 0}
         />
         <StatCard
           icon={AlertTriangle}

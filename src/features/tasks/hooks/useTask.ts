@@ -12,6 +12,7 @@ import {
   ERR_DELETE_ATTACHMENT,
   ERR_TASK_DATE_REVERSED,
   ERR_TASK_DATE_REQUIRED,
+  ERR_TASK_MANAGER_ASSIGNEE,
   ERR_TASK_SKILL_MISMATCH,
 } from '@/utils/errorMessages'
 import { ERROR_CODES } from '@/constants/errorCodes'
@@ -35,6 +36,7 @@ const getTaskWriteErrorMessage = (err: unknown, fallback: string) => {
   if (code === ERROR_CODES.TASK_DATE_REVERSED)          return getErrorMessage(err, ERR_TASK_DATE_REVERSED)
   if (code === ERROR_CODES.TASK_DATE_REQUIRED)          return getErrorMessage(err, ERR_TASK_DATE_REQUIRED)
   if (code === ERROR_CODES.TASK_ASSIGNEE_SKILL_MISSING) return getErrorMessage(err, ERR_TASK_SKILL_MISMATCH)
+  if (code === ERROR_CODES.TASK_MANAGER_NOT_ASSIGNABLE) return getErrorMessage(err, ERR_TASK_MANAGER_ASSIGNEE)
   return getErrorMessage(err, fallback)
 }
 
