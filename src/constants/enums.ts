@@ -1,3 +1,6 @@
+
+
+
 /**
  * Centralised enum definitions — mirrors api-docs/11-enums.md.
  * Bất cứ chỗ nào hiển thị enum (label, badge, dot…) phải import từ file này
@@ -8,7 +11,6 @@
  *   *_LABEL    — { value: 'Display Text' }
  *   *_META     — { value: { label, badge, dot, color, cls } } cho component dùng nhiều style
  */
-
 // ── User roles ────────────────────────────────────────────────────────────────
 export const USER_ROLES = ['ADMIN', 'HR', 'PROJECT_MANAGER', 'TEAM_MEMBER'] as const
 export type UserRole = typeof USER_ROLES[number]
@@ -19,6 +21,7 @@ export const USER_ROLE_LABEL = {
   PROJECT_MANAGER: 'Project Manager',
   TEAM_MEMBER:     'Team Member',
 }
+
 
 /** Short labels for table columns / compact badges */
 export const USER_ROLE_SHORT_LABEL = {
@@ -34,6 +37,7 @@ export const USER_ROLE_BADGE = {
   PROJECT_MANAGER: 'badge-accent',
   TEAM_MEMBER:     'badge-neutral',
 }
+
 
 // ── Project status ────────────────────────────────────────────────────────────
 export const PROJECT_STATUSES = ['PLANNING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'] as const
@@ -53,6 +57,8 @@ export const PROJECT_STATUS_META = {
   CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
 }
 
+
+
 // ── Project role-in-project ───────────────────────────────────────────────────
 // API §11: PROJECT_MANAGER | MEMBER
 export const PROJECT_ROLES = ['PROJECT_MANAGER', 'MEMBER'] as const
@@ -62,6 +68,7 @@ export const PROJECT_ROLE_LABEL = {
   PROJECT_MANAGER: 'Project Manager',
   MEMBER:          'Member',
 }
+
 
 // ── Task status ───────────────────────────────────────────────────────────────
 export const TASK_STATUSES = ['TODO', 'IN_PROGRESS', 'DONE', 'CANCELLED'] as const
@@ -74,6 +81,7 @@ export const TASK_STATUS_LABEL = {
   CANCELLED:   'Cancelled',
 }
 
+
 /** Background+text classes for status pills (TaskFilterDrawer / TasksPage) */
 export const TASK_STATUS_META = {
   TODO:        { label: 'TO DO',       color: 'bg-[#e2e4e6] text-slate-800 font-bold tracking-wide' },
@@ -81,6 +89,7 @@ export const TASK_STATUS_META = {
   DONE:        { label: 'DONE',        color: 'bg-[#a6d86e] text-slate-800 font-bold tracking-wide' },
   CANCELLED:   { label: 'CANCELLED',   color: 'bg-rose-300 text-slate-800 font-bold tracking-wide'  },
 }
+
 
 /** Border-style pills for the task detail page */
 export const TASK_STATUS_DETAIL_META = {
@@ -97,6 +106,7 @@ export const TASK_STATUS_TRANSITIONS = {
   CANCELLED: ['TODO'],
 } satisfies Record<TaskStatus, TaskStatus[]>
 
+
 // ── Task type ─────────────────────────────────────────────────────────────────
 export const TASK_TYPES = ['FEATURE', 'BUG', 'RESEARCH'] as const
 export type TaskType = typeof TASK_TYPES[number]
@@ -112,6 +122,7 @@ export const TASK_TYPE_META = {
   BUG:         { label: 'BUG',      color: 'bg-rose-100   text-rose-700   border border-rose-300'   },
   RESEARCH:    { label: 'RESEARCH', color: 'bg-violet-100 text-violet-700 border border-violet-300' },
 }
+
 
 // ── Task priority ─────────────────────────────────────────────────────────────
 export const TASK_PRIORITIES = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'] as const
@@ -130,6 +141,7 @@ export const TASK_PRIORITY_META = {
   HIGH:     { label: 'High',     icon: '▲', dot: 'bg-danger',        color: 'text-danger'                },
   CRITICAL: { label: 'Critical', icon: '⬤', dot: 'bg-danger',        color: 'text-danger font-semibold'  },
 }
+
 
 // ── Skill level ───────────────────────────────────────────────────────────────
 export const TASK_ACTIVITY_TYPES = [
@@ -182,6 +194,8 @@ export const SKILL_LEVEL_META = {
   EXPERT:       { label: 'Expert',       badge: 'badge-success' },
 }
 
+
+
 // ── Risk level (burnout) ──────────────────────────────────────────────────────
 // ── User active/status (derived from `active: boolean`) ───────────────────────
 export const USER_STATUS_META = {
@@ -189,6 +203,7 @@ export const USER_STATUS_META = {
   DISABLED: { label: 'Disabled', color: 'bg-rose-300  text-slate-800 font-bold tracking-wide', dot: 'bg-danger'  },
   INVITED:  { label: 'Invited',  color: 'bg-[#8db5f8] text-slate-800 font-bold tracking-wide', dot: 'bg-info'    },
 }
+
 
 // ── Search source (§13) ───────────────────────────────────────────────────────
 export const SEARCH_SOURCES = ['redis', 'elasticsearch', 'database'] as const
@@ -198,27 +213,12 @@ export const SEARCH_SOURCE_LABEL = {
   redis:         'Redis cache',
   elasticsearch: 'Elasticsearch',
   database:      'Database (fallback)',
-}
-
 // ── Workload level (§9 / §11) ─────────────────────────────────────────────────
 //
 // Dashboard workload-volume badge driven by backlog depth.
 // Severity (worst first): OVERLOADED > BUSY > AVAILABLE > BLOCKED > UNDEFINED
-export const LOAD_LEVELS = [
-  'OVERLOADED', 'BUSY', 'AVAILABLE', 'BLOCKED', 'UNDEFINED',
-] as const
-export type LoadLevel = typeof LOAD_LEVELS[number]
-
-export const LOAD_LEVEL_META = {
-  OVERLOADED: { label: 'Overloaded', bg: 'bg-orange-500/15', text: 'text-orange-600', dot: 'bg-orange-500', border: 'border-orange-500/25' },
-  BUSY:       { label: 'Busy',       bg: 'bg-warning/15',    text: 'text-warning',    dot: 'bg-warning',    border: 'border-warning/25' },
-  AVAILABLE:  { label: 'Available',  bg: 'bg-info/15',       text: 'text-info',       dot: 'bg-info',       border: 'border-info/25' },
-  BLOCKED:    { label: 'Observer',   bg: 'bg-bg-subtle',     text: 'text-text-muted', dot: 'bg-border-strong', border: 'border-border-subtle' },
-  UNDEFINED:  { label: 'N/A',        bg: 'bg-bg-subtle',     text: 'text-text-muted', dot: 'bg-border-subtle', border: 'border-border-subtle' },
-} satisfies Record<LoadLevel, { label: string; bg: string; text: string; dot: string; border: string }>
-
+}
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
 /** Convert an enum map into <option> array: [{ value, label }] */
 export function toOptions<T extends Record<string, string>>(labelMap: T) {
   return Object.entries(labelMap).map(([value, label]) => ({ value, label }))

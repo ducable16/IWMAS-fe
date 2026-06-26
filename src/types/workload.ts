@@ -1,4 +1,3 @@
-import type { LoadLevel } from '@/constants/enums'
 import type { Id } from './api'
 
 export interface TaskWorkloadItem {
@@ -9,6 +8,7 @@ export interface TaskWorkloadItem {
   priority: string
   startDate: string | null
   dueDate: string | null
+
   /** Mirrors estimatedHours in workload responses; null when the task is unestimated. */
   remainingHours: number | null
   executionSeq: number | null
@@ -26,11 +26,13 @@ export interface ProjectAllocationItem {
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
   backlogHours: number
+
   /** Null when the lane has no capacity. */
   backlogDays: number | null
   overdueCount: number
   predictedLateTaskCount: number
 }
+
 
 /** Project-scoped workload returned by API 9.1. */
 export interface ProjectMemberWorkloadResponse {
@@ -48,6 +50,7 @@ export interface MemberWorkloadResponse {
   userId: Id
   userFullName: string
   email: string
+
   /** Workdays needed to clear the most-loaded lane; null when no lane has capacity. */
   worstBacklogDays: number | null
   atRiskCount: number
@@ -55,9 +58,11 @@ export interface MemberWorkloadResponse {
   overdueTaskCount: number
   predictedLateTaskCount: number
   unestimatedTaskCount: number
+
   /** Always populated. */
   unestimatedTasks: TaskWorkloadItem[]
   projectAllocations: ProjectAllocationItem[]
+
   /** Always populated by the user real-time endpoints. */
   tasks: TaskWorkloadItem[]
 }
@@ -68,9 +73,8 @@ export interface ProjectScheduleResponse {
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
   backlogHours: number
-  /** Null when the lane has no capacity. */
+
   backlogDays: number | null
-  loadLevel: LoadLevel | string
   overdueCount: number
   predictedLateTaskCount: number
   savedOrder: boolean
@@ -79,6 +83,7 @@ export interface ProjectScheduleResponse {
 
 export interface SchedulePreviewRequest {
   projectId: Id
+
   /** Must be exactly the lane's schedulable task ids in the desired order. */
   orderedTaskIds: Id[]
 }

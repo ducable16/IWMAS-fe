@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { userService } from '../services/memberService'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -54,7 +54,6 @@ export function useMembers(params: MemberQueryParams = {}) {
       }
     },
     placeholderData: (prev) => prev,
-    staleTime: 30_000,
   })
 }
 
@@ -85,7 +84,6 @@ export function useAllActiveMembers(enabled = true) {
       return uniqueUsers.map(normaliseUser)
     },
     enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -114,7 +112,6 @@ export function useUser(id: Id | null | undefined) {
       return normaliseUser(res.data ?? {})
     },
     enabled: !!id,
-    staleTime: 60_000,
   })
 }
 
@@ -135,7 +132,6 @@ export function useUserProjects(userId: Id | null | undefined, params: PagedPara
     },
     enabled: !!userId && enabled,
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
   })
 }
 
@@ -156,7 +152,6 @@ export function useUserAssignedTasks(userId: Id | null | undefined, params: Page
     },
     enabled: !!userId && enabled,
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
   })
 }
 
@@ -177,7 +172,6 @@ export function useUserReportedTasks(userId: Id | null | undefined, params: Page
     },
     enabled: !!userId && enabled,
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
   })
 }
 

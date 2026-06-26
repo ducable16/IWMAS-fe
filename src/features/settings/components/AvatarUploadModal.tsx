@@ -285,7 +285,7 @@ export default function AvatarUploadModal({
         </div>
 
         <p className="text-center text-[12px] text-text-muted">
-          Drag to reposition and preview how your avatar will appear across IWAS.
+          Drag to reposition and preview how your avatar will appear across IWMAS.
         </p>
       </Modal.Body>
 

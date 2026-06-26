@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+﻿import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import clsx from 'clsx'
 import { taskService } from '@/features/tasks/services/taskService'
@@ -16,7 +16,7 @@ type Props = {
 const PRIORITY_META_BY_KEY = PRIORITY_META as Record<string, { label: string; color?: string }>
 
 function normaliseTask(t: Task) {
-  const assigneeName = t.assignee?.fullName || t.assignee?.email || '—'
+  const assigneeName = t.assignee?.fullName || t.assignee?.email || 'â€”'
   return {
     id: t.id,
     title: t.title || 'Untitled',
@@ -40,17 +40,17 @@ export function ProjectTasksTab({ projectId }: Props) {
       const res = await taskService.getByProject(projectId)
       return Array.isArray(res.data) ? res.data : []
     },
-    staleTime: 30_000,
     refetchOnWindowFocus: true,
   })
 
   const tasks = rawTasks.map(normaliseTask)
 
-  if (isLoading) return <LiveLoading label="Loading tasks…" />
+  if (isLoading) return <LiveLoading label="Loading tasksâ€¦" />
   if (isError) return <LiveError error={error} onRetry={refetch} />
 
   return (
     <div className="space-y-4">
+
         {/* Header row */}
         <div className="flex items-center justify-between">
           <p className="text-[13px] text-text-muted">
@@ -104,6 +104,7 @@ export function ProjectTasksTab({ projectId }: Props) {
                         onClick={() => navigate(`/tasks/${task.id}`)}
                         className="border-b border-border-subtle last:border-0 hover:bg-bg-hover/40 transition-colors cursor-pointer group"
                       >
+
                         {/* Title */}
                         <td className="px-4 py-3 max-w-[320px]">
                           <div className="flex items-start gap-2.5">
@@ -116,15 +117,18 @@ export function ProjectTasksTab({ projectId }: Props) {
                           </div>
                         </td>
 
+
                         {/* Type */}
                         <td className="px-4 py-3">
                           <TaskTypeBadge type={task.type} />
                         </td>
 
+
                         {/* Status */}
                         <td className="px-4 py-3">
                           <TaskStatusBadge status={task.status} />
                         </td>
+
 
                         {/* Priority */}
                         <td className="px-4 py-3">
@@ -132,6 +136,7 @@ export function ProjectTasksTab({ projectId }: Props) {
                             {prio.label}
                           </span>
                         </td>
+
 
                         {/* Assignee */}
                         <td className="px-4 py-3">
@@ -147,9 +152,10 @@ export function ProjectTasksTab({ projectId }: Props) {
                               {task.assigneeFull}
                             </span>
                           ) : (
-                            <span className="text-[12px] text-text-muted">—</span>
+                            <span className="text-[12px] text-text-muted">â€”</span>
                           )}
                         </td>
+
 
                         {/* Due */}
                         <td
@@ -163,6 +169,7 @@ export function ProjectTasksTab({ projectId }: Props) {
                           )}
                           {fmtDay(task.due)}
                         </td>
+
 
                         {/* Estimate */}
                         <td className="px-4 py-3 text-[12px] text-text-muted tabular-nums">

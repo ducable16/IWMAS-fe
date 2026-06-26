@@ -27,13 +27,15 @@ function append(qs: URLSearchParams, key: string, value: QueryValue) {
 }
 
 export const taskService = {
-  getByProject: (projectId: Id) => api.get<Task[]>(`/projects/${projectId}/tasks`),
+  getByProject: (projectId: Id) => api.get<Task[]>(`/tasks/projects/${projectId}`),
   getMine:       ()          => api.get<Task[]>('/tasks/my'),
+
   /** §4.20 GET /api/tasks/unestimated — PM's unestimated tasks across managed projects. */
   getUnestimated: (projectId?: Id | null) =>
     api.get<Task[]>('/tasks/unestimated', {
       params: projectId == null ? undefined : { projectId },
     }),
+
   /** §4.21 GET /api/tasks/unassigned — PM's unassigned tasks across managed projects. */
   getUnassigned: (projectId?: Id | null) =>
     api.get<Task[]>('/tasks/unassigned', {
@@ -47,11 +49,13 @@ export const taskService = {
   remove:        (id: Id)        => api.delete(`/tasks/${id}`),
   getHistory:    (id: Id)        => api.get<TaskActivityEntry[]>(`/tasks/${id}/history`),
 
+
   /**
    * §4.4 GET /api/tasks/board — Kanban grouped by status.
    * Requires projectId query param.
    */
   getBoard: (projectId: Id) => api.get<TaskBoardResponse>(`/tasks/board?projectId=${projectId}`),
+
 
   /**
    * §4.5 GET /api/tasks/calendar — Tasks grouped by dueDate.
@@ -64,6 +68,7 @@ export const taskService = {
     append(qs, 'projectId', projectId)
     return api.get(`/tasks/calendar?${qs.toString()}`)
   },
+
 
   /**
    * Search & filter tasks — GET /api/tasks
@@ -86,6 +91,7 @@ export const taskService = {
     append(qs, 'page', params.page ?? 0)
     append(qs, 'size', params.size ?? 20)
 
+
     // Repeatable array params
     ;(params.statuses || []).forEach((v) => append(qs, 'statuses', v))
     ;(params.priorities || []).forEach((v) => append(qs, 'priorities', v))
@@ -94,6 +100,7 @@ export const taskService = {
     return api.get<PageResponse<Task>>(`/tasks?${qs.toString()}`)
   },
 
+
   // Comments
   getComments: (taskId: Id) => api.get<TaskComment[]>(`/tasks/${taskId}/comments`),
   addComment: (taskId: Id, data: TaskCommentRequest) => api.post<TaskComment>(`/tasks/${taskId}/comments`, data),
@@ -101,6 +108,7 @@ export const taskService = {
     api.put<TaskComment>(`/tasks/${taskId}/comments/${commentId}`, data),
   deleteComment: (taskId: Id, commentId: Id) =>
     api.delete(`/tasks/${taskId}/comments/${commentId}`),
+
 
   // Attachments
   getAttachments: (taskId: Id) =>

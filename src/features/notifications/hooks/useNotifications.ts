@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { notificationService } from '../services/notificationService'
 import {
@@ -12,6 +12,7 @@ import { getErrorMessage } from '@/utils/apiError'
 import { ERR_MARK_READ, ERR_MARK_ALL_READ } from '@/utils/errorMessages'
 import type { Id } from '@/types'
 
+
 /** Section 8.3 GET /api/notifications/unread/count - REST bootstrap for the bell badge. */
 export function useUnreadCount() {
   return useQuery({
@@ -22,9 +23,9 @@ export function useUnreadCount() {
         ? Number(res.data.count)
         : Number(res.data ?? 0))
     },
-    staleTime: 30_000,
   })
 }
+
 
 /** Section 8.1 GET /api/notifications - all notifications, newest first */
 export function useNotifications(enabled = true) {
@@ -35,9 +36,9 @@ export function useNotifications(enabled = true) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled,
-    staleTime: 15_000,
   })
 }
+
 
 /** Section 8.2 GET /api/notifications/unread */
 export function useUnreadNotifications(enabled = true) {
@@ -48,9 +49,9 @@ export function useUnreadNotifications(enabled = true) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled,
-    staleTime: 15_000,
   })
 }
+
 
 /** Section 8.4 PATCH /api/notifications/:id/read */
 export function useMarkAsRead() {
@@ -66,6 +67,7 @@ export function useMarkAsRead() {
     onError: (err: unknown) => toast.error(getErrorMessage(err, ERR_MARK_READ)),
   })
 }
+
 
 /** Section 8.5 PATCH /api/notifications/read-all */
 export function useMarkAllAsRead() {

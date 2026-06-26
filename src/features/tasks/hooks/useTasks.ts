@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { taskService } from '../services/taskService'
 import { formatEstimate } from '@/utils/date'
 import type { Id, Task, TaskListItem, TaskListResult, TaskSearchParams } from '@/types'
@@ -57,10 +57,10 @@ export function useSearchTasks(params: TaskSearchParams = {}, enabled = true) {
     },
     enabled,
     placeholderData: (prev) => prev,
-    staleTime: 30_000,
     refetchInterval: 60_000,
   })
 }
+
 
 /** §4.20 — tasks without an estimate in projects managed by the current PM. */
 export function useUnestimatedTasks(
@@ -74,10 +74,10 @@ export function useUnestimatedTasks(
       return Array.isArray(res.data) ? res.data : []
     },
     enabled,
-    staleTime: 30_000,
     refetchOnWindowFocus: true,
   })
 }
+
 
 /** §4.21 — tasks without an assignee in projects managed by the current PM. */
 export function useUnassignedTasks(
@@ -91,7 +91,6 @@ export function useUnassignedTasks(
       return Array.isArray(res.data) ? res.data : []
     },
     enabled,
-    staleTime: 30_000,
     refetchOnWindowFocus: true,
   })
 }

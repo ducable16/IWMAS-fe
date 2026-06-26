@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+﻿import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { searchService } from '@/features/search/services/searchService'
 import { SEARCH_MIN_PREFIX } from '@/features/search/hooks/useSearch'
 import type { Id, MemberView } from '@/types'
@@ -8,7 +8,6 @@ export type ManagerSuggestionItem = {
   entityId: Id
   user?: MemberView | undefined
 }
-
 /**
  * §3.5 / §13.1 — Search PM candidates for the "Create / Edit project" form.
  *
@@ -29,7 +28,6 @@ export function useManagerAutocomplete(query: string) {
       })
       return res.data ?? { suggestions: [] }
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   })
 }

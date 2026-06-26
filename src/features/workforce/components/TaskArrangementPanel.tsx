@@ -3,7 +3,6 @@ import toast from 'react-hot-toast'
 import {
   AlertTriangle,
   Brain,
-  CalendarDays,
   GripVertical,
   RotateCcw,
   Save,
@@ -29,9 +28,6 @@ import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import { LiveEmpty, LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
 import { TaskPriorityBadge } from '@/components/ui/Badge'
-import BacklogMetric from './BacklogMetric'
-import DeadlineRiskIndicator from './DeadlineRiskIndicator'
-import LoadLevelBadge from './LoadLevelBadge'
 import { fmtDay } from '@/utils/date'
 import {
   useArrangeLane,
@@ -40,14 +36,12 @@ import {
   useMySchedule,
   useMyNextTask,
   usePreviewSchedule,
-  useResetSchedule,
   useSaveSchedule,
   useSuggestSchedule,
 } from '../hooks/useWorkload'
 import type {
   ArrangeTaskItem,
   Id,
-  ProjectAllocationItem,
   ProjectScheduleResponse,
   TaskWorkloadItem,
 } from '@/types'
@@ -57,9 +51,14 @@ import { ERR_ARRANGEMENT_STALE } from '@/utils/errorMessages'
 type TaskArrangementPanelProps = {
   userId: Id
   isSelf: boolean
-  allocations: ProjectAllocationItem[]
-  selectedProjectId: Id | null
-  onProjectChange: (projectId: Id) => void
+  projectId: Id
+  embedded?: boolean
+  onStateChange?: (state: TaskArrangementState) => void
+}
+
+export type TaskArrangementState = {
+  hasUnsavedChanges: boolean
+  isMutating: boolean
 }
 
 type ScheduleView = 'plan' | 'suggested'
@@ -142,38 +141,40 @@ function SortableArrangeRow({
       </div>
 
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="min-w-0 truncate text-[13.5px] font-semibold text-text-primary">
+        <div className="flex flex-wrap items-center gap-2 sm:grid sm:grid-cols-[minmax(0,1fr)_5.5rem_4.75rem_6.5rem]">
+          <p className="w-full min-w-0 truncate text-[13.5px] font-semibold text-text-primary sm:w-auto">
             {task.title}
           </p>
-          <TaskPriorityBadge priority={task.priority || 'MEDIUM'} className="shrink-0" />
-          {atRisk && (
-            <span className="inline-flex items-center gap-1 rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning">
-              <AlertTriangle className="h-3 w-3" strokeWidth={2} />
-              At risk
-            </span>
-          )}
-          {task.estimateDefaulted && (
-            <span className="rounded-full border border-danger/20 bg-danger/10 px-2 py-0.5 text-[11px] font-semibold text-danger">
-              Needs estimate
-            </span>
-          )}
+          <div className="sm:w-[5.5rem]">
+            <TaskPriorityBadge priority={task.priority || 'MEDIUM'} className="shrink-0" />
+          </div>
+          <div className="sm:w-[4.75rem]">
+            {atRisk && (
+              <span className="inline-flex items-center gap-1 rounded-full border border-warning/25 bg-warning/10 px-2 py-0.5 text-[11px] font-semibold text-warning">
+                <AlertTriangle className="h-3 w-3" strokeWidth={2} />
+                At risk
+              </span>
+            )}
+          </div>
+          <div className="sm:w-[6.5rem]">
+            {task.estimateDefaulted && (
+              <span className="rounded-full border border-danger/20 bg-danger/10 px-2 py-0.5 text-[11px] font-semibold text-danger">
+                Needs estimate
+              </span>
+            )}
+          </div>
         </div>
 
-        <div
-          className={clsx(
-            'mt-2 grid gap-2 text-[11.5px] text-text-muted',
-            task.slackHours < 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-4',
-          )}
-        >
-          {task.slackHours >= 0 && (
+        <div className="mt-2 grid gap-2 text-[11.5px] text-text-muted sm:grid-cols-3">
+          {task.slackHours < 0 ? (
+            <span className={clsx('tabular-nums', task.projectedTardinessHours > 0 && 'font-semibold text-danger')}>
+              Late {formatHours(task.projectedTardinessHours)}
+            </span>
+          ) : (
             <span className="tabular-nums">
               Slack {formatHours(task.slackHours)}
             </span>
           )}
-          <span className={clsx('tabular-nums', task.projectedTardinessHours > 0 && 'font-semibold text-danger')}>
-            Late {formatHours(task.projectedTardinessHours)}
-          </span>
           <span className="tabular-nums text-text-primary">Start {fmtDay(projectedStart)}</span>
           <span
             className={clsx(
@@ -194,9 +195,9 @@ function SortableArrangeRow({
 export default function TaskArrangementPanel({
   userId,
   isSelf,
-  allocations,
-  selectedProjectId,
-  onProjectChange,
+  projectId,
+  embedded = false,
+  onStateChange,
 }: TaskArrangementPanelProps) {
   const canEditOrder = isSelf
   const [order, setOrder] = useState<string[]>([])
@@ -204,23 +205,19 @@ export default function TaskArrangementPanel({
   const [previewedOrder, setPreviewedOrder] = useState<string[]>([])
   const [scheduleView, setScheduleView] = useState<ScheduleView>('plan')
 
-  const activeProjectId = selectedProjectId ?? allocations[0]?.projectId ?? null
-  const activeAllocation = allocations.find((item) => keyOf(item.projectId) === keyOf(activeProjectId ?? ''))
-
-  const myArrangement = useArrangeMyLane(activeProjectId, undefined, isSelf)
-  const laneArrangement = useArrangeLane(activeProjectId, userId, undefined, !isSelf)
-  const mySchedule = useMySchedule(activeProjectId, isSelf)
-  const suggestedSchedule = useSuggestSchedule(activeProjectId, isSelf)
-  const myNextTask = useMyNextTask(activeProjectId, undefined, isSelf)
+  const myArrangement = useArrangeMyLane(projectId, undefined, isSelf)
+  const laneArrangement = useArrangeLane(projectId, userId, undefined, !isSelf)
+  const mySchedule = useMySchedule(projectId, isSelf)
+  const suggestedSchedule = useSuggestSchedule(projectId, isSelf)
+  const myNextTask = useMyNextTask(projectId, undefined, isSelf)
   const laneNextTask = useLaneNextTask(
-    activeProjectId,
+    projectId,
     userId,
     undefined,
     !isSelf,
   )
   const previewSchedule = usePreviewSchedule()
   const saveSchedule = useSaveSchedule()
-  const resetSchedule = useResetSchedule()
 
   const arrangementQuery = isSelf ? myArrangement : laneArrangement
   const nextQuery = isSelf ? myNextTask : laneNextTask
@@ -262,7 +259,7 @@ export default function TaskArrangementPanel({
   const hasCurrentPreview = !!preview && idsEqual(order, previewedOrder)
   const isScheduleLoading = isSelf && (mySchedule.isLoading || suggestedSchedule.isLoading)
   const scheduleError = isSelf ? (mySchedule.error || suggestedSchedule.error) : null
-  const isMutating = previewSchedule.isPending || saveSchedule.isPending || resetSchedule.isPending
+  const isMutating = previewSchedule.isPending || saveSchedule.isPending
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -280,11 +277,11 @@ export default function TaskArrangementPanel({
     }
     setPreview(null)
     setPreviewedOrder([])
-  }, [activeProjectId, initialOrder, isSelf, mySchedule.data, savedOrder, suggestedOrder, suggestedSchedule.data])
+  }, [initialOrder, isSelf, mySchedule.data, projectId, savedOrder, suggestedOrder, suggestedSchedule.data])
 
-  if (!allocations.length) {
-    return <LiveEmpty label="No project lanes available for task arrangement." />
-  }
+  useEffect(() => {
+    onStateChange?.({ hasUnsavedChanges: hasOrderChanges, isMutating })
+  }, [hasOrderChanges, isMutating, onStateChange])
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
@@ -324,9 +321,8 @@ export default function TaskArrangementPanel({
   }
 
   const handlePreview = () => {
-    if (!activeProjectId) return
     previewSchedule.mutate(
-      { projectId: activeProjectId, orderedTaskIds: orderedTaskIds() },
+      { projectId, orderedTaskIds: orderedTaskIds() },
       {
         onSuccess: (data) => {
           setPreview(data)
@@ -339,9 +335,8 @@ export default function TaskArrangementPanel({
   }
 
   const handleSave = () => {
-    if (!activeProjectId) return
     saveSchedule.mutate(
-      { projectId: activeProjectId, orderedTaskIds: orderedTaskIds() },
+      { projectId, orderedTaskIds: orderedTaskIds() },
       {
         onSuccess: (data) => {
           setPreview(data)
@@ -381,68 +376,19 @@ export default function TaskArrangementPanel({
     setPreviewedOrder(suggestedOrder)
   }
 
-  const followAutomatically = () => {
-    if (!activeProjectId) return
-    resetSchedule.mutate(activeProjectId, {
-      onSuccess: (data) => {
-        const nextOrder = orderFromSchedule(data)
-        setScheduleView('suggested')
-        setOrder(nextOrder)
-        setPreview(data)
-        setPreviewedOrder(nextOrder)
-        toast.success('Automatic task ordering restored')
-      },
-      onError: (err) => handleScheduleError(err, 'Failed to restore automatic ordering'),
-    })
-  }
-
   return (
-    <div className="card p-5">
+    <div className={clsx(!embedded && 'card p-5')}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-2">
           <Brain className="h-4 w-4 text-accent" strokeWidth={1.75} />
-          <div>
-            <h3 className="text-[13px] font-semibold uppercase tracking-wider text-text-secondary">
-              Task arrangement
-            </h3>
-            {activeAllocation && (
-              <p className="mt-0.5 text-[12px] text-text-muted">
-                {activeAllocation.projectName}
-                {arrangement?.dailyCapacityHours != null
-                  ? ` · ${arrangement.dailyCapacityHours.toFixed(1)}h/day`
-                  : activeAllocation.dailyCapacityHours != null
-                    ? ` · ${activeAllocation.dailyCapacityHours.toFixed(1)}h/day`
-                    : ''}
-              </p>
-            )}
-          </div>
+          <h3 className="text-[13px] font-semibold uppercase tracking-wider text-text-primary">
+            Task arrangement
+          </h3>
         </div>
-
-      </div>
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        {allocations.map((allocation) => {
-          const active = keyOf(allocation.projectId) === keyOf(activeProjectId ?? '')
-          return (
-            <button
-              key={keyOf(allocation.projectId)}
-              type="button"
-              onClick={() => onProjectChange(allocation.projectId)}
-              className={clsx(
-                'rounded-lg border px-3 py-1.5 text-[12px] font-medium transition-colors',
-                active
-                  ? 'border-accent bg-accent text-white'
-                  : 'border-border-subtle bg-bg-surface text-text-secondary hover:border-border-strong',
-              )}
-            >
-              {allocation.projectName}
-            </button>
-          )
-        })}
       </div>
 
       {isSelf && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="mt-4">
           <div className="inline-flex rounded-lg border border-border-subtle bg-bg-subtle p-0.5">
             <button
               type="button"
@@ -469,23 +415,6 @@ export default function TaskArrangementPanel({
               Suggested
             </button>
           </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-[11.5px] text-text-muted">
-              {mySchedule.data?.savedOrder ? 'Saved custom order' : 'Following automatically'}
-            </span>
-            {mySchedule.data?.savedOrder && (
-              <button
-                type="button"
-                onClick={followAutomatically}
-                disabled={isMutating}
-                className="btn-secondary inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[12px] disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Sparkles className="h-3.5 w-3.5" strokeWidth={1.75} />
-                {resetSchedule.isPending ? 'Restoring...' : 'Follow automatically'}
-              </button>
-            )}
-          </div>
         </div>
       )}
 
@@ -508,16 +437,6 @@ export default function TaskArrangementPanel({
       {!arrangementQuery.isLoading && !isScheduleLoading && !arrangementQuery.isError && !scheduleError && (
         <div className="mt-5 space-y-4">
           <div className="rounded-xl border border-border-subtle bg-bg-subtle/35 p-3">
-            {arrangement && (
-              <div className="mb-3 flex flex-wrap gap-2 text-[11.5px] text-text-muted">
-                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
-                  Allocation {arrangement.allocatedEffortPercent ?? '-'}%
-                </span>
-                <span className="rounded-full border border-border-subtle bg-bg-surface px-2 py-0.5">
-                  Capacity {formatHours(arrangement.dailyCapacityHours)}/day
-                </span>
-              </div>
-            )}
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-accent" strokeWidth={1.75} />
@@ -543,24 +462,6 @@ export default function TaskArrangementPanel({
               )}
             </div>
           </div>
-
-          {visibleSchedule && (
-            <div className="flex flex-wrap items-center gap-3 rounded-xl border border-accent/20 bg-accent/[0.04] px-3 py-2">
-              <LoadLevelBadge level={visibleSchedule.loadLevel} />
-              <div className="min-w-[180px] flex-1">
-                <BacklogMetric
-                  days={visibleSchedule.backlogDays}
-                  hours={visibleSchedule.backlogHours}
-                />
-              </div>
-              <DeadlineRiskIndicator
-                atRiskCount={visibleSchedule.overdueCount + visibleSchedule.predictedLateTaskCount}
-                overdueCount={visibleSchedule.overdueCount}
-                predictedLateCount={visibleSchedule.predictedLateTaskCount}
-                compact
-              />
-            </div>
-          )}
 
           {tasks.length === 0 ? (
             <LiveEmpty label="No schedulable tasks in this project lane." />
@@ -588,11 +489,7 @@ export default function TaskArrangementPanel({
               </DndContext>
 
               {canEditOrder && scheduleView === 'plan' && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
-                  <p className="inline-flex items-center gap-1.5 text-[12px] text-text-muted">
-                    <CalendarDays className="h-3.5 w-3.5" strokeWidth={1.75} />
-                    Preview before saving to see projected dates and lateness.
-                  </p>
+                <div className="flex justify-end border-t border-border-subtle pt-4">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -625,10 +522,7 @@ export default function TaskArrangementPanel({
               )}
 
               {canEditOrder && scheduleView === 'suggested' && (
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border-subtle pt-4">
-                  <p className="text-[12px] text-text-muted">
-                    Review the suggested order, then use it as the starting point for your plan.
-                  </p>
+                <div className="flex justify-end border-t border-border-subtle pt-4">
                   <button
                     type="button"
                     onClick={useSuggestion}

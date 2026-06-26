@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { employeeSkillService } from '@/features/members/services/memberService'
 import { skillCategoryService, skillService } from '../services/skillService'
@@ -56,7 +56,6 @@ export function useSkills(params: SkillQuery = {}) {
       const res = await skillService.getAll(params)
       return res.data
     },
-    staleTime: 60_000,
   })
 }
 
@@ -67,7 +66,6 @@ export function useSkillCategories() {
       const res = await skillCategoryService.getAll()
       return res.data
     },
-    staleTime: 120_000,
   })
 }
 
@@ -83,7 +81,6 @@ export function useSkillMembers(
       return res.data
     },
     enabled: !!skillId && enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -95,7 +92,6 @@ export function useSkillStats(skillId: Id | null | undefined, enabled = true) {
       return res.data
     },
     enabled: !!skillId && enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -206,7 +202,6 @@ export function useMySkills() {
       const res = await employeeSkillService.getMine()
       return res.data
     },
-    staleTime: 30_000,
   })
 }
 
@@ -218,7 +213,6 @@ export function useUserSkills(userId: Id | null | undefined) {
       return res.data
     },
     enabled: !!userId,
-    staleTime: 30_000,
   })
 }
 

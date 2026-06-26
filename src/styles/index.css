@@ -1,16 +1,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
 /* ──────────────────────────────────────────────────────────────
-   IWAS — Notion-inspired design system
-   Tokens here MIRROR the Tailwind theme. Components use Tailwind
-   utility classes; raw CSS variables are exposed for cases where
-   Tailwind classes aren't reachable (e.g. inline svg fills).
-   ──────────────────────────────────────────────────────────────*/
+
+
+
+*/
 
 @layer base {
   :root {
+
     /* Surfaces */
     --color-bg-canvas:   #FFFFFF;
     --color-bg-surface:  #FFFFFF;
@@ -18,15 +17,18 @@
     --color-bg-subtle:   #F6F5F4;
     --color-bg-hover:    rgba(0, 0, 0, 0.05);
 
+
     /* Borders — whisper weights */
     --color-border-subtle: rgba(0, 0, 0, 0.06);
     --color-border:        rgba(0, 0, 0, 0.10);
     --color-border-strong: rgba(0, 0, 0, 0.16);
 
+
     /* Text */
     --color-text-primary:   rgba(0, 0, 0, 0.95);
     --color-text-secondary: #615D59;
     --color-text-muted:     #A39E98;
+
 
     /* Accent */
     --color-accent:        #0075DE;
@@ -34,14 +36,17 @@
     --color-accent-subtle: #F2F9FF;
     --color-accent-text:   #097FE8;
 
+
     /* Semantic */
     --color-success: #1AAE39;
     --color-warning: #DD5B00;
     --color-danger:  #DD5B00;
     --color-info:    #0075DE;
 
+
     /* Focus */
     --color-focus: #097FE8;
+
 
     /* Shadows */
     --shadow-card:
@@ -55,6 +60,7 @@
       rgba(0, 0, 0, 0.02) 0px 7px 15px,
       rgba(0, 0, 0, 0.04) 0px 14px 28px,
       rgba(0, 0, 0, 0.05) 0px 23px 52px;
+
 
     /* Radii */
     --radius-micro:       4px;
@@ -79,13 +85,15 @@
 
   body {
     /* NotionInter is the spec'd display face but we don't ship the licensed
-       file — Inter is the closest open fallback and renders nearly identically. */
+
+    */
     font-family: 'NotionInter', 'Inter', -apple-system, system-ui, 'Segoe UI',
       Helvetica, Arial, sans-serif;
     background-color: var(--color-bg-canvas);
     color: var(--color-text-primary);
     min-height: 100vh;
     line-height: 1.50;
+
     /* Notion enables lining numerals + localised forms for poise */
     font-feature-settings: 'lnum' 1, 'locl' 1;
   }
@@ -93,6 +101,7 @@
   #root {
     min-height: 100vh;
   }
+
 
   /* Display / heading text gets the OpenType perks + tight tracking */
   h1, h2, h3, h4, h5, h6,
@@ -131,12 +140,10 @@
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Component layer — re-uses existing class names so call sites
-   stay untouched. Values are remapped to Notion tokens.
-   ──────────────────────────────────────────────────────────────*/
+
 
 @layer components {
+
 
   /* Cards */
   .card {
@@ -154,6 +161,7 @@
   .card-hero {
     @apply bg-bg-surface border border-border rounded-hero;
   }
+
 
   /* Buttons — Notion shape: 4px radius, 8px 16px padding */
   .btn-primary {
@@ -206,6 +214,7 @@
            transition-[transform,background-color] duration-150;
   }
 
+
   /* Inputs — 4px radius, 6px padding, near-black text */
   .input-base,
   .input-field {
@@ -255,6 +264,7 @@
            hover:border-danger focus:border-danger focus:ring-danger/25;
   }
 
+
   /* Pill badges — 9999px radius, 12px weight 600, 0.125px tracking */
   .badge {
     @apply inline-flex items-center gap-1
@@ -290,6 +300,7 @@
     @apply badge bg-bg-surface border border-border text-text-secondary;
   }
 
+
   /* Sidebar nav links */
   .sidebar-link {
     @apply flex items-center gap-2.5
@@ -302,6 +313,7 @@
   .sidebar-link.active {
     @apply bg-bg-surface text-text-primary border border-border;
   }
+
 
   /* Headings + helpers */
   .section-title {
@@ -327,6 +339,7 @@
     @apply inline-block w-1.5 h-1.5 rounded-full;
   }
 
+
   /* Toggle */
   .toggle {
     @apply relative inline-flex items-center h-5 w-9 rounded-full
@@ -342,6 +355,7 @@
   .toggle-thumb-on  { @apply left-[18px]; }
   .toggle-thumb-off { @apply left-0.5; }
 
+
   /* Layout helpers — Notion's alternating section rhythm */
   .section {
     @apply max-w-[1200px] mx-auto px-6 md:px-8 py-16 md:py-20;
@@ -350,6 +364,7 @@
   .section-alt {
     @apply bg-bg-subtle;
   }
+
 
   /* Typography roles — apply directly via class on heading/text elements */
   .text-display-hero {
@@ -393,9 +408,7 @@
   }
 }
 
-/* ──────────────────────────────────────────────────────────────
-   Utilities — restraint above all
-   ──────────────────────────────────────────────────────────────*/
+
 
 @layer utilities {
   .stagger-1 { animation-delay: 40ms;  opacity: 0; }
@@ -418,6 +431,7 @@
     border-width: 1px;
     border-color: rgba(0, 0, 0, 0.06);
   }
+
 
   /* Pure-white sections vs warm-white alt sections — Notion rhythm */
   .bg-warm-white { background-color: #F6F5F4; }

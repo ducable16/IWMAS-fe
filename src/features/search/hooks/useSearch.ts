@@ -1,15 +1,15 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+﻿import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { searchService } from '../services/searchService'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import type { AutocompleteResponse, Id, ProjectAutocompleteResponse } from '@/types'
 export { useDebouncedValue } from '@/utils/hooks'
-
 /**
  * §13.1 Min prefix length and debounce — match backend defaults.
  * Backend default app.search.autocomplete.min-prefix-length = 2.
  */
 export const SEARCH_MIN_PREFIX = 2
 export const SEARCH_DEBOUNCE_MS = 220
+
 
 /**
  * §13.1 Autocomplete — typeahead suggestions.
@@ -42,12 +42,10 @@ export function useAutocomplete(
       const res = await searchService.autocomplete(trimmed, signal, opts)
       return res.data
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
   })
 }
-
 /**
  * §13.1 Autocomplete with excludeProjectId — "Add Member" typeahead.
  *
@@ -75,11 +73,11 @@ export function useAutocompleteExcludeProject(
       const res = await searchService.autocomplete(trimmed, signal, opts)
       return res.data
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
   })
 }
+
 
 /**
  * §13.3 Project Autocomplete — typeahead suggestions.
@@ -96,11 +94,11 @@ export function useProjectAutocomplete(query: string | null | undefined) {
       const res = await searchService.autocompleteProjects(trimmed, signal)
       return res.data
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
   })
 }
+
 
 /**
  * §13.2 User search — full paginated result list.
@@ -129,10 +127,10 @@ export function useUserSearch(params: UserSearchParams = {}) {
       const res = await searchService.searchUsers({ ...params, q }, signal)
       return res.data
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   })
 }
+
 
 /**
  * §13.4 Project Search — full paginated result list.
@@ -160,7 +158,6 @@ export function useProjectSearch(params: ProjectSearchParams = {}) {
       const res = await searchService.searchProjects({ ...params, q }, signal)
       return res.data
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   })
 }

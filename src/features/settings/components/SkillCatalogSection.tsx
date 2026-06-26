@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import clsx from 'clsx'
 import { BarChart3, FolderTree, Loader2, Pencil, Plus, Search, Trash2, Users } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useConfirm } from '@/hooks/useConfirm'
@@ -735,7 +736,12 @@ export default function SkillCatalogSection() {
                         setSelectedSkillId(skill.id)
                       }
                     }}
-                    className="w-full rounded-lg border border-border-subtle p-3 text-left hover:bg-bg-hover transition-colors"
+                    className={clsx(
+                      'w-full rounded-lg border p-3 text-left transition-colors',
+                      skill.id === selectedSkillId
+                        ? 'border-accent/40 bg-accent/[0.06] ring-1 ring-accent/20'
+                        : 'border-border-subtle hover:bg-bg-hover',
+                    )}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">

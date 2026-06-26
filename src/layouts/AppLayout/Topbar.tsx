@@ -175,7 +175,7 @@ export default function Topbar() {
   const entry = Object.entries(ROUTE_LABELS)
     .sort(([a], [b]) => b.length - a.length)
     .find(([path]) => location.pathname === path || location.pathname.startsWith(path + '/'))
-  const pageTitle = entry?.[1] || 'IWAS'
+  const pageTitle = entry?.[1] || 'IWMAS'
 
   const handleLogout = () => {
     logout()

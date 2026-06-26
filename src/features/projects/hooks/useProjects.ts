@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
+﻿import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { projectService, type ProjectMemberSearchParams } from '../services/projectService'
 import { useAuthStore } from '@/features/auth/store/authStore'
@@ -104,7 +104,6 @@ export function useProjects(params: ProjectQueryParams = {}, enabled = true) {
     },
     enabled,
     placeholderData: (prev) => prev,
-    staleTime: 60_000,
   })
 }
 
@@ -122,7 +121,6 @@ export function useMyProjects(params: ProjectQueryParams = {}, enabled = true) {
     },
     enabled,
     placeholderData: (prev) => prev,
-    staleTime: 60_000,
   })
 }
 
@@ -136,7 +134,6 @@ export function useMyManagedProjectMembers(enabled = true) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: user?.role === 'PROJECT_MANAGER' && enabled,
-    staleTime: 60_000,
   })
 }
 
@@ -148,7 +145,6 @@ export function useProject(id: Id | null | undefined) {
       return res.data ?? null
     },
     enabled: !!id,
-    staleTime: 60_000,
   })
 }
 
@@ -160,7 +156,6 @@ export function useProjectMembers(projectId: Id | null | undefined) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId,
-    staleTime: 30_000,
   })
 }
 
@@ -187,7 +182,6 @@ export function useProjectMemberSearch(
     },
     enabled: !!projectId && enabled,
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
   })
 }
 
@@ -200,7 +194,6 @@ export function useSuggestProjectCode(name: string | null | undefined, enabled =
       return res.data?.code ?? null
     },
     enabled: trimmed.length >= 2 && enabled,
-    staleTime: 10_000,
   })
 }
 
@@ -216,7 +209,6 @@ export function useUserEffortRemaining(
       return res.data ?? null
     },
     enabled: !!userId && enabled,
-    staleTime: 30_000,
   })
 }
 

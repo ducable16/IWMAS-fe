@@ -127,6 +127,7 @@ export default function Sidebar() {
       )}
       style={{ width: collapsed ? COLLAPSED_WIDTH : expandedWidth }}
     >
+
       {/* Logo */}
       <div
         className={clsx(
@@ -137,7 +138,7 @@ export default function Sidebar() {
         {!collapsed ? (
           <>
             <div className="flex items-center gap-2">
-              <span className="text-[16px] font-bold text-text-primary tracking-tight">IWAS</span>
+              <span className="text-[16px] font-bold text-text-primary tracking-tight">IWMAS</span>
             </div>
             <button
               onClick={toggle}
@@ -157,6 +158,7 @@ export default function Sidebar() {
           </button>
         )}
       </div>
+
 
 
 
@@ -200,6 +202,7 @@ export default function Sidebar() {
           )
         })}
       </nav>
+
 
       {/* User */}
       {!collapsed && user && (

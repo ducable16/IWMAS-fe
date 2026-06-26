@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { taskService } from '../services/taskService'
 import type { Id, TaskListItem } from '@/types'
 
@@ -21,7 +21,6 @@ export function useTaskBoard(projectId: Id | null | undefined) {
       return res.data ?? {}
     },
     enabled: !!projectId,
-    staleTime: 15_000,
     refetchInterval: 30_000,
   })
 }
@@ -34,7 +33,6 @@ export function useTaskCalendar({ from, to, projectId }: TaskCalendarParams = {}
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!from && !!to,
-    staleTime: 30_000,
     refetchInterval: 60_000,
   })
 }

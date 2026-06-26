@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+﻿import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { arrangementService, workloadService } from '../services/workforceService'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import type {
@@ -12,8 +12,9 @@ import type {
   SchedulePreviewRequest,
 } from '@/types'
 
-// ── §9.1 Project members real-time workload ──────────────────────────────────
 
+
+// ── §9.1 Project members real-time workload ──────────────────────────────────
 export function useProjectWorkload(
   projectId: Id | null | undefined,
 ) {
@@ -24,12 +25,12 @@ export function useProjectWorkload(
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId,
-    staleTime: 30_000,
   })
 }
 
-// ── §9.2 User real-time workload (with task breakdown) ──────────────────────
 
+
+// ── §9.2 User real-time workload (with task breakdown) ──────────────────────
 export function useUserWorkloadDetail(
   userId: Id | null | undefined,
   enabled = true,
@@ -41,12 +42,12 @@ export function useUserWorkloadDetail(
       return res.data ?? null
     },
     enabled: !!userId && enabled,
-    staleTime: 30_000,
   })
 }
 
-// ── §9.3 My real-time workload ──────────────────────────────────────────────
 
+
+// ── §9.3 My real-time workload ──────────────────────────────────────────────
 export function useMyWorkload() {
   const userId = useAuthStore((state) => state.user?.id)
 
@@ -57,14 +58,14 @@ export function useMyWorkload() {
       return res.data ?? null
     },
     enabled: !!userId,
-    staleTime: 60_000,
     refetchOnWindowFocus: true,
     refetchInterval: 300_000,
   })
 }
 
-// ── §9.4 My saved schedule for a project ────────────────────────────────────
 
+
+// ── §9.4 My saved schedule for a project ────────────────────────────────────
 export function useMySchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
     queryKey: ['workload', 'schedule', 'me', projectId],
@@ -73,12 +74,12 @@ export function useMySchedule(projectId: Id | null | undefined, enabled = true) 
       return res.data ?? null
     },
     enabled: !!projectId && enabled,
-    staleTime: 30_000,
   })
 }
 
-// ── §9.5 ATC schedule suggestion ────────────────────────────────────────────
 
+
+// ── §9.5 ATC schedule suggestion ────────────────────────────────────────────
 export function useSuggestSchedule(projectId: Id | null | undefined, enabled = true) {
   return useQuery<ProjectScheduleResponse | null>({
     queryKey: ['workload', 'schedule', 'suggest', projectId],
@@ -87,12 +88,12 @@ export function useSuggestSchedule(projectId: Id | null | undefined, enabled = t
       return res.data ?? null
     },
     enabled: !!projectId && enabled,
-    staleTime: 30_000,
   })
 }
 
-// ── §9.6 Preview custom order (no persist) ──────────────────────────────────
 
+
+// ── §9.6 Preview custom order (no persist) ──────────────────────────────────
 export function usePreviewSchedule() {
   return useMutation<ProjectScheduleResponse, unknown, SchedulePreviewRequest>({
     mutationFn: async (data) => {
@@ -102,8 +103,9 @@ export function usePreviewSchedule() {
   })
 }
 
-// ── §9.7 Save schedule ───────────────────────────────────────────────────────
 
+
+// ── §9.7 Save schedule ───────────────────────────────────────────────────────
 export function useSaveSchedule() {
   const queryClient = useQueryClient()
   return useMutation<ProjectScheduleResponse, unknown, SchedulePreviewRequest>({
@@ -121,25 +123,9 @@ export function useSaveSchedule() {
   })
 }
 
-export function useResetSchedule() {
-  const queryClient = useQueryClient()
-  return useMutation<ProjectScheduleResponse, unknown, Id>({
-    mutationFn: async (projectId) => {
-      const res = await workloadService.resetSchedule(projectId)
-      return res.data as ProjectScheduleResponse
-    },
-    onSuccess: (_, projectId) => {
-      queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'me', projectId] })
-      queryClient.invalidateQueries({ queryKey: ['workload', 'schedule', 'suggest', projectId] })
-      queryClient.invalidateQueries({ queryKey: ['workload', 'me', 'realtime'] })
-      queryClient.invalidateQueries({ queryKey: ['workload', 'project', projectId] })
-      queryClient.invalidateQueries({ queryKey: ['arrangement'] })
-    },
-  })
-}
+
 
 // ── Task arrangement (§16) ───────────────────────────────────────────────────
-
 export function useArrangeLane(
   projectId: Id | null | undefined,
   assigneeId: Id | null | undefined,
@@ -153,7 +139,6 @@ export function useArrangeLane(
       return res.data ?? null
     },
     enabled: !!projectId && !!assigneeId && enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -174,7 +159,6 @@ export function useLaneNextTask(
       return res.data ?? null
     },
     enabled: !!projectId && !!assigneeId && enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -190,7 +174,6 @@ export function useArrangeMyLane(
       return res.data ?? null
     },
     enabled: !!projectId && enabled,
-    staleTime: 30_000,
   })
 }
 
@@ -209,6 +192,5 @@ export function useMyNextTask(
       return res.data ?? null
     },
     enabled: !!projectId && enabled,
-    staleTime: 30_000,
   })
 }

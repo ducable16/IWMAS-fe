@@ -1,7 +1,8 @@
-import { keepPreviousData, useQuery } from '@tanstack/react-query'
+﻿import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { searchService } from '@/features/search/services/searchService'
 import { SEARCH_MIN_PREFIX } from '@/features/search/hooks/useSearch'
 import type { Id } from '@/types'
+
 
 /**
  * §3.11 / §13.1 — Search candidates for adding a member to a project.
@@ -26,10 +27,10 @@ function useProjectCandidates(
       })
       return res.data ?? { suggestions: [] }
     },
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   })
 }
+
 
 /**
  * §3.7 — Search PM candidates for the "Change Project Manager" modal.
@@ -38,6 +39,7 @@ function useProjectCandidates(
 export function useProjectManagerCandidates(query: string, projectId?: Id | null) {
   return useProjectCandidates(query, projectId, 'PROJECT_MANAGER')
 }
+
 
 /**
  * §3.11 — Search member candidates for the "Add Member" modal.

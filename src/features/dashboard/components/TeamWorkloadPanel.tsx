@@ -108,6 +108,7 @@ const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: Member
           <WorkloadTaskList
             tasks={member.tasks}
             emptyLabel="No tasks for this member"
+            showDeadlineRisk
           />
         </div>
       )}

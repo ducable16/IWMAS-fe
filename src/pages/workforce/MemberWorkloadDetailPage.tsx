@@ -1,13 +1,8 @@
-import { useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft } from 'lucide-react'
-import clsx from 'clsx'
 import { LiveError, LiveLoading } from '@/components/feedback/LiveStateOverlay'
-import ProjectAllocationsTable from '@/features/workforce/components/member-workload-detail/ProjectAllocationsTable'
-import WorkloadTaskSections from '@/features/workforce/components/member-workload-detail/WorkloadTaskSections'
-import TaskArrangementPanel from '@/features/workforce/components/TaskArrangementPanel'
-import BacklogMetric from '@/features/workforce/components/BacklogMetric'
-import DeadlineRiskIndicator from '@/features/workforce/components/DeadlineRiskIndicator'
+import MemberWorkloadLaneWorkspace from '@/features/workforce/components/member-workload-detail/MemberWorkloadLaneWorkspace'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import { useMyWorkload, useUserWorkloadDetail } from '@/features/workforce/hooks/useWorkload'
 import { useCan } from '@/utils/permissions'
@@ -18,6 +13,8 @@ const parseQueryId = (value: string | null): Id | null => {
   const numeric = Number(value)
   return Number.isNaN(numeric) ? value : numeric
 }
+
+const keyOf = (id: Id) => String(id)
 
 function WorkloadDetailContent({
   data,
@@ -31,9 +28,21 @@ function WorkloadDetailContent({
   onProjectChange: (projectId: Id) => void
 }) {
 
-  const tasks = data.tasks ?? []
   const allocations = data.projectAllocations ?? []
-  const activeProjectId = selectedProjectId ?? allocations[0]?.projectId ?? null
+  const activeAllocation = allocations.find(
+    (allocation) => selectedProjectId != null
+      && keyOf(allocation.projectId) === keyOf(selectedProjectId),
+  ) ?? allocations[0] ?? null
+  const activeProjectId = activeAllocation?.projectId ?? null
+
+  useEffect(() => {
+    if (
+      activeProjectId != null
+      && (selectedProjectId == null || keyOf(selectedProjectId) !== keyOf(activeProjectId))
+    ) {
+      onProjectChange(activeProjectId)
+    }
+  }, [activeProjectId, onProjectChange, selectedProjectId])
 
   return (
     <>
@@ -66,72 +75,19 @@ function WorkloadDetailContent({
           </div>
         </div>
 
-        <div className="mt-5 grid gap-3 border-t border-border-subtle pt-4 sm:grid-cols-2">
-          <div className="rounded-xl bg-bg-subtle px-3 py-2.5">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Workload volume</p>
-            <BacklogMetric days={data.worstBacklogDays} />
-          </div>
-          <div className="rounded-xl bg-bg-subtle px-3 py-2.5">
-            <p className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-text-muted">Deadline risk</p>
-            <DeadlineRiskIndicator
-              atRiskCount={data.atRiskCount}
-              overdueCount={data.overdueTaskCount}
-              predictedLateCount={data.predictedLateTaskCount}
-              compact
-            />
-          </div>
-        </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-4">
-          <div className="text-center p-3 bg-bg-subtle rounded-xl">
-            <p className="text-[20px] font-bold text-text-primary tabular-nums">
-              {data.activeTaskCount ?? 0}
-            </p>
-            <p className="text-[11.5px] text-text-muted mt-0.5">Active tasks</p>
-          </div>
-          <div className="text-center p-3 bg-bg-subtle rounded-xl">
-            <p
-              className={clsx(
-                'text-[20px] font-bold tabular-nums',
-                data.atRiskCount > 0 ? 'text-danger' : 'text-text-primary',
-              )}
-            >
-              {data.atRiskCount}
-            </p>
-            <p className="text-[11.5px] text-text-muted mt-0.5">At risk</p>
-            {data.atRiskCount > 0 && (
-              <p className="mt-0.5 text-[10px] text-text-muted">
-                {data.overdueTaskCount} overdue · {data.predictedLateTaskCount} predicted
-              </p>
-            )}
-          </div>
-          <div className="text-center p-3 bg-bg-subtle rounded-xl">
-            <p className="text-[20px] font-bold text-text-primary tabular-nums">
-              {data.unestimatedTaskCount > 0 ? data.unestimatedTaskCount : '-'}
-            </p>
-            <p className="text-[11.5px] text-text-muted mt-0.5">Unestimated</p>
-          </div>
-        </div>
+
+
       </div>
 
-      <ProjectAllocationsTable
-        allocations={allocations}
-        activeProjectId={activeProjectId}
-        onSelectProject={onProjectChange}
-      />
-      <TaskArrangementPanel
+      <MemberWorkloadLaneWorkspace
         userId={data.userId}
         isSelf={isSelf}
         allocations={allocations}
-        selectedProjectId={activeProjectId}
+        activeProjectId={activeProjectId}
+        tasks={data.tasks ?? []}
         onProjectChange={onProjectChange}
       />
-      <WorkloadTaskSections tasks={tasks} variant="page" />
-
-      <p className="text-[12px] text-text-muted text-center pb-4">
-        <span className="font-semibold text-text-secondary">{data.activeTaskCount}</span>
-        {' active tasks total'}
-      </p>
     </>
   )
 }
@@ -188,7 +144,7 @@ function OtherUserWorkloadView({
 
 export default function MemberWorkloadDetailPage() {
   const { userId } = useParams()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const navigate = useNavigate()
 
   const can = useCan()
@@ -197,9 +153,12 @@ export default function MemberWorkloadDetailPage() {
   const targetUserId = Number(userId)
   const isSelf = targetUserId === currentUser?.id
   const canViewOther = can.viewAllWorkload && !isSelf
-  const [selectedProjectId, setSelectedProjectId] = useState<Id | null>(
-    () => parseQueryId(searchParams.get('projectId')),
-  )
+  const selectedProjectId = parseQueryId(searchParams.get('projectId'))
+  const handleProjectChange = useCallback((projectId: Id) => {
+    const nextSearchParams = new URLSearchParams(searchParams)
+    nextSearchParams.set('projectId', String(projectId))
+    setSearchParams(nextSearchParams, { replace: true })
+  }, [searchParams, setSearchParams])
 
   if (can.isHr) return <Navigate to="/dashboard" replace />
 
@@ -227,12 +186,12 @@ export default function MemberWorkloadDetailPage() {
         <OtherUserWorkloadView
           userId={targetUserId}
           selectedProjectId={selectedProjectId}
-          onProjectChange={setSelectedProjectId}
+          onProjectChange={handleProjectChange}
         />
       ) : (
         <SelfWorkloadView
           selectedProjectId={selectedProjectId}
-          onProjectChange={setSelectedProjectId}
+          onProjectChange={handleProjectChange}
         />
       )}
     </div>

@@ -57,10 +57,12 @@ export default function ProjectDetailPage() {
   const updateProject              = useUpdateProject()
   const isPending                  = updateProject.isPending
 
+
   // Project managers can modify only projects they manage.
   const isOwnProject     = !!project && project.managerId === user?.id
   const canEdit          = can.isPm && isOwnProject
   const canManageMembers = can.isPm && isOwnProject
+
 
   // Fetch all users to resolve managerId → fullName
   const { data: usersData } = useMembers({ size: 100 })
@@ -68,6 +70,7 @@ export default function ProjectDetailPage() {
   const managerName = project?.managerId
     ? (allUsers.find((u) => u.id === project.managerId)?.fullName ?? `#${project.managerId}`)
     : '—'
+
 
   // ── Edit state ──────────────────────────────────────────────
   const [isEditing, setIsEditing] = useState(false)
@@ -122,6 +125,7 @@ export default function ProjectDetailPage() {
       status:      form.status,
       startDate:   form.startDate || undefined,
       endDate:     form.endDate   || undefined,
+      managerId:   form.managerId ? Number(form.managerId) : undefined,
     }
     updateProject.mutate(
       { id: project.id, data: payload },
@@ -173,6 +177,7 @@ export default function ProjectDetailPage() {
 
   const statusMeta = STATUS_META[project.status as keyof typeof STATUS_META] || STATUS_META.PLANNING
 
+
   // Edit-mode derived values
   const editStatusMeta = STATUS_META[form.status as keyof typeof STATUS_META] || STATUS_META.PLANNING
   const editManagerName = form.managerId
@@ -187,6 +192,7 @@ export default function ProjectDetailPage() {
       data-edit-manager-name={editManagerName}
     >
 
+
       {/* ── Back + Header ── */}
       <div className="mb-6">
         <button
@@ -199,6 +205,7 @@ export default function ProjectDetailPage() {
         </button>
 
         <div className="flex items-start justify-between gap-4">
+
           {/* Title / Code */}
           <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 border border-accent/10 flex items-center justify-center text-[16px] font-bold text-accent shrink-0">
@@ -235,6 +242,7 @@ export default function ProjectDetailPage() {
               )}
             </div>
           </div>
+
 
           {/* Action buttons */}
           {canEdit && (
@@ -283,6 +291,7 @@ export default function ProjectDetailPage() {
         </div>
       </div>
 
+
       {/* ── Tab navigation ── */}
       <div className="flex items-center gap-1 border-b border-border-subtle mb-6">
         {([
@@ -311,6 +320,7 @@ export default function ProjectDetailPage() {
         ))}
       </div>
 
+
       {/* ── Tab: Overview ── */}
       {activeTab === 'overview' && (
         <ProjectOverviewTab
@@ -323,6 +333,7 @@ export default function ProjectDetailPage() {
         />
       )}
 
+
       {/* ── Tab: Members ── */}
       {activeTab === 'members' && (
         <ProjectMembersTab
@@ -334,6 +345,7 @@ export default function ProjectDetailPage() {
           onRemoveMemberClick={handleRemoveMember}
         />
       )}
+
 
       {/* ── Tab: Tasks ── */}
       {activeTab === 'tasks' && (

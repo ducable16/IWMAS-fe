@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { useProjectAutocomplete } from '@/features/search/hooks/useSearch'
 import { projectService } from '@/features/projects/services/projectService'
 import type { Id, PageResponse, Project } from '@/types'
@@ -22,7 +22,6 @@ export function useProjectSuggestions(q: string) {
       return { suggestions: data.map((project) => ({ entityId: project.id, term: project.name })) }
     },
     enabled: !isAuto,
-    staleTime: 60000,
   })
 
   return isAuto ? auto : all
@@ -67,6 +66,5 @@ export function useAssigneeSuggestions(
       }
     },
     enabled: !!projectId,
-    staleTime: 60000,
   })
 }

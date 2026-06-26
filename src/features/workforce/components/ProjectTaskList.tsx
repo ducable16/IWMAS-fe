@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 import { Clock } from 'lucide-react'
 import clsx from 'clsx'
 import { taskService } from '@/features/tasks/services/taskService'
@@ -20,19 +20,18 @@ export default function ProjectTaskList({ projectId }: ProjectTaskListProps) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!projectId,
-    staleTime: 30_000,
   })
 
   const tasks = data || []
 
-  if (isLoading) return <LiveLoading label="Loading project tasks…" />
+  if (isLoading) return <LiveLoading label="Loading project tasksâ€¦" />
   if (isError) return <LiveError error={error} onRetry={refetch} />
   if (!tasks.length) return <LiveEmpty label="No tasks in this project." />
 
   return (
     <div className="space-y-2">
       {tasks.map((task) => {
-        const assigneeName = task.assignee?.fullName || task.assignee?.email || '—'
+        const assigneeName = task.assignee?.fullName || task.assignee?.email || 'â€”'
         return (
           <div
             key={task.id}

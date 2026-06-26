@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+﻿import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 import { taskService } from '../services/taskService'
 import { getErrorMessage, getApiErrorCode } from '@/utils/apiError'
@@ -97,7 +97,6 @@ export function useTaskAttachments(taskId: Id | null | undefined) {
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!taskId,
-    staleTime: 30_000,
   })
 }
 

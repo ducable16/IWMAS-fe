@@ -28,8 +28,8 @@ export default function AuthLayout() {
             <span className="text-white text-sm font-semibold leading-none">I</span>
           </div>
           <div className="leading-tight">
-            <p className="text-[15px] font-semibold text-text-primary">IWAS</p>
-            <p className="text-[12px] text-text-muted mt-0.5">Intelligent Workload Allocation</p>
+            <p className="text-[15px] font-semibold text-text-primary">IWMAS</p>
+            <p className="text-[12px] text-text-muted mt-0.5">Intelligent Workload Management and Allocation System</p>
           </div>
         </div>
 
@@ -63,7 +63,7 @@ export default function AuthLayout() {
         </div>
 
         <p className="text-text-muted text-xs">
-          IWAS {new Date().getFullYear()} | Authorized access only
+          IWMAS {new Date().getFullYear()} | Authorized access only
         </p>
       </div>
 
@@ -73,7 +73,7 @@ export default function AuthLayout() {
             <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
               <span className="text-white text-[13px] font-semibold leading-none">I</span>
             </div>
-            <span className="font-semibold text-text-primary tracking-tight">IWAS</span>
+            <span className="font-semibold text-text-primary tracking-tight">IWMAS</span>
           </div>
           <Outlet />
         </div>

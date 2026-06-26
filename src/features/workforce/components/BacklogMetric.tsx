@@ -7,6 +7,7 @@ type BacklogMetricProps = {
   variant?: 'default' | 'analytics-row'
 }
 
+
 /** Backlog depth shown in real units; it is deliberately not rendered as a percentage. */
 export default function BacklogMetric({
   days,
@@ -41,8 +42,8 @@ export default function BacklogMetric({
         {Math.max(0, days).toFixed(1)} workdays
       </span>
       {!compact && hours !== null && hours !== undefined && (
-        <span className="text-[11px] text-text-muted tabular-nums">
-          · {Math.max(0, hours).toFixed(1)}h queued
+        <span className="text-[11px] text-text-primary tabular-nums">
+          ({Math.max(0, hours).toFixed(1)}h)
         </span>
       )}
     </div>
