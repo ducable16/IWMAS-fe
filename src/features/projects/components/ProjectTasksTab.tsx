@@ -16,7 +16,7 @@ type Props = {
 const PRIORITY_META_BY_KEY = PRIORITY_META as Record<string, { label: string; color?: string }>
 
 function normaliseTask(t: Task) {
-  const assigneeName = t.assignee?.fullName || t.assignee?.email || 'â€”'
+  const assigneeName = t.assignee?.fullName || t.assignee?.email || '-'
   return {
     id: t.id,
     title: t.title || 'Untitled',
@@ -45,7 +45,7 @@ export function ProjectTasksTab({ projectId }: Props) {
 
   const tasks = rawTasks.map(normaliseTask)
 
-  if (isLoading) return <LiveLoading label="Loading tasksâ€¦" />
+  if (isLoading) return <LiveLoading label="Loading tasks..." />
   if (isError) return <LiveError error={error} onRetry={refetch} />
 
   return (
@@ -152,7 +152,7 @@ export function ProjectTasksTab({ projectId }: Props) {
                               {task.assigneeFull}
                             </span>
                           ) : (
-                            <span className="text-[12px] text-text-muted">â€”</span>
+                            <span className="text-[12px] text-text-muted">-</span>
                           )}
                         </td>
 

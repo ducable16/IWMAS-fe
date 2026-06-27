@@ -1,13 +1,5 @@
 import type { Id } from './api'
 
-export interface ArrangementQueryParams {
-  k?: number | undefined
-  wCritical?: number | undefined
-  wHigh?: number | undefined
-  wMedium?: number | undefined
-  wLow?: number | undefined
-}
-
 export interface ArrangeTaskItem {
   taskId: Id
   title: string
@@ -20,7 +12,6 @@ export interface ArrangeTaskItem {
   lateByWorkdays: number
   willSlip: boolean
   estimateDefaulted: boolean
-  reason: string
 }
 
 export interface ArrangeResponse {
@@ -28,7 +19,6 @@ export interface ArrangeResponse {
   assigneeId: Id
   allocatedEffortPercent: number | null
   dailyCapacityHours: number | null
-  k: number
   tasks: ArrangeTaskItem[]
 }
 
@@ -39,5 +29,4 @@ export interface NextTaskResponse {
   taskId: Id | null
   title: string | null
   priority: string | null
-  reason: string | null
 }

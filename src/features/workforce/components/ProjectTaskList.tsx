@@ -24,14 +24,14 @@ export default function ProjectTaskList({ projectId }: ProjectTaskListProps) {
 
   const tasks = data || []
 
-  if (isLoading) return <LiveLoading label="Loading project tasksâ€¦" />
+  if (isLoading) return <LiveLoading label="Loading project tasks..." />
   if (isError) return <LiveError error={error} onRetry={refetch} />
   if (!tasks.length) return <LiveEmpty label="No tasks in this project." />
 
   return (
     <div className="space-y-2">
       {tasks.map((task) => {
-        const assigneeName = task.assignee?.fullName || task.assignee?.email || 'â€”'
+        const assigneeName = task.assignee?.fullName || task.assignee?.email || '-'
         return (
           <div
             key={task.id}

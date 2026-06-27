@@ -106,7 +106,7 @@
   </g>
   <text class="heading" x="742" y="656">5. Config &amp; Infrastructure</text>
   <text class="text" x="742" y="698">lib/ — axios · queryClient</text>
-  <text class="text" x="742" y="729">store/ — tenantStore · uiStore</text>
+  <text class="text" x="742" y="729">store/ — uiStore</text>
   <text class="text" x="742" y="760">constants/ · import.meta.env</text>
   <text class="small" x="742" y="805">HTTP · cache · global state · runtime configuration</text>
 

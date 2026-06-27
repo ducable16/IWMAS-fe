@@ -1,6 +1,5 @@
 import api from '@/lib/axios'
 import type {
-  ArrangementQueryParams,
   ArrangeResponse,
   Id,
   MemberWorkloadResponse,
@@ -52,21 +51,21 @@ export const workloadService = {
 export const arrangementService = {
 
   // API 16.1: suggested order for a member's project lane.
-  arrangeLane: (projectId: Id, assigneeId: Id, params?: ArrangementQueryParams) =>
-    api.get<ArrangeResponse>(`/arrangement/lanes/${projectId}/${assigneeId}`, { params }),
+  arrangeLane: (projectId: Id, assigneeId: Id) =>
+    api.get<ArrangeResponse>(`/arrangement/lanes/${projectId}/${assigneeId}`),
 
 
   // API 16.2: suggested next task for a member's project lane.
-  getLaneNextTask: (projectId: Id, assigneeId: Id, params?: Pick<ArrangementQueryParams, 'k'>) =>
-    api.get<NextTaskResponse>(`/arrangement/lanes/${projectId}/${assigneeId}/next`, { params }),
+  getLaneNextTask: (projectId: Id, assigneeId: Id) =>
+    api.get<NextTaskResponse>(`/arrangement/lanes/${projectId}/${assigneeId}/next`),
 
 
   // API 16.3: suggested order for the authenticated user's project lane.
-  arrangeMyLane: (projectId: Id, params?: ArrangementQueryParams) =>
-    api.get<ArrangeResponse>(`/arrangement/me/lanes/${projectId}`, { params }),
+  arrangeMyLane: (projectId: Id) =>
+    api.get<ArrangeResponse>(`/arrangement/me/lanes/${projectId}`),
 
 
   // API 16.4: suggested next task for the authenticated user.
-  getMyNextTask: (projectId: Id, params?: Pick<ArrangementQueryParams, 'k'>) =>
-    api.get<NextTaskResponse>(`/arrangement/me/lanes/${projectId}/next`, { params }),
+  getMyNextTask: (projectId: Id) =>
+    api.get<NextTaskResponse>(`/arrangement/me/lanes/${projectId}/next`),
 }

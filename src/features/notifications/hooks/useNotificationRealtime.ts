@@ -16,13 +16,6 @@ import {
 import { resolveNotificationRoute } from '../utils/notificationRouting'
 import type { Notification } from '@/types'
 
-function getUnreadCount(data: unknown) {
-  if (typeof data === 'object' && data && 'count' in data) {
-    return Number((data as { count: number }).count)
-  }
-  return Number(data ?? 0)
-}
-
 function NotificationToast({ notification }: { notification: Notification }) {
   return createElement(
     'div',
@@ -64,16 +57,14 @@ export function useNotificationRealtime() {
 
     ;(async () => {
       try {
-        const [listRes, countRes] = await Promise.all([
-          notificationService.getAll(),
-          notificationService.getUnreadCount(),
-        ])
+        const listRes = await notificationService.getAll()
+        const notifications = Array.isArray(listRes.data) ? listRes.data : []
 
         if (!cancelled) {
           hydrateNotificationCache(
             queryClient,
-            Array.isArray(listRes.data) ? listRes.data : [],
-            getUnreadCount(countRes.data),
+            notifications,
+            notifications.filter((item) => !item.isRead).length,
           )
         }
       } catch (err) {

@@ -2,7 +2,6 @@
 import { arrangementService, workloadService } from '../services/workforceService'
 import { useAuthStore } from '@/features/auth/store/authStore'
 import type {
-  ArrangementQueryParams,
   ArrangeResponse,
   Id,
   MemberWorkloadResponse,
@@ -59,7 +58,6 @@ export function useMyWorkload() {
     },
     enabled: !!userId,
     refetchOnWindowFocus: true,
-    refetchInterval: 300_000,
   })
 }
 
@@ -129,13 +127,12 @@ export function useSaveSchedule() {
 export function useArrangeLane(
   projectId: Id | null | undefined,
   assigneeId: Id | null | undefined,
-  params?: ArrangementQueryParams,
   enabled = true,
 ) {
   return useQuery<ArrangeResponse | null>({
-    queryKey: ['arrangement', 'lane', projectId, assigneeId, params],
+    queryKey: ['arrangement', 'lane', projectId, assigneeId],
     queryFn: async () => {
-      const res = await arrangementService.arrangeLane(projectId as Id, assigneeId as Id, params)
+      const res = await arrangementService.arrangeLane(projectId as Id, assigneeId as Id)
       return res.data ?? null
     },
     enabled: !!projectId && !!assigneeId && enabled,
@@ -145,16 +142,14 @@ export function useArrangeLane(
 export function useLaneNextTask(
   projectId: Id | null | undefined,
   assigneeId: Id | null | undefined,
-  k?: number,
   enabled = true,
 ) {
   return useQuery<NextTaskResponse | null>({
-    queryKey: ['arrangement', 'lane', projectId, assigneeId, 'next', k],
+    queryKey: ['arrangement', 'lane', projectId, assigneeId, 'next'],
     queryFn: async () => {
       const res = await arrangementService.getLaneNextTask(
         projectId as Id,
         assigneeId as Id,
-        k == null ? undefined : { k },
       )
       return res.data ?? null
     },
@@ -164,13 +159,12 @@ export function useLaneNextTask(
 
 export function useArrangeMyLane(
   projectId: Id | null | undefined,
-  params?: ArrangementQueryParams,
   enabled = true,
 ) {
   return useQuery<ArrangeResponse | null>({
-    queryKey: ['arrangement', 'me', projectId, params],
+    queryKey: ['arrangement', 'me', projectId],
     queryFn: async () => {
-      const res = await arrangementService.arrangeMyLane(projectId as Id, params)
+      const res = await arrangementService.arrangeMyLane(projectId as Id)
       return res.data ?? null
     },
     enabled: !!projectId && enabled,
@@ -179,16 +173,12 @@ export function useArrangeMyLane(
 
 export function useMyNextTask(
   projectId: Id | null | undefined,
-  k?: number,
   enabled = true,
 ) {
   return useQuery<NextTaskResponse | null>({
-    queryKey: ['arrangement', 'me', projectId, 'next', k],
+    queryKey: ['arrangement', 'me', projectId, 'next'],
     queryFn: async () => {
-      const res = await arrangementService.getMyNextTask(
-        projectId as Id,
-        k == null ? undefined : { k },
-      )
+      const res = await arrangementService.getMyNextTask(projectId as Id)
       return res.data ?? null
     },
     enabled: !!projectId && enabled,

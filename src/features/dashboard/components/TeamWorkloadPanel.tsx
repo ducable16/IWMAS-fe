@@ -90,7 +90,7 @@ const MemberRow = memo(function MemberRow({ member, expanded, onToggle }: Member
             active tasks
             {member.unestimatedTaskCount > 0 && (
               <span className="font-semibold text-warning">
-                {' '}· {member.unestimatedTaskCount} unestimated
+                {' '} - {member.unestimatedTaskCount} unestimated
               </span>
             )}
           </div>

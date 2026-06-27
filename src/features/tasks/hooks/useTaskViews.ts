@@ -21,7 +21,6 @@ export function useTaskBoard(projectId: Id | null | undefined) {
       return res.data ?? {}
     },
     enabled: !!projectId,
-    refetchInterval: 30_000,
   })
 }
 
@@ -33,6 +32,5 @@ export function useTaskCalendar({ from, to, projectId }: TaskCalendarParams = {}
       return Array.isArray(res.data) ? res.data : []
     },
     enabled: !!from && !!to,
-    refetchInterval: 60_000,
   })
 }

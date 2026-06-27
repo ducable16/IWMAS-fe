@@ -1,6 +1,5 @@
 import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { useAuthStore } from '@/features/auth/store/authStore'
-import { useTenantStore } from '@/store/tenantStore'
 import type { ApiEnvelope, User } from '@/types'
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
@@ -52,7 +51,6 @@ function deleteHeader(config: InternalAxiosRequestConfig, key: string) {
 
 instance.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
-  const tenantId = useTenantStore.getState().tenantId
 
   if (config.data instanceof FormData && config.headers) {
     // Let browser set multipart/form-data with boundary automatically.
@@ -60,7 +58,6 @@ instance.interceptors.request.use((config) => {
   }
 
   if (token && config.headers) setHeader(config, 'Authorization', `Bearer ${token}`)
-  if (tenantId && config.headers) setHeader(config, 'X-Tenant-ID', tenantId)
 
   return config
 })

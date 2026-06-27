@@ -57,7 +57,6 @@ export function useSearchTasks(params: TaskSearchParams = {}, enabled = true) {
     },
     enabled,
     placeholderData: (prev) => prev,
-    refetchInterval: 60_000,
   })
 }
 

@@ -19,7 +19,7 @@ export default function DeadlineRiskIndicator({
 }: DeadlineRiskIndicatorProps) {
   const count = Math.max(0, atRiskCount || 0)
   const hasRisk = count > 0
-  const detail = `${overdueCount || 0} overdue · ${predictedLateCount || 0} predicted late`
+  const detail = `${overdueCount || 0} overdue - ${predictedLateCount || 0} predicted late`
 
   return (
     <div

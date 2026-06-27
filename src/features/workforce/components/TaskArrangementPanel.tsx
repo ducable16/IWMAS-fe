@@ -205,15 +205,14 @@ export default function TaskArrangementPanel({
   const [previewedOrder, setPreviewedOrder] = useState<string[]>([])
   const [scheduleView, setScheduleView] = useState<ScheduleView>('plan')
 
-  const myArrangement = useArrangeMyLane(projectId, undefined, isSelf)
-  const laneArrangement = useArrangeLane(projectId, userId, undefined, !isSelf)
+  const myArrangement = useArrangeMyLane(projectId, isSelf)
+  const laneArrangement = useArrangeLane(projectId, userId, !isSelf)
   const mySchedule = useMySchedule(projectId, isSelf)
   const suggestedSchedule = useSuggestSchedule(projectId, isSelf)
-  const myNextTask = useMyNextTask(projectId, undefined, isSelf)
+  const myNextTask = useMyNextTask(projectId, isSelf)
   const laneNextTask = useLaneNextTask(
     projectId,
     userId,
-    undefined,
     !isSelf,
   )
   const previewSchedule = usePreviewSchedule()
